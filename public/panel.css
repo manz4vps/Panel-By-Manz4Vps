@@ -1,0 +1,47 @@
+/* =========================================
+   STYLE PANEL V25 ULTIMATE
+   ========================================= */
+body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+.bg-panel { background-color: #1e293b; }
+.tab-active { color: #3b82f6; font-weight: 900; border-bottom: 3px solid #3b82f6; }
+.tab-inactive { color: #94a3b8; font-weight: 600; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #1e293b; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* Animasi */
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Animasi tab dinonaktifkan biar instan */
+.tab-fade-in {}
+
+.toast-animate { animation: slideIn 0.3s ease-out; }
+.toast-fade { animation: fadeOut 0.5s ease-out forwards; }
+.animate-spin-pro { animation: spin 1s linear infinite; }
+
+.dropdown-menu { transform-origin: top right; transition: transform 0.2s, opacity 0.2s; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* =========================================
+   🔥 FIX BACKGROUND EDITOR (CODEMIRROR) SUPER KUAT 🔥
+   ========================================= */
+.CodeMirror, 
+.CodeMirror.cm-s-tomorrow-night-eighties {
+    background-color: #1e293b !important; /* Biru panel */
+    color: #f8fafc !important;
+}
+
+.CodeMirror-gutters,
+.cm-s-tomorrow-night-eighties .CodeMirror-gutters {
+    background-color: #0f172a !important; /* Biru lebih gelap buat angka */
+    border-right: 1px solid #334155 !important;
+}
+
+.CodeMirror-linenumber {
+    color: #64748b !important; /* Warna angka dibikin nyatu sama tema */
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autentikasi - Panel Server V25</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .glow { box-shadow: 0 0 20px rgba(37, 99, 235, 0.5); }
+        .fade-enter { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .scrollable-form { max-height: 80vh; overflow-y: auto; padding-right: 5px; }
+        .scrollable-form::-webkit-scrollbar { width: 5px; }
+        .scrollable-form::-webkit-scrollbar-track { background: transparent; }
+        .scrollable-form::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 relative">
+    
+    <div class="absolute w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[120px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+
+    <div class="bg-slate-800 p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md border border-slate-700 relative z-10 glow transition-all duration-500">
+        
+        <div class="text-center mb-6">
+            <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 mb-2">🎮 PANEL V26</h1>
+            <p id="form-subtitle" class="text-slate-400 font-bold">Silakan masuk untuk melanjutkan.</p>
+        </div>
+
+        <div id="alert-box" class="hidden mb-6 p-4 rounded-xl text-sm font-bold text-center border transition-all"></div>
+        
+        <form id="form-login" onsubmit="handleLoginReq(event)" class="space-y-6 fade-enter block">
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Username / Email</label>
+                <input type="text" id="login-username" placeholder="Masukan Username / Email..." required 
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-4 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition text-lg font-medium shadow-inner text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Password</label>
+                <div class="relative flex items-center">
+                    <input type="password" id="login-password" placeholder="••••••••" required 
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl pl-4 pr-12 py-4 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition text-lg font-medium shadow-inner text-white">
+                    <button type="button" onclick="togglePass('login-password')" class="absolute right-4 text-slate-400 hover:text-blue-400 transition">
+                        <svg id="eye-login-password" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        <svg id="slash-login-password" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <button id="btnLogin" type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-lg py-4 rounded-xl shadow-lg transition transform active:scale-95 duration-300">
+                🚀 MASUK SEKARANG
+            </button>
+            <p class="text-center text-sm font-bold text-slate-400 mt-4 cursor-pointer hover:text-blue-400 transition" onclick="toggleForm('register')">
+                Belum punya akun? <span class="text-blue-500 underline">Daftar disini</span>
+            </p>
+        </form>
+
+        <form id="form-register" onsubmit="handleRegReq(event)" class="space-y-5 fade-enter hidden scrollable-form">
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Email Address</label>
+                <input type="email" id="reg-email" placeholder="contoh@gmail.com" required 
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 transition font-medium shadow-inner text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Buat Username</label>
+                <input type="text" id="reg-username" placeholder="Pilih username" required 
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 transition font-medium shadow-inner text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Buat Password</label>
+                <div class="relative flex items-center">
+                    <input type="password" id="reg-password" placeholder="••••••••" required 
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 transition font-medium shadow-inner text-white">
+                    <button type="button" onclick="togglePass('reg-password')" class="absolute right-4 text-slate-400 hover:text-green-400 transition">
+                        <svg id="eye-reg-password" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        <svg id="slash-reg-password" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Konfirmasi Password</label>
+                <div class="relative flex items-center">
+                    <input type="password" id="reg-confirm-password" placeholder="••••••••" required 
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 transition font-medium shadow-inner text-white">
+                    <button type="button" onclick="togglePass('reg-confirm-password')" class="absolute right-4 text-slate-400 hover:text-green-400 transition">
+                        <svg id="eye-reg-confirm-password" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        <svg id="slash-reg-confirm-password" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <button id="btnReg" type="submit" class="w-full bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-black text-lg py-4 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.4)] transition transform active:scale-95 duration-300 mt-2">
+                ✨ DAFTAR AKUN
+            </button>
+            <p class="text-center text-sm font-bold text-slate-400 pt-2 cursor-pointer hover:text-green-400 transition" onclick="toggleForm('login')">
+                Sudah punya akun? <span class="text-green-500 underline">Kembali Login</span>
+            </p>
+        </form>
+
+    </div>
+
+    <script>
+        // 🌟 FITUR MATA (SHOW/HIDE PASSWORD)
+        function togglePass(id) {
+            const input = document.getElementById(id);
+            const eyeOpen = document.getElementById('eye-' + id);
+            const eyeSlash = document.getElementById('slash-' + id);
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeSlash.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeSlash.classList.add('hidden');
+            }
+        }
+
+        function toggleForm(type) {
+            const forms = ['login', 'register'];
+            forms.forEach(f => document.getElementById(`form-${f}`).classList.add('hidden'));
+            document.getElementById(`form-${type}`).classList.remove('hidden');
+            document.getElementById('alert-box').classList.add('hidden'); 
+
+            const subtitle = document.getElementById('form-subtitle');
+            if(type === 'register') subtitle.innerText = "Buat akun baru untuk mengelola server.";
+            else subtitle.innerText = "Silakan masuk untuk melanjutkan.";
+        }
+
+        function showAlert(msg, type) {
+            const box = document.getElementById('alert-box');
+            box.classList.remove('hidden', 'bg-red-500/20', 'border-red-500', 'text-red-400', 'bg-green-500/20', 'border-green-500', 'text-green-400');
+            if (type === 'error') {
+                box.classList.add('bg-red-500/20', 'border-red-500', 'text-red-400');
+                box.innerHTML = `❌ ${msg}`;
+            } else {
+                box.classList.add('bg-green-500/20', 'border-green-500', 'text-green-400');
+                box.innerHTML = `✅ ${msg}`;
+            }
+        }
+
+        // 1. Tombol Login Ditekan
+        async function handleLoginReq(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            btn.innerText = "⏳ Memeriksa..."; btn.disabled = true;
+
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                
+                if (data.success || data.bypass) {
+                    window.location.href = '/dashboard.html'; 
+                } else {
+                    showAlert(data.error, "error");
+                }
+            } catch (err) { showAlert("Gagal terhubung.", "error"); }
+            btn.innerText = "🚀 MASUK SEKARANG"; btn.disabled = false;
+        }
+
+        // 2. Tombol Daftar Ditekan (LANGSUNG DAFTAR TANPA OTP)
+        async function handleRegReq(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnReg');
+            
+            const email = document.getElementById('reg-email').value.trim();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+
+            if (password !== confirmPassword) return showAlert("Konfirmasi Password tidak sama!", "error");
+
+            btn.innerText = "⏳ Mendaftarkan..."; btn.disabled = true;
+
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showAlert(data.message, "success");
+                    document.getElementById('form-register').reset();
+                    setTimeout(() => toggleForm('login'), 2000); // Balik ke form login 2 detik setelah sukses
+                } else {
+                    showAlert(data.error, "error");
+                }
+            } catch (err) { showAlert("Gagal terhubung.", "error"); }
+            btn.innerText = "✨ DAFTAR AKUN"; btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
