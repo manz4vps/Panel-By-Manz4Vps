@@ -17,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// ================= 🔥 AUTO JAVA MANAGER 🔥 =================
+// ================= ðŸ”¥ AUTO JAVA MANAGER ðŸ”¥ =================
 function getRequiredJavaVersion(mcVersion) {
     if (!mcVersion) return 21; // Default standar
     const v = mcVersion.toLowerCase();
@@ -45,7 +45,7 @@ function ensureJava(version, logCallback, callback) {
     // Kalo Javanya udah pernah didownload, langsung pake
     if (fs.existsSync(javaExe)) return callback(null, javaExe);
 
-    logCallback(`\x1b[33m⏳ Mendownload & Instalasi OpenJDK ${version}... (Hanya sekali)\x1b[0m\n`);
+    logCallback(`\x1b[33mâ³ Mendownload & Instalasi OpenJDK ${version}... (Hanya sekali)\x1b[0m\n`);
     
     const arch = os.arch().includes('arm') ? 'aarch64' : 'x64';
     const isAlpine = fs.existsSync('/etc/alpine-release');
@@ -118,7 +118,7 @@ function generateRandomPort() {
 
 function getUserSettings(serverName) {
     const file = path.join(getUserDir(serverName), 'panel_settings.json');
-    let def = { ram: '2G', jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '' }; 
+    let def = { ram: '2G', jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: false }; 
     if (fs.existsSync(file)) {
         try { return { ...def, ...JSON.parse(fs.readFileSync(file)) }; } catch(e){ return def; }
     } else {
@@ -131,7 +131,7 @@ function getUserSettings(serverName) {
 const activeServers = {}; 
 
 function getUserState(serverName) {
-    if (!activeServers[serverName]) activeServers[serverName] = { process: null, logs: [], isRestarting: false, isDownloading: false, startTime: null, isStarting: false };
+    if (!activeServers[serverName]) activeServers[serverName] = { process: null, logs: [], isRestarting: false, isDownloading: false, startTime: null, isStarting: false, netBaseRx: 0, netBaseTx: 0, _restartKillTimer: null };
     return activeServers[serverName];
 }
 
@@ -251,7 +251,7 @@ app.post('/api/create-server', checkAuth, (req, res) => {
 app.post('/api/select-server', checkAuth, (req, res) => { req.session.currentServer = req.body.serverName; res.json({success: true}); });
 
 app.get('/api/settings', checkAuth, (req, res) => { res.json(getUserSettings(getServerName(req))); });
-app.post('/api/settings', checkAuth, (req, res) => { const srv = getServerName(req); const settings = getUserSettings(srv); if (req.body.ram) settings.ram = req.body.ram.trim(); if (req.body.jarFile) settings.jarFile = req.body.jarFile.trim(); if (req.body.ip !== undefined) settings.ip = req.body.ip.trim(); if (req.body.port) settings.port = String(req.body.port).trim(); if (req.body.engine) settings.engine = String(req.body.engine).trim(); fs.writeFileSync(path.join(getUserDir(srv), 'panel_settings.json'), JSON.stringify(settings)); res.send('Pengaturan disimpan'); });
+app.post('/api/settings', checkAuth, (req, res) => { const srv = getServerName(req); const settings = getUserSettings(srv); if (req.body.ram) settings.ram = req.body.ram.trim(); if (req.body.jarFile) settings.jarFile = req.body.jarFile.trim(); if (req.body.ip !== undefined) settings.ip = req.body.ip.trim(); if (req.body.port) settings.port = String(req.body.port).trim(); if (req.body.engine) settings.engine = String(req.body.engine).trim(); if (req.body.autoStart !== undefined) settings.autoStart = Boolean(req.body.autoStart); fs.writeFileSync(path.join(getUserDir(srv), 'panel_settings.json'), JSON.stringify(settings)); res.send('Pengaturan disimpan'); });
 app.get('/api/dashboard-stats', checkAuth, (req, res) => { const srv = getServerName(req); const username = req.session.username; const users = readUsers(); const userLimits = users[username]?.limits || { ram: 2048, cpu: 100, disk: 51200 }; const mcDir = getUserDir(srv); const state = getUserState(srv); function getDirSizeSync(dirPath) { let size = 0; try { const files = fs.readdirSync(dirPath); files.forEach(file => { const fullPath = path.join(dirPath, file); const stats = fs.statSync(fullPath); if (stats.isDirectory()) size += getDirSizeSync(fullPath); else size += stats.size; }); } catch (e) {} return size; } let diskBytes = getDirSizeSync(mcDir); if (state.process) { pidusage(state.process.pid, (err, stats) => { if (!err && stats) { res.json({ name: srv, cpu: stats.cpu.toFixed(2), ramUsed: stats.memory, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } else { res.json({ name: srv, cpu: "0.00", ramUsed: 0, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } }); } else { res.json({ name: srv, cpu: "0.00", ramUsed: 0, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } });
 function getRawDate(filePath) { try { if (!fs.existsSync(filePath)) return null; return fs.statSync(filePath).mtime.toISOString(); } catch (e) { return null; } }
 function formatBytes(bytes) { if (!+bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`; }
@@ -259,7 +259,7 @@ function formatBytes(bytes) { if (!+bytes) return '0 B'; const k = 1024, sizes =
 app.get('/api/files', checkAuth, (req, res) => { try { const mcDir = getUserDir(getServerName(req)); let subPath = req.query.path || ''; if (subPath.includes('..')) return res.status(403).json({ error: 'Akses ditolak!' }); let targetDir = path.join(mcDir, subPath); if (!fs.existsSync(targetDir)) targetDir = mcDir; const files = fs.readdirSync(targetDir, { withFileTypes: true }); let fileList = files.filter(dirent => !(subPath === '' && dirent.name === 'panel_settings.json')).map(dirent => { const currentFilePath = path.join(targetDir, dirent.name); let size = ''; if (!dirent.isDirectory()) { try { size = formatBytes(fs.statSync(currentFilePath).size); } catch(e){} } return { name: dirent.name, isDirectory: dirent.isDirectory(), path: subPath === '' ? dirent.name : `${subPath}/${dirent.name}`, date: getRawDate(currentFilePath), size: size }; }); fileList.sort((a, b) => (a.isDirectory === b.isDirectory) ? a.name.localeCompare(b.name) : (a.isDirectory ? -1 : 1)); res.json(fileList); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.get('/api/file', checkAuth, (req, res) => { let subPath = req.query.path || ''; if (subPath.includes('..')) return res.status(403).send("Akses ditolak!"); fs.readFile(path.join(getUserDir(getServerName(req)), subPath), 'utf8', (err, data) => res.send(err ? "Gagal membaca file" : data)); });
 
-// 🔥 FITUR DOWNLOAD FILE AMAN (DITAMBAHKAN DI SINI) 🔥
+// ðŸ”¥ FITUR DOWNLOAD FILE AMAN (DITAMBAHKAN DI SINI) ðŸ”¥
 app.get('/api/download', checkAuth, (req, res) => {
     let subPath = req.query.path || '';
     if (subPath.includes('..')) return res.status(403).send("Akses ditolak!");
@@ -273,7 +273,7 @@ app.get('/api/download', checkAuth, (req, res) => {
 app.post('/api/file', checkAuth, (req, res) => { let subPath = req.body.path || ''; if (subPath.includes('..')) return res.status(403).send("Akses ditolak!"); fs.writeFile(path.join(getUserDir(getServerName(req)), subPath), req.body.content, (err) => res.send(err ? "Gagal menyimpan" : "Tersimpan")); });
 app.post('/api/folder', checkAuth, (req, res) => { let subPath = req.body.path || ''; if (subPath.includes('..')) return res.status(403).send("Akses ditolak!"); try { fs.mkdirSync(path.join(getUserDir(getServerName(req)), subPath), { recursive: true }); res.send("OK"); } catch(e) { res.status(500).send("Err"); } });
 
-// === 🔥 SISTEM UPLOAD MANUAL (SOCKET.IO TRACKER) 🔥 ===
+// === ðŸ”¥ SISTEM UPLOAD MANUAL (SOCKET.IO TRACKER) ðŸ”¥ ===
 const tempUploadsDir = path.join(__dirname, 'tmp_uploads'); 
 if (!fs.existsSync(tempUploadsDir)) fs.mkdirSync(tempUploadsDir, { recursive: true });
 try { fs.readdirSync(tempUploadsDir).forEach(f => fs.unlinkSync(path.join(tempUploadsDir, f))); } catch(e){}
@@ -324,7 +324,7 @@ app.post('/api/upload', checkAuth, (req, res, next) => {
     }
 });
 
-// === 🔥 SISTEM REMOTE DOWNLOAD (BYPASS GDRIVE) 🔥 ===
+// === ðŸ”¥ SISTEM REMOTE DOWNLOAD (BYPASS GDRIVE) ðŸ”¥ ===
 function fetchWithRedirects(urlStr, cookies = '') {
     return new Promise((resolve) => {
         const parsedUrl = new URL(urlStr);
@@ -437,7 +437,29 @@ app.post('/api/extract', checkAuth, (req, res) => { const mcDir = getUserDir(get
 app.post('/api/archive', checkAuth, (req, res) => { const mcDir = getUserDir(getServerName(req)); const { items, archiveName, currentPath } = req.body; if (!items || !Array.isArray(items) || !archiveName || archiveName.includes('..')) return res.status(400).send("Data tidak valid"); const targetDir = path.join(mcDir, currentPath || ''); const archivePath = path.join(targetDir, archiveName.endsWith('.zip') ? archiveName : archiveName + '.zip'); const safeItems = items.filter(item => !item.includes('..')).map(item => `"${path.basename(item)}"`).join(' '); if (!safeItems) return res.status(400).send("Tidak ada item yang valid"); const cmd = `cd "${targetDir}" && zip -r "${archivePath}" ${safeItems}`; exec(cmd, (err, stdout, stderr) => { if (err) return res.status(500).send("Gagal membuat arsip: " + stderr); res.send("Berhasil diarsipkan"); }); });
 app.post('/api/move', checkAuth, (req, res) => { const mcDir = getUserDir(getServerName(req)); const { items, destination } = req.body; if (!items || !Array.isArray(items) || destination.includes('..')) return res.status(400).send("Data tidak valid"); const destPath = path.join(mcDir, destination); if (!fs.existsSync(destPath)) fs.mkdirSync(destPath, { recursive: true }); let errors = 0; items.forEach(itemPath => { if (itemPath.includes('..')) return; const fullPath = path.join(mcDir, itemPath); const newFullPath = path.join(destPath, path.basename(itemPath)); if (fs.existsSync(fullPath)) { try { fs.renameSync(fullPath, newFullPath); } catch (err) { errors++; } } }); if (errors > 0) return res.status(500).send(`Selesai tapi ada ${errors} file yang error dipindah`); res.send("Berhasil dipindahkan"); });
 
+function readNetStats() {
+    try {
+        const data = fs.readFileSync('/proc/net/dev', 'utf8');
+        let rx = 0, tx = 0;
+        const lines = data.split('\n').slice(2);
+        for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            if (parts.length < 10) continue;
+            const iface = parts[0].replace(':', '');
+            if (iface === 'lo' || iface === '') continue;
+            rx += parseInt(parts[1]) || 0;
+            tx += parseInt(parts[9]) || 0;
+        }
+        return { rx, tx, time: Date.now() };
+    } catch(e) { return { rx: 0, tx: 0, time: Date.now() }; }
+}
+
+let prevNetStats = readNetStats();
+
 setInterval(() => {
+    const curNet = readNetStats();
+    prevNetStats = curNet;
+
     let users = readUsers();
     for (const srvName in activeServers) {
         const state = activeServers[srvName]; const settings = getUserSettings(srvName);
@@ -450,15 +472,16 @@ setInterval(() => {
             continue; 
         }
         
+        const netInBytes = Math.max(0, curNet.rx - state.netBaseRx);
+        const netOutBytes = Math.max(0, curNet.tx - state.netBaseTx);
+
         pidusage(state.process.pid, (err, stats) => {
             if (!err && stats) { 
                 let cpuRaw = stats.cpu; if (cpuRaw > 0 && cpuRaw % 1 === 0) { cpuRaw += (Math.random() * 0.98 + 0.01); }
                 let cpuFormatted = cpuRaw.toFixed(2); let ramMB = stats.memory / (1024 * 1024);
-                
                 let currentStatus = state.isStarting ? 'starting' : 'running';
-
                 io.to(owner).emit('dashboard_stats', { serverName: srvName, cpu: cpuFormatted, ramMB: ramMB, isOnline: true, status: currentStatus });
-                io.to('panel_' + srvName).emit('stats', { cpu: cpuFormatted, ramMB: ramMB, startTime: state.startTime, address: displayAddress, status: currentStatus }); 
+                io.to('panel_' + srvName).emit('stats', { cpu: cpuFormatted, ramMB: ramMB, startTime: state.startTime, address: displayAddress, status: currentStatus, netIn: netInBytes, netOut: netOutBytes }); 
             }
         });
     }
@@ -499,7 +522,7 @@ io.on('connection', (socket) => {
     socket.on('command', (cmd) => { 
         let commandText = cmd.trim();
         
-        // 🔥 FITUR VPSINFO DENGAN TAMBAHAN HURUF 'B' (GB/MB) & CPU LOAD 🔥
+        // ðŸ”¥ FITUR VPSINFO DENGAN TAMBAHAN HURUF 'B' (GB/MB) & CPU LOAD ðŸ”¥
         if (commandText.toLowerCase() === 'vpsinfo') {
             const cpus = os.cpus();
             const totalRamNum = os.totalmem() / (1024 ** 3);
@@ -508,7 +531,7 @@ io.on('connection', (socket) => {
             const ramPercent = Math.round((usedRamNum / totalRamNum) * 100);
             const ramColor = ramPercent >= 80 ? '\x1b[1;31m' : (ramPercent >= 60 ? '\x1b[1;33m' : '\x1b[1;32m');
 
-            // --- ⚙️ SCRIPT TAMBAHAN UNTUK HITUNG CPU LOAD VPS ---
+            // --- âš™ï¸ SCRIPT TAMBAHAN UNTUK HITUNG CPU LOAD VPS ---
             const startCpu = os.cpus();
             setTimeout(() => {
                 const endCpu = os.cpus();
@@ -550,13 +573,13 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
                         } catch(e) {} 
                     }
                     
-                    userLog(`\n\x1b[1;35m=== 💻 SPESIFIKASI VPS (MANZ4VPS) ===\x1b[0m\n`);
-                    userLog(`\x1b[1;36m🖥️  OS Sistem   :\x1b[0m ${os.type()} ${os.release()} (${os.arch()})\n`);
-                    userLog(`\x1b[1;36m⚙️  Prosesor   :\x1b[0m ${cpus[0].model}\n`);
-                    userLog(`\x1b[1;36m🔥  Total Core :\x1b[0m ${cpus.length} Cores\n`);
-                    userLog(`\x1b[1;36m📈  CPU Load    :\x1b[0m ${cpuColor}${cpuPercent}%\x1b[0m\n`); // <--- INI TAMBAHAN FITUR CPU-NYA BRO
-                    userLog(`\x1b[1;36m💾  RAM         :\x1b[0m ${usedRamNum.toFixed(2)}GB / ${totalRamNum.toFixed(2)}GB (${ramColor}${ramPercent}%\x1b[0m) / free ${freeRamNum.toFixed(2)}GB\n`);
-                    userLog(`\x1b[1;36m💽  Disk Root   :\x1b[0m ${diskUsed} / ${diskTotal} (${diskColor}${diskPercent}\x1b[0m) / free ${diskFree}\n`);
+                    userLog(`\n\x1b[1;35m=== ðŸ’» SPESIFIKASI VPS (MANZ4VPS) ===\x1b[0m\n`);
+                    userLog(`\x1b[1;36mðŸ–¥ï¸  OS Sistem   :\x1b[0m ${os.type()} ${os.release()} (${os.arch()})\n`);
+                    userLog(`\x1b[1;36mâš™ï¸  Prosesor   :\x1b[0m ${cpus[0].model}\n`);
+                    userLog(`\x1b[1;36mðŸ”¥  Total Core :\x1b[0m ${cpus.length} Cores\n`);
+                    userLog(`\x1b[1;36mðŸ“ˆ  CPU Load    :\x1b[0m ${cpuColor}${cpuPercent}%\x1b[0m\n`); // <--- INI TAMBAHAN FITUR CPU-NYA BRO
+                    userLog(`\x1b[1;36mðŸ’¾  RAM         :\x1b[0m ${usedRamNum.toFixed(2)}GB / ${totalRamNum.toFixed(2)}GB (${ramColor}${ramPercent}%\x1b[0m) / free ${freeRamNum.toFixed(2)}GB\n`);
+                    userLog(`\x1b[1;36mðŸ’½  Disk Root   :\x1b[0m ${diskUsed} / ${diskTotal} (${diskColor}${diskPercent}\x1b[0m) / free ${diskFree}\n`);
                     userLog(`\x1b[1;35m====================================\x1b[0m\n\n`);
                 });
             }, 500); // Mengukur beban CPU dalam jeda 500ms agar akurat
@@ -589,13 +612,14 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
 
             state.process.stderr.on('data', (data) => userLog(`\x1b[31m${data.toString()}\x1b[0m`));
             state.process.on('close', (code) => {
-                userLog(`\x1b[31m☠️ Proses berhenti (Kode: ${code})\x1b[0m\n`);
+                userLog(`\x1b[31mâ˜ ï¸ Proses berhenti (Kode: ${code})\x1b[0m\n`);
                 pidusage.clear(); 
+                if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
                 state.process = null; 
                 state.startTime = null;
                 state.isStarting = false;
-                io.to('panel_' + activeServer).emit('stats', { cpu: "0.00", ramMB: 0, startTime: null, address: `${settings.ip}:${settings.port}`, status: 'offline' });
-                if (state.isRestarting) { state.isRestarting = false; setTimeout(startServer, 2000); }
+                io.to('panel_' + activeServer).emit('stats', { cpu: "0.00", ramMB: 0, startTime: null, address: `${settings.ip}:${settings.port}`, status: 'offline', netIn: 0, netOut: 0 });
+                if (state.isRestarting) { state.isRestarting = false; userLog(`\x1b[1;36m[Manz4VPS Daemon]:\x1b[0m Memulai ulang dalam 2 detik...\x1b[0m\n`); setTimeout(() => globalSpawn(activeServer), 2000); }
             });
         } catch(e) { 
             userLog(`\x1b[31mGagal eksekusi: ${e.message}\x1b[0m\n`); 
@@ -604,10 +628,11 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
     }
 
     function startServer() {
-        if (state.isDownloading) return userLog(`\x1b[33m⚠️ Sistem sedang mengunduh file. Harap tunggu.\x1b[0m\n`);
+        if (state.isDownloading) return userLog(`\x1b[33mâš ï¸ Sistem sedang mengunduh file. Harap tunggu.\x1b[0m\n`);
         if (state.process || state.isStarting) return; 
 
         state.isStarting = true;
+        const snap = readNetStats(); state.netBaseRx = snap.rx; state.netBaseTx = snap.tx;
         const settings = getUserSettings(activeServer);
 
         userLog(`\x1b[1;36m[Manz4VPS Daemon]:\x1b[0m Checking server disk space usage...\n`);
@@ -626,7 +651,7 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
                 
                 ensureJava(reqJavaVer, userLog, (err, javaPath) => {
                     if (err) {
-                        userLog(`\x1b[31m❌ Gagal menginstal Java ${reqJavaVer}: ${err.message}\x1b[0m\n`);
+                        userLog(`\x1b[31mâŒ Gagal menginstal Java ${reqJavaVer}: ${err.message}\x1b[0m\n`);
                         state.isStarting = false;
                         return;
                     }
@@ -638,27 +663,48 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
     }
 
     socket.on('start', () => startServer());
-    socket.on('restart', () => { if (state.process) { state.isRestarting = true; state.process.stdin.write('stop\n'); } else startServer(); });
-    socket.on('stop_aman', () => { if (state.process) { state.isRestarting = false; state.process.stdin.write('stop\n'); } });
+    socket.on('restart', () => {
+        if (state.process) {
+            state.isRestarting = true;
+            userLog(`\x1b[1;33m[Manz4VPS Daemon]:\x1b[0m Mengirim perintah restart...\n`);
+            try { state.process.stdin.write('stop\n'); } catch(e) {}
+            if (state._restartKillTimer) clearTimeout(state._restartKillTimer);
+            state._restartKillTimer = setTimeout(() => {
+                if (state.process && state.isRestarting) {
+                    userLog(`\x1b[1;33m[Manz4VPS Daemon]:\x1b[0m Proses tidak merespons dalam 45 detik, paksa berhenti...\n`);
+                    try { state.process.kill('SIGTERM'); } catch(e) {}
+                    setTimeout(() => { if (state.process && state.isRestarting) { try { state.process.kill('SIGKILL'); } catch(e) {} } }, 5000);
+                }
+            }, 45000);
+        } else { globalSpawn(activeServer); }
+    });
+    socket.on('stop_aman', () => {
+        if (state.process) {
+            state.isRestarting = false;
+            if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
+            state.process.stdin.write('stop\n');
+        }
+    });
     
     socket.on('kill_paksa', () => { 
         if (state.process) { 
-            state.isRestarting = false; 
-            try { state.process.kill('SIGKILL'); userLog(`\x1b[31m☠️ Proses dimatikan paksa (SIGKILL).\x1b[0m\n`); } catch(err) { }
+            state.isRestarting = false;
+            if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
+            try { state.process.kill('SIGKILL'); userLog(`\x1b[31mâ˜ ï¸ Proses dimatikan paksa (SIGKILL).\x1b[0m\n`); } catch(err) { }
             state.startTime = null;
             state.isStarting = false;
         } 
     });
     
-    socket.on('accept_eula', () => { try { fs.writeFileSync(path.join(mcDir, 'eula.txt'), 'eula=true'); userLog(`\x1b[32m✅ EULA disetujui. Memulai ulang...\x1b[0m\n`); setTimeout(startServer, 1000); } catch (e) { } });
+    socket.on('accept_eula', () => { try { fs.writeFileSync(path.join(mcDir, 'eula.txt'), 'eula=true'); userLog(`\x1b[32mâœ… EULA disetujui. Memulai ulang...\x1b[0m\n`); if (state.process) { state.isRestarting = true; try { state.process.stdin.write('stop\n'); } catch(e) {} } else { setTimeout(() => globalSpawn(activeServer), 2000); } } catch (e) { } });
     
     socket.on('download_jar', (url, versionName, isCleanInstall) => {
-        if (state.isDownloading) return userLog(`\x1b[33m⚠️ Proses unduhan lain sedang berjalan.\x1b[0m\n`);
-        if (state.process) return userLog(`\x1b[31m❌ GAGAL: Server masih menyala!\x1b[0m\n`);
+        if (state.isDownloading) return userLog(`\x1b[33mâš ï¸ Proses unduhan lain sedang berjalan.\x1b[0m\n`);
+        if (state.process) return userLog(`\x1b[31mâŒ GAGAL: Server masih menyala!\x1b[0m\n`);
         state.isDownloading = true; io.to('panel_' + activeServer).emit('download_lock_state', true); 
         
         if (isCleanInstall) {
-            userLog(`\x1b[33m🧹 Melakukan WIPE (Sapu Bersih) seluruh file...\x1b[0m\n`);
+            userLog(`\x1b[33mðŸ§¹ Melakukan WIPE (Sapu Bersih) seluruh file...\x1b[0m\n`);
             try {
                 const files = fs.readdirSync(mcDir);
                 files.forEach(file => { if (file !== 'panel_settings.json') { try { fs.rmSync(path.join(mcDir, file), { recursive: true, force: true }); } catch (err) {} } });
@@ -668,14 +714,14 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
             if (fs.existsSync(jarPath)) { try { if (fs.existsSync(backupPath)) fs.rmSync(backupPath, { force: true }); fs.renameSync(jarPath, backupPath); } catch(e) {} }
         }
         
-        userLog(`\x1b[33m⏳ Memulai pengunduhan ${versionName}...\x1b[0m\n`);
+        userLog(`\x1b[33mâ³ Memulai pengunduhan ${versionName}...\x1b[0m\n`);
         const downloader = spawn('curl', ['-L', '-#', '-o', 'server.jar', url], { cwd: mcDir });
         downloader.on('close', (code) => {
             state.isDownloading = false; io.to('panel_' + activeServer).emit('download_lock_state', false); 
             if(code === 0) { 
-                userLog(`\x1b[32m✅ SUKSES! ${versionName} siap dimainkan.\x1b[0m\n`); io.to('panel_' + activeServer).emit('download_success_toast'); 
+                userLog(`\x1b[32mâœ… SUKSES! ${versionName} siap dimainkan.\x1b[0m\n`); io.to('panel_' + activeServer).emit('download_success_toast'); 
                 const settings = getUserSettings(activeServer); settings.installedVersion = versionName; fs.writeFileSync(path.join(mcDir, 'panel_settings.json'), JSON.stringify(settings));
-            } else { userLog(`\x1b[31m❌ Unduhan gagal. (Kode: ${code})\x1b[0m\n`); }
+            } else { userLog(`\x1b[31mâŒ Unduhan gagal. (Kode: ${code})\x1b[0m\n`); }
         });
     });
 
@@ -683,17 +729,84 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
         if (state.isDownloading) return;
         state.isDownloading = true; io.to('panel_' + activeServer).emit('download_lock_state', true); 
         const pluginsDir = path.join(mcDir, 'plugins'); if (!fs.existsSync(pluginsDir)) fs.mkdirSync(pluginsDir, { recursive: true });
-        userLog(`\x1b[33m⏳ Mengunduh plugin: ${filename}...\x1b[0m\n`);
+        userLog(`\x1b[33mâ³ Mengunduh plugin: ${filename}...\x1b[0m\n`);
         const downloader = spawn('curl', ['-L', '-#', '-o', filename, url], { cwd: pluginsDir });
         downloader.on('close', (code) => {
             state.isDownloading = false; io.to('panel_' + activeServer).emit('download_lock_state', false); 
-            if(code === 0) { userLog(`\x1b[32m✅ SUKSES! Plugin ${filename} berhasil dipasang.\x1b[0m\n`); io.to('panel_' + activeServer).emit('plugin_success_toast', filename); } 
-            else { userLog(`\x1b[31m❌ Gagal mengunduh plugin.\x1b[0m\n`); }
+            if(code === 0) { userLog(`\x1b[32mâœ… SUKSES! Plugin ${filename} berhasil dipasang.\x1b[0m\n`); io.to('panel_' + activeServer).emit('plugin_success_toast', filename); } 
+            else { userLog(`\x1b[31mâŒ Gagal mengunduh plugin.\x1b[0m\n`); }
         });
     });
 });
 
-const PTERO_PORT = 443;
+function globalSpawn(srvName) {
+    const state = getUserState(srvName);
+    if (state.process || state.isStarting || state.isDownloading) return;
+    const settings = getUserSettings(srvName);
+    const mcDir = getUserDir(srvName);
+    const uLog = (msg) => { state.logs.push(msg); if (state.logs.length > 300) state.logs.shift(); io.to('panel_' + srvName).emit('log', msg); };
+    const snap = readNetStats(); state.netBaseRx = snap.rx; state.netBaseTx = snap.tx;
+    state.isStarting = true;
+
+    const doSpawn = (cmd, args) => {
+        uLog(`\x1b[38;2;234;179;8m\x1b[1mcontainer@manz4vps~\x1b[0m ${cmd} ${args.join(' ')}\n`);
+        try {
+            state.process = spawn(cmd, args, { cwd: mcDir, env: { ...process.env, TZ: 'Asia/Jakarta' } });
+            state.startTime = Date.now();
+            state.process.stdout.on('data', d => { const o = d.toString(); uLog(o); if (o.includes('Done (') || /bot is online|ready|listening on port/i.test(o)) state.isStarting = false; });
+            state.process.stderr.on('data', d => uLog(`\x1b[31m${d.toString()}\x1b[0m`));
+            state.process.on('close', code => {
+                uLog(`\x1b[31mâ˜ ï¸ Proses berhenti (Kode: ${code})\x1b[0m\n`);
+                pidusage.clear();
+                if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
+                state.process = null; state.startTime = null; state.isStarting = false;
+                const s2 = getUserSettings(srvName);
+                io.to('panel_' + srvName).emit('stats', { cpu: "0.00", ramMB: 0, startTime: null, address: `${s2.ip}:${s2.port}`, status: 'offline', netIn: 0, netOut: 0 });
+                if (state.isRestarting) {
+                    state.isRestarting = false;
+                    uLog(`\x1b[1;36m[Manz4VPS Daemon]:\x1b[0m Memulai ulang dalam 2 detik...\n`);
+                    setTimeout(() => globalSpawn(srvName), 2000);
+                }
+            });
+        } catch(e) { uLog(`\x1b[31mGagal: ${e.message}\x1b[0m\n`); state.isStarting = false; }
+    };
+
+    if (settings.engine === 'node') {
+        doSpawn('sh', ['-c', `if [ -d .git ]; then git pull; fi; if [ -f package.json ]; then npm install; fi; exec node "${settings.jarFile}"`]);
+    } else if (settings.engine === 'python') {
+        doSpawn('python3', [settings.jarFile]);
+    } else {
+        const reqJavaVer = getRequiredJavaVersion(settings.installedVersion);
+        ensureJava(reqJavaVer, uLog, (err, javaPath) => {
+            if (err) { uLog(`\x1b[31mâŒ Gagal Java: ${err.message}\x1b[0m\n`); state.isStarting = false; return; }
+            doSpawn(javaPath, ['-Xms128M', '-Xmx' + settings.ram, '-Djline.terminal=jline.UnsupportedTerminal', '-jar', settings.jarFile, 'nogui', '--port', settings.port]);
+        });
+    }
+}
+
+function bootAutoStart() {
+    setTimeout(() => {
+        try {
+            const users = readUsers();
+            for (const username in users) {
+                const userServers = users[username].servers || [];
+                userServers.forEach(srvName => {
+                    try {
+                        const settings = getUserSettings(srvName);
+                        if (!settings.autoStart) return;
+                        const state = getUserState(srvName);
+                        const uLog = (msg) => { state.logs.push(msg); if (state.logs.length > 300) state.logs.shift(); io.to('panel_' + srvName).emit('log', msg); };
+                        uLog(`\x1b[1;36m[Manz4VPS Daemon]:\x1b[0m Auto Start aktif. Memulai server ${srvName}...\n`);
+                        globalSpawn(srvName);
+                    } catch(e) {}
+                });
+            }
+        } catch(e) {}
+    }, 3000);
+}
+
+const PTERO_PORT = process.env.PORT || 5000;
 server.listen(PTERO_PORT, '0.0.0.0', () => {
-    console.log(`\x1b[32m🚀 PANEL V26 (ULTIMATE)\x1b[0m`);
+    console.log(`\x1b[32mðŸš€ PANEL V26 (ULTIMATE)\x1b[0m`);
+    bootAutoStart();
 });
