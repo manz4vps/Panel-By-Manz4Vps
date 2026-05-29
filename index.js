@@ -531,7 +531,7 @@ io.on('connection', (socket) => {
             const ramPercent = Math.round((usedRamNum / totalRamNum) * 100);
             const ramColor = ramPercent >= 80 ? '\x1b[1;31m' : (ramPercent >= 60 ? '\x1b[1;33m' : '\x1b[1;32m');
 
-            // --- âš™ï¸ SCRIPT TAMBAHAN UNTUK HITUNG CPU LOAD VPS ---
+            // --- ⚙️ SCRIPT TAMBAHAN UNTUK HITUNG CPU LOAD VPS ---
             const startCpu = os.cpus();
             setTimeout(() => {
                 const endCpu = os.cpus();
@@ -573,13 +573,13 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
                         } catch(e) {} 
                     }
                     
-                    userLog(`\n\x1b[1;35m=== ðŸ’» SPESIFIKASI VPS (MANZ4VPS) ===\x1b[0m\n`);
-                    userLog(`\x1b[1;36mðŸ–¥ï¸  OS Sistem   :\x1b[0m ${os.type()} ${os.release()} (${os.arch()})\n`);
-                    userLog(`\x1b[1;36mâš™ï¸  Prosesor   :\x1b[0m ${cpus[0].model}\n`);
-                    userLog(`\x1b[1;36mðŸ”¥  Total Core :\x1b[0m ${cpus.length} Cores\n`);
-                    userLog(`\x1b[1;36mðŸ“ˆ  CPU Load    :\x1b[0m ${cpuColor}${cpuPercent}%\x1b[0m\n`); // <--- INI TAMBAHAN FITUR CPU-NYA BRO
-                    userLog(`\x1b[1;36mðŸ’¾  RAM         :\x1b[0m ${usedRamNum.toFixed(2)}GB / ${totalRamNum.toFixed(2)}GB (${ramColor}${ramPercent}%\x1b[0m) / free ${freeRamNum.toFixed(2)}GB\n`);
-                    userLog(`\x1b[1;36mðŸ’½  Disk Root   :\x1b[0m ${diskUsed} / ${diskTotal} (${diskColor}${diskPercent}\x1b[0m) / free ${diskFree}\n`);
+                    userLog(`\n\x1b[1;35m=== 💻 SPESIFIKASI VPS (MANZ4VPS) ===\x1b[0m\n`);
+                    userLog(`\x1b[1;36m🖥️  OS Sistem   :\x1b[0m ${os.type()} ${os.release()} (${os.arch()})\n`);
+                    userLog(`\x1b[1;36m⚙️  Prosesor   :\x1b[0m ${cpus[0].model}\n`);
+                    userLog(`\x1b[1;36m🔥  Total Core :\x1b[0m ${cpus.length} Cores\n`);
+                    userLog(`\x1b[1;36m📈  CPU Load    :\x1b[0m ${cpuColor}${cpuPercent}%\x1b[0m\n`); // <--- INI TAMBAHAN FITUR CPU-NYA BRO
+                    userLog(`\x1b[1;36m💾  RAM         :\x1b[0m ${usedRamNum.toFixed(2)}GB / ${totalRamNum.toFixed(2)}GB (${ramColor}${ramPercent}%\x1b[0m) / free ${freeRamNum.toFixed(2)}GB\n`);
+                    userLog(`\x1b[1;36m💽  Disk Root   :\x1b[0m ${diskUsed} / ${diskTotal} (${diskColor}${diskPercent}\x1b[0m) / free ${diskFree}\n`);
                     userLog(`\x1b[1;35m====================================\x1b[0m\n\n`);
                 });
             }, 500); // Mengukur beban CPU dalam jeda 500ms agar akurat
