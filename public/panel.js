@@ -19,7 +19,25 @@ function parseRamToMB(ramStr) {
     return Math.round(val);
 }
 
-function showToast(message, type = 'success') { const container = document.getElementById('toast-container'); if(!container) return; if (container.children.length >= 5) container.removeChild(container.firstChild); const toast = document.createElement('div'); const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600'; const icon = type === 'success' ? '✅' : '⚠️'; let cleanMsg = message.replace(/^[✅⚠️❌]\s*/, ''); toast.className = `${bgColor} text-white p-4 rounded-xl flex items-center gap-3 font-bold toast-animate shadow-xl z-[999]`; toast.innerHTML = `<span class="text-xl">${icon}</span> <span class="text-sm">${cleanMsg}</span>`; container.appendChild(toast); setTimeout(() => { toast.classList.add('toast-fade'); setTimeout(() => toast.remove(), 500); }, 3000); }
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    if (container.children.length >= 4) container.removeChild(container.firstChild);
+    let cleanMsg = message.replace(/^[✅⚠️❌🔄]\s*/, '');
+    const configs = {
+        success: { bar: 'bg-green-500', icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`, iconBg: 'bg-green-500/20 text-green-400' },
+        error:   { bar: 'bg-red-500',   icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`, iconBg: 'bg-red-500/20 text-red-400' },
+        info:    { bar: 'bg-blue-500',  icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01"/></svg>`, iconBg: 'bg-blue-500/20 text-blue-400' },
+    };
+    const cfg = configs[type] || configs.success;
+    const toast = document.createElement('div');
+    toast.style.cssText = 'transform:translateX(110%);transition:transform 0.3s cubic-bezier(.34,1.56,.64,1),opacity 0.3s;opacity:0;';
+    toast.className = 'relative flex items-center gap-3 bg-slate-900 border border-slate-700/80 rounded-2xl px-4 py-3 shadow-2xl overflow-hidden min-w-[220px] max-w-[320px]';
+    toast.innerHTML = `<div class="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center ${cfg.iconBg}">${cfg.icon}</div><p class="text-white font-semibold text-sm leading-tight flex-1">${cleanMsg}</p><div class="absolute bottom-0 left-0 h-0.5 ${cfg.bar} rounded-full toast-bar" style="width:100%;transition:width 3s linear;"></div>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => { requestAnimationFrame(() => { toast.style.transform = 'translateX(0)'; toast.style.opacity = '1'; setTimeout(() => { const bar = toast.querySelector('.toast-bar'); if(bar) bar.style.width = '0%'; }, 50); }); });
+    setTimeout(() => { toast.style.transform = 'translateX(110%)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 350); }, 3200);
+}
 function copyIp() { const ipEl = document.getElementById('stat-ip-text'); if(!ipEl) return; const ipText = ipEl.innerText; if (!ipText || ipText === 'Memuat...' || ipText === 'Offline') return; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(ipText).then(() => showToast('📋 IP disalin', 'success')).catch(err => {}); } else { let textArea = document.createElement("textarea"); textArea.value = ipText; textArea.style.position = "fixed"; textArea.style.opacity = "0"; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try { if (document.execCommand('copy')) showToast('📋 IP disalin', 'success'); } catch (err) {} document.body.removeChild(textArea); } }
 function toggleMenu(event, menuId) { event.stopPropagation(); closeAllDropdowns(); const menu = document.getElementById(menuId); if (menu) menu.classList.remove('hidden'); } 
 function closeAllDropdowns() { document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden')); }
@@ -119,8 +137,8 @@ setInterval(() => {
         latestStats.cpu = 0; latestStats.ram = 0; latestStats.netIn = 0; latestStats.netOut = 0;
         if(cpuText) cpuText.innerHTML = `<span class="text-slate-400">Offline</span>`; 
         if(ramText) ramText.innerHTML = `<span class="text-slate-400">Offline</span>`;
-        if(netInText) netInText.innerHTML = `0 B`;
-        if(netOutText) netOutText.innerHTML = `0 B`;
+        if(netInText) netInText.innerHTML = `<span class="text-slate-400">Offline</span>`;
+        if(netOutText) netOutText.innerHTML = `<span class="text-slate-400">Offline</span>`;
     } else {
         if(cpuText) cpuText.innerHTML = `${latestStats.cpu.toFixed(2)}%`; 
         if(ramText) ramText.innerHTML = `${formatMB(latestStats.ram)}`;
@@ -280,18 +298,26 @@ function showTab(tab, addToHistory = true) {
     if(tab === 'versions') { const vmCat = document.getElementById('vm-category'); if(document.getElementById('vm-software') && document.getElementById('vm-software').options.length === 0) updateSubCategory(); }
     if (addToHistory && tab !== 'files' && tab !== 'edit' && window.location.hash !== '#' + tab) history.pushState({ tab: tab }, '', '#' + tab);
     if (tab === 'edit' && typeof editor !== 'undefined' && editor) setTimeout(() => { editor.refresh(); }, 150);
+    if (tab === 'console' && typeof smoothScrollToBottom === 'function') setTimeout(() => smoothScrollToBottom(true), 80);
     setTimeout(() => { if (window.finishProgress) window.finishProgress(); }, 150);
 }
 
 window.addEventListener('popstate', (event) => { let hash = window.location.hash.replace('#', ''); if (hash.startsWith('edit/') || hash.startsWith('files')) { return; } else if (['console', 'versions', 'plugins', 'network', 'startup', 'settings'].includes(hash)) { showTab(hash, false); } else if (hash === '') { showTab('console', false); } });
-window.onload = async () => { 
+window.onload = async () => {
     let hashFull = window.location.hash.replace('#', ''); let initialTab = 'console';
-    if (hashFull.startsWith('files')) { initialTab = 'files'; let path = hashFull.replace('files', ''); if (path.startsWith('/')) path = path.substring(1); if(typeof currentPath !== 'undefined') currentPath = path; } 
+    if (hashFull.startsWith('files')) { initialTab = 'files'; let path = hashFull.replace('files', ''); if (path.startsWith('/')) path = path.substring(1); if(typeof currentPath !== 'undefined') currentPath = path; }
     else if (hashFull.startsWith('edit/')) { initialTab = 'edit'; } else if (['versions', 'plugins', 'network', 'startup', 'settings'].includes(hashFull)) { initialTab = hashFull; } else { initialTab = localStorage.getItem('activeTab') || 'console'; }
     history.replaceState(null, '', '#' + (hashFull || initialTab));
-    try { await loadSettings(); if (initialTab === 'files' && typeof loadFiles === 'function') loadFiles(typeof currentPath !== 'undefined' ? currentPath : '', false); if (initialTab === 'edit' && typeof openFile === 'function') { let filePath = hashFull.replace('edit/', ''); if(typeof currentPath !== 'undefined') currentPath = filePath.substring(0, filePath.lastIndexOf('/')) || ''; openFile(filePath, filePath.split('/').pop(), false); } } catch(e) {}
     showTab(initialTab, false);
-    const loader = document.getElementById('page-loader'); if (loader) { loader.classList.add('opacity-0'); setTimeout(() => { loader.classList.add('hidden'); }, 300); }
+    // Hide loader immediately — don't wait for API calls
+    const loader = document.getElementById('page-loader');
+    if (loader) { loader.style.transition = 'opacity 0.15s'; loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 150); }
+    // Load settings in background after UI is visible
+    try {
+        await loadSettings();
+        if (initialTab === 'files' && typeof loadFiles === 'function') loadFiles(typeof currentPath !== 'undefined' ? currentPath : '', false);
+        if (initialTab === 'edit' && typeof openFile === 'function') { let filePath = hashFull.replace('edit/', ''); if(typeof currentPath !== 'undefined') currentPath = filePath.substring(0, filePath.lastIndexOf('/')) || ''; openFile(filePath, filePath.split('/').pop(), false); }
+    } catch(e) {}
 };
 
 function updateCommandPreview() { const engineEl = document.getElementById('set-engine'); const ramEl = document.getElementById('set-ram'); const jarEl = document.getElementById('set-jar'); const previewEl = document.getElementById('cmd-preview'); if(!engineEl || !previewEl) return; const engine = engineEl.value || 'java'; const ram = ramEl ? (ramEl.value || '2G') : '2G'; const jar = jarEl ? (jarEl.value || 'server.jar') : 'server.jar'; let cmd = ''; if (engine === 'node') cmd = `node ${jar}`; else if (engine === 'python') cmd = `python3 ${jar}`; else cmd = `java -Xmx${ram} -Xms128M -jar ${jar} nogui`; previewEl.innerText = cmd; }
@@ -309,15 +335,132 @@ function switchPluginTab(tab) {
     if (tab === 'search') { searchControl.style.display = 'block'; installedControl.style.display = 'none'; searchResults.style.display = 'grid'; installedResults.style.display = 'none'; btnSearch.className = "flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors bg-blue-600 text-white shadow"; btnInstalled.className = "flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors text-slate-400 hover:text-white hover:bg-slate-800"; if(searchResults.innerHTML === '') loadDefaultPlugins(); } else { searchControl.style.display = 'none'; installedControl.style.display = 'block'; searchResults.style.display = 'none'; installedResults.style.display = 'grid'; btnInstalled.className = "flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors bg-blue-600 text-white shadow"; btnSearch.className = "flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors text-slate-400 hover:text-white hover:bg-slate-800"; loadInstalledPlugins(); }
 }
 function renderPlugins(hits) { const resultsDiv = document.getElementById('pluginSearchResults'); if (hits.length === 0) { if(resultsDiv) resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10">❌ Plugin tidak ditemukan. Coba kata kunci lain.</p>'; return; } if(resultsDiv) resultsDiv.innerHTML = hits.map(plugin => `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between hover:border-blue-500 transition shadow-lg relative overflow-hidden group"><div class="flex items-start gap-3 mb-4"><img src="${plugin.icon_url || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover bg-slate-900 border border-slate-600"><div class="overflow-hidden"><h3 class="font-black text-blue-400 text-base truncate" title="${plugin.title}">${plugin.title}</h3><p class="text-xs text-slate-400 truncate mt-0.5">By ${plugin.author || 'Unknown'}</p></div></div><button onclick="openPluginVersionModal('${plugin.project_id}', '${plugin.title.replace(/'/g, "\\'")}', '${plugin.icon_url || ''}')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> PILIH VERSI</button></div>`).join(''); }
-async function loadDefaultPlugins() { if (window.startProgress) window.startProgress(); const resultsDiv = document.getElementById('pluginSearchResults'); if(resultsDiv) resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10 animate-pulse">Memuat daftar plugin populer...</p>'; try { const res = await fetch(`https://api.modrinth.com/v2/search?facets=[["project_type:plugin"]]&index=downloads&limit=12`); const data = await res.json(); renderPlugins(data.hits); } catch(e) { if(resultsDiv) resultsDiv.innerHTML = '<p class="text-red-400 col-span-full text-center py-10">Gagal mengambil data dari Modrinth.</p>'; } finally { if (window.finishProgress) window.finishProgress(); } }
+async function loadDefaultPlugins() { if (window.startProgress) window.startProgress(); const resultsDiv = document.getElementById('pluginSearchResults'); if(resultsDiv) resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10 animate-pulse">Memuat plugin populer...</p>'; try { const res = await fetch(`https://api.modrinth.com/v2/search?facets=[["project_type:plugin"]]&index=downloads&limit=12`); const data = await res.json(); renderPlugins(data.hits); } catch(e) { if(resultsDiv) resultsDiv.innerHTML = '<p class="text-red-400 col-span-full text-center py-10">Gagal mengambil data dari Modrinth.</p>'; } finally { if (window.finishProgress) window.finishProgress(); } }
 async function searchPlugins() { const queryEl = document.getElementById('pluginSearchQuery'); if(!queryEl) return; const input = queryEl.value.trim(); if (!input) { loadDefaultPlugins(); return; } if (window.startProgress) window.startProgress(); const resultsDiv = document.getElementById('pluginSearchResults'); if(resultsDiv) resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10 animate-pulse">Mencari plugin...</p>'; try { const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(input)}&facets=[["project_type:plugin"]]&limit=15`); const data = await res.json(); if (input.toLowerCase().includes('vault')) { data.hits.unshift({ project_id: 'vault-original-bypass', title: 'Vault (Original by MilkBowl)', icon_url: 'https://cdn-icons-png.flaticon.com/512/2621/2621062.png', author: 'MilkBowl' }); } renderPlugins(data.hits); } catch(e) { if(resultsDiv) resultsDiv.innerHTML = '<p class="text-red-400 col-span-full text-center py-10">Pencarian gagal.</p>'; } finally { if (window.finishProgress) window.finishProgress(); } }
 async function loadInstalledPlugins() { const resultsDiv = document.getElementById('pluginInstalledResults'); resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10 animate-pulse">Membaca folder plugins/ ...</p>'; await fetch('/api/folder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ path: 'plugins' }) }); try { const res = await fetch('/api/files?path=plugins'); const files = await res.json(); const jars = files.filter(f => !f.isDirectory && f.name.endsWith('.jar')); if (jars.length === 0) { resultsDiv.innerHTML = '<p class="text-slate-500 col-span-full text-center py-10 font-bold">📂 Belum ada plugin yang terpasang.</p>'; return; } resultsDiv.innerHTML = jars.map(jar => `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between shadow-lg relative overflow-hidden"><div class="flex items-start gap-3 mb-4"><div class="w-10 h-10 rounded-lg bg-slate-900 border border-slate-600 flex items-center justify-center text-xl shrink-0">🧩</div><div class="overflow-hidden w-full"><h3 class="font-black text-slate-200 text-sm truncate" title="${jar.name}">${jar.name}</h3><p class="text-xs text-slate-500 truncate mt-0.5">${jar.size}</p></div></div><div id="update-status-${jar.name.replace(/[^a-zA-Z0-9]/g, '')}"><button onclick="checkSingleUpdate('${jar.name}')" class="w-full bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg font-bold text-xs text-slate-300 shadow transition active:scale-95 flex items-center justify-center gap-2">🔄 CEK UPDATE</button></div></div>`).join(''); checkInstalledUpdates(); } catch (e) { resultsDiv.innerHTML = '<p class="text-red-400 col-span-full text-center py-10 font-bold">❌ Gagal membaca isi folder plugins.</p>'; } }
-async function checkSingleUpdate(filename) { const safeId = filename.replace(/[^a-zA-Z0-9]/g, ''); const statusDiv = document.getElementById(`update-status-${safeId}`); if(!statusDiv) return; statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-400 flex items-center justify-center gap-2 cursor-not-allowed animate-pulse border border-slate-700">⏳ MENGECEK...</button>`; try { let cleanName = filename.replace(/-?\d+(\.\d+)*(-.*)?\.jar/i, '').trim(); if(cleanName === '') cleanName = filename.replace('.jar', ''); const searchRes = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(cleanName)}&facets=[["project_type:plugin"]]&limit=1`); const searchData = await searchRes.json(); if (searchData.hits.length === 0) { statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed">❔ TIDAK KETEMU DI MODRINTH</button>`; return; } const projectId = searchData.hits[0].project_id; const loaders = encodeURIComponent('["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]'); const verRes = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?loaders=${loaders}`); const versions = await verRes.json(); if (!versions || versions.length === 0) { statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed">✅ UP TO DATE</button>`; return; } const latestVersion = versions[0]; const latestFile = latestVersion.files.find(f => f.primary) || latestVersion.files[0]; if (latestFile.filename === filename) { statusDiv.innerHTML = `<button disabled class="w-full bg-green-500/10 py-2.5 rounded-lg font-bold text-xs text-green-500 border border-green-500/20 cursor-not-allowed">✅ UP TO DATE</button>`; } else { statusDiv.innerHTML = `<button onclick="executePluginUpdate('${filename}', '${latestFile.url}', '${latestFile.filename}')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2">🚀 PERBARUI (V.${latestVersion.version_number})</button>`; } } catch (e) { statusDiv.innerHTML = `<button onclick="checkSingleUpdate('${filename}')" class="w-full bg-red-500/20 hover:bg-red-500/30 py-2.5 rounded-lg font-bold text-xs text-red-400 border border-red-500/30 transition active:scale-95">⚠️ GAGAL CEK (COBA LAGI)</button>`; } }
+async function checkSingleUpdate(filename) {
+    const safeId = filename.replace(/[^a-zA-Z0-9]/g, '');
+    const statusDiv = document.getElementById(`update-status-${safeId}`);
+    if(!statusDiv) return;
+    statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-400 flex items-center justify-center gap-2 cursor-not-allowed animate-pulse border border-slate-700">⏳ MENGECEK...</button>`;
+    try {
+        // Strip version numbers and everything after from filename to get clean plugin name
+        // e.g. "TAB v6.0.2 - Vanilla.jar" → "TAB", "SkinRestorer-15.0.0.jar" → "SkinRestorer"
+        let cleanName = filename
+            .replace(/\.jar$/i, '')
+            .replace(/[\s\-_]v?\d+[\d._\-].*$/i, '')  // remove from first version-like number to end
+            .replace(/[\s\-_]+$/, '')
+            .trim();
+        if (!cleanName) cleanName = filename.replace(/\.jar$/i, '');
+
+        // Search with higher limit and find the best match by title similarity
+        const searchRes = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(cleanName)}&facets=[["project_type:plugin"]]&limit=5`);
+        const searchData = await searchRes.json();
+        if (!searchData.hits || searchData.hits.length === 0) {
+            statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed">❔ TIDAK KETEMU DI MODRINTH</button>`;
+            return;
+        }
+        // Pick the hit whose slug/title most closely matches the clean name
+        const lc = cleanName.toLowerCase();
+        const bestHit = searchData.hits.find(h => h.slug.toLowerCase() === lc || h.title.toLowerCase() === lc)
+            || searchData.hits.find(h => h.slug.toLowerCase().startsWith(lc) || h.title.toLowerCase().startsWith(lc))
+            || searchData.hits[0];
+
+        const loaders = encodeURIComponent('["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]');
+        const verRes = await fetch(`https://api.modrinth.com/v2/project/${bestHit.project_id}/version?loaders=${loaders}`);
+        const versions = await verRes.json();
+        if (!versions || versions.length === 0) {
+            statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed">✅ UP TO DATE</button>`;
+            return;
+        }
+        const latestVersion = versions.find(v => v.version_type === 'release') || versions[0];
+        const latestFile = _getBestFile(latestVersion.files);
+        if (!latestFile) { statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed">❔ FILE TIDAK DITEMUKAN</button>`; return; }
+        if (latestFile.filename === filename) {
+            statusDiv.innerHTML = `<button disabled class="w-full bg-green-500/10 py-2.5 rounded-lg font-bold text-xs text-green-500 border border-green-500/20 cursor-not-allowed">✅ UP TO DATE</button>`;
+        } else {
+            statusDiv.innerHTML = `<button onclick="executePluginUpdate('${filename}', '${latestFile.url}', '${latestFile.filename}')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2">🚀 PERBARUI ke V.${latestVersion.version_number}</button>`;
+        }
+    } catch (e) {
+        statusDiv.innerHTML = `<button onclick="checkSingleUpdate('${filename}')" class="w-full bg-red-500/20 hover:bg-red-500/30 py-2.5 rounded-lg font-bold text-xs text-red-400 border border-red-500/30 transition active:scale-95">⚠️ GAGAL CEK (COBA LAGI)</button>`;
+    }
+}
 async function checkInstalledUpdates(manual = false) { if(manual) showToast('Mengecek update plugin...', 'success'); const resultsDiv = document.getElementById('pluginInstalledResults'); const buttons = resultsDiv.querySelectorAll('button[onclick^="checkSingleUpdate"]'); for (let btn of buttons) { btn.click(); await new Promise(r => setTimeout(r, 500)); } }
 async function executePluginUpdate(oldFilename, newUrl, newFilename) { const safeId = oldFilename.replace(/[^a-zA-Z0-9]/g, ''); const statusDiv = document.getElementById(`update-status-${safeId}`); if(statusDiv) statusDiv.innerHTML = `<button disabled class="w-full bg-blue-800 py-2.5 rounded-lg font-bold text-xs text-blue-300 flex items-center justify-center gap-2 cursor-not-allowed animate-pulse">⏳ MENGUNDUH...</button>`; try { await fetch('/api/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items: [`plugins/${oldFilename}`] }) }); socket.emit('download_plugin', newUrl, newFilename); setTimeout(() => { loadInstalledPlugins(); }, 2500); } catch (e) { showToast('Gagal memperbarui', 'error'); } }
 let currentPluginData = [];
-async function openPluginVersionModal(projectId, title, iconUrl) { if (projectId === 'vault-original-bypass') { const vaultLink = 'https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar'; socket.emit('download_plugin', vaultLink, 'Vault.jar'); return; } const modal = document.getElementById('pluginVersionModal'); const titleEl = document.getElementById('pv-title'); const iconEl = document.getElementById('pv-icon'); const listEl = document.getElementById('pv-list'); if(!modal || !listEl) return; titleEl.innerText = title; if (iconUrl) { iconEl.src = iconUrl; iconEl.classList.remove('hidden'); } else { iconEl.classList.add('hidden'); } listEl.innerHTML = '<div class="flex flex-col items-center justify-center py-12 gap-3"><div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div><p class="text-slate-400 font-bold text-sm animate-pulse">Mencari versi untuk server Java...</p></div>'; modal.classList.remove('hidden'); filterPluginVersions('all', true); try { const loaders = encodeURIComponent('["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]'); const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?loaders=${loaders}`); currentPluginData = await res.json(); if (!currentPluginData || currentPluginData.length === 0) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold">❌ Plugin ini tidak memiliki versi untuk Spigot/Paper.</p>'; return; } renderVersionList(currentPluginData); } catch(e) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold">❌ Gagal mengambil daftar versi.</p>'; } }
-function renderVersionList(versionsArray) { const listEl = document.getElementById('pv-list'); if(!listEl) return; if (versionsArray.length === 0) { listEl.innerHTML = '<p class="text-center text-slate-500 py-10 font-bold">Tidak ada versi yang cocok dengan filter.</p>'; return; } listEl.innerHTML = versionsArray.map(v => { const isRelease = v.version_type === 'release'; const badgeColor = isRelease ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'; const file = v.files.find(f => f.primary) || v.files[0]; let gameVersions = 'Unspecified'; if (v.game_versions && v.game_versions.length > 0) { if (v.game_versions.length > 3) gameVersions = `${v.game_versions[0]} - ${v.game_versions[v.game_versions.length - 1]}`; else gameVersions = v.game_versions.join(', '); } return `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 hover:border-slate-500 transition"><div class="flex-1 overflow-hidden"><div class="flex items-center gap-2 mb-1.5"><span class="font-black text-white text-base truncate">${v.version_number}</span><span class="text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-widest ${badgeColor}">${v.version_type}</span></div><p class="text-xs text-slate-400 mb-1 truncate">${v.name}</p><p class="text-xs text-slate-500 font-mono"><b>MC:</b> ${gameVersions}</p></div><button onclick="downloadSpecificPlugin('${file.url}', '${file.filename}')" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 px-6 py-2.5 rounded-lg font-black text-white text-sm shadow transition active:scale-95 whitespace-nowrap shrink-0 flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> INSTALL</button></div>`; }).join(''); }
+let currentPluginPlatform = 'spigot';
+
+function setPluginPlatform(platform) {
+    currentPluginPlatform = platform;
+    ['spigot','fabric','neoforge','forge'].forEach(p => {
+        const btn = document.getElementById(`plt-${p}`);
+        if (!btn) return;
+        if (p === platform) {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-black transition border bg-green-600 text-white border-green-500 shadow';
+        } else {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-black transition border bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600';
+        }
+    });
+    const resultsDiv = document.getElementById('pluginSearchResults');
+    if (resultsDiv) resultsDiv.innerHTML = '';
+    const query = document.getElementById('pluginSearchQuery');
+    if (query && query.value.trim()) { searchPlugins(); } else { loadDefaultPlugins(); }
+}
+
+function _getPlatformConfig() {
+    if (currentPluginPlatform === 'fabric') return { type: 'mod', loaders: '["fabric"]', label: 'Fabric' };
+    if (currentPluginPlatform === 'neoforge') return { type: 'mod', loaders: '["neoforge"]', label: 'NeoForge' };
+    if (currentPluginPlatform === 'forge') return { type: 'mod', loaders: '["forge"]', label: 'Forge' };
+    return { type: 'plugin', loaders: '["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]', label: 'Spigot/Paper' };
+}
+
+async function openPluginVersionModal(projectId, title, iconUrl) { if (projectId === 'vault-original-bypass') { const vaultLink = 'https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar'; socket.emit('download_plugin', vaultLink, 'Vault.jar'); return; } const modal = document.getElementById('pluginVersionModal'); const titleEl = document.getElementById('pv-title'); const iconEl = document.getElementById('pv-icon'); const listEl = document.getElementById('pv-list'); if(!modal || !listEl) return; titleEl.innerText = title; if (iconUrl) { iconEl.src = iconUrl; iconEl.classList.remove('hidden'); } else { iconEl.classList.add('hidden'); } listEl.innerHTML = '<div class="flex flex-col items-center justify-center py-12 gap-3"><div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div><p class="text-slate-400 font-bold text-sm animate-pulse">Memuat versi...</p></div>'; modal.classList.remove('hidden'); filterPluginVersions('all', true); try { const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`); currentPluginData = await res.json(); if (!currentPluginData || currentPluginData.length === 0) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold">❌ Tidak ada versi tersedia.</p>'; return; } renderVersionList(currentPluginData); } catch(e) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold">❌ Gagal mengambil daftar versi.</p>'; } }
+function _getBestFile(files) {
+    if (!files || files.length === 0) return null;
+    const n = f => f.filename.toLowerCase();
+    // Always pick spigot-compatible file: avoid fabric/neoforge/forge labeled files
+    const spigotFile = files.find(f => !n(f).includes('fabric') && !n(f).includes('neoforge') && !n(f).includes('-forge') && f.primary);
+    if (spigotFile) return spigotFile;
+    const anySpigot = files.find(f => !n(f).includes('fabric') && !n(f).includes('neoforge') && !n(f).includes('-forge'));
+    return anySpigot || files.find(f => f.primary) || files[0];
+}
+
+function _getLoaderBadges(loaders) {
+    if (!loaders || loaders.length === 0) return '';
+    const known = ['paper','spigot','purpur','bukkit','folia','waterfall','velocity','fabric','neoforge','forge','quilt'];
+    const show = loaders.filter(l => known.includes(l.toLowerCase()));
+    if (show.length === 0) return '';
+    const colors = { fabric: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', neoforge: 'bg-orange-500/20 text-orange-300 border-orange-500/30', forge: 'bg-red-500/20 text-red-300 border-red-500/30', quilt: 'bg-purple-500/20 text-purple-300 border-purple-500/30' };
+    return show.map(l => { const c = colors[l.toLowerCase()] || 'bg-slate-600/50 text-slate-300 border-slate-500/30'; return `<span class="text-[9px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${c}">${l}</span>`; }).join(' ');
+}
+
+function renderVersionList(versionsArray) {
+    const listEl = document.getElementById('pv-list');
+    if(!listEl) return;
+    if (versionsArray.length === 0) { listEl.innerHTML = '<p class="text-center text-slate-500 py-10 font-bold">Tidak ada versi yang cocok dengan filter.</p>'; return; }
+    // Sort: pure paper/spigot (no fabric/neoforge/forge) first, mixed second, mod-only last
+    const modLoaders = ['fabric','neoforge','forge','quilt'];
+    const spigotLoaders = ['paper','spigot','purpur','bukkit','folia','waterfall','velocity'];
+    function loaderScore(v) {
+        const ls = (v.loaders || []).map(l => l.toLowerCase());
+        const hasMod = ls.some(l => modLoaders.includes(l));
+        const hasSpigot = ls.some(l => spigotLoaders.includes(l));
+        if (hasSpigot && !hasMod) return 0;   // pure spigot
+        if (hasSpigot && hasMod) return 1;    // mixed
+        return 2;                              // mod-only
+    }
+    const sorted = [...versionsArray].sort((a, b) => loaderScore(a) - loaderScore(b));
+    listEl.innerHTML = sorted.map(v => {
+        const isRelease = v.version_type === 'release';
+        const badgeColor = isRelease ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        const file = _getBestFile(v.files);
+        if (!file) return '';
+        let gameVersions = 'Unspecified';
+        if (v.game_versions && v.game_versions.length > 0) { if (v.game_versions.length > 3) gameVersions = `${v.game_versions[0]} – ${v.game_versions[v.game_versions.length - 1]}`; else gameVersions = v.game_versions.join(', '); }
+        const loaderBadges = _getLoaderBadges(v.loaders);
+        return `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 hover:border-slate-500 transition"><div class="flex-1 overflow-hidden"><div class="flex flex-wrap items-center gap-1.5 mb-1.5"><span class="font-black text-white text-base">${v.version_number}</span><span class="text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-widest ${badgeColor}">${v.version_type}</span>${loaderBadges}</div><p class="text-xs text-slate-400 mb-1 truncate">${v.name}</p><p class="text-xs text-slate-500 font-mono"><b>MC:</b> ${gameVersions}</p></div><button onclick="downloadSpecificPlugin('${file.url}', '${file.filename}')" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 px-6 py-2.5 rounded-lg font-black text-white text-sm shadow transition active:scale-95 whitespace-nowrap shrink-0 flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> INSTALL</button></div>`;
+    }).join('');
+}
 function filterPluginVersions(type, justUpdateUI = false) { document.querySelectorAll('.pv-filter-btn').forEach(btn => { btn.classList.remove('bg-blue-600', 'text-white'); btn.classList.add('bg-slate-700', 'text-slate-300'); }); const activeBtn = document.getElementById(`pv-btn-${type}`); if (activeBtn) { activeBtn.classList.remove('bg-slate-700', 'text-slate-300'); activeBtn.classList.add('bg-blue-600', 'text-white'); } if (justUpdateUI) return; let filtered = []; if (type === 'all') filtered = currentPluginData; else if (type === 'release') filtered = currentPluginData.filter(v => v.version_type === 'release'); else if (type === 'beta') filtered = currentPluginData.filter(v => v.version_type === 'beta' || v.version_type === 'alpha'); renderVersionList(filtered); }
 function downloadSpecificPlugin(url, filename) { document.getElementById('pluginVersionModal').classList.add('hidden'); showToast(`Memproses ${filename}...`); socket.emit('download_plugin', url, filename); }
 socket.on('download_lock_state', (isDownloading) => { const startBtn = document.getElementById('startBtn'); const vmBtn = document.getElementById('vm-install-btn'); if (isDownloading) { if(startBtn) { startBtn.disabled = true; startBtn.innerText = "⏳..."; } if(vmBtn) { vmBtn.disabled = true; vmBtn.innerText = "⏳..."; } } else { if(startBtn) { startBtn.disabled = false; startBtn.innerText = "Start"; } if(vmBtn) { vmBtn.disabled = false; vmBtn.innerText = "📥 INSTALL VERSI INI"; } } });
