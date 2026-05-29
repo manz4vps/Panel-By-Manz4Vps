@@ -67,10 +67,17 @@ syncDiskAndLimits(); setInterval(syncDiskAndLimits, 10000);
 setInterval(() => { const uptimeEl = document.getElementById('stat-uptime-text'); if(!uptimeEl) return; if (globalStartTime) { const diffMs = Date.now() - globalStartTime; if (diffMs < 5000) { uptimeEl.innerText = 'Starting'; return; } let totalSeconds = Math.floor(diffMs / 1000); let totalDays = Math.floor(totalSeconds / (3600 * 24)); let hours = Math.floor((totalSeconds % (3600 * 24)) / 3600); let minutes = Math.floor((totalSeconds % 3600) / 60); let seconds = totalSeconds % 60; if (totalDays > 0) uptimeEl.innerText = `${totalDays}d ${hours}h ${minutes}m`; else uptimeEl.innerText = `${hours}h ${minutes}m ${seconds}s`; } else { uptimeEl.innerText = 'Offline'; } }, 1000);
 
 let lastStatsTick = Date.now();
-let latestStats = { cpu: 0, ram: 0 };
+let latestStats = { cpu: 0, ram: 0, netIn: 0, netOut: 0 };
 let isTabActive = true;
 
 document.addEventListener("visibilitychange", () => { isTabActive = !document.hidden; });
+
+function formatNetBytes(bytes) {
+    if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+    if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+    if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return bytes + ' B';
+}
 
 socket.on('stats', (data) => {
     lastStatsTick = Date.now(); 
@@ -80,9 +87,11 @@ socket.on('stats', (data) => {
 
     if (currentlyOnline) {
         latestStats.cpu = parseFloat(data.cpu) || 0; latestStats.ram = parseFloat(data.ramMB) || 0;
+        latestStats.netIn = parseFloat(data.netIn) || 0; latestStats.netOut = parseFloat(data.netOut) || 0;
         isServerOnline = true;
     } else {
-        latestStats.cpu = 0; latestStats.ram = 0; resetStopButton();
+        latestStats.cpu = 0; latestStats.ram = 0; latestStats.netIn = 0; latestStats.netOut = 0;
+        resetStopButton();
         if (isServerOnline) {
             const terminal = document.getElementById('terminal');
             if (terminal) {
@@ -103,14 +112,20 @@ setInterval(() => {
 
     const cpuText = document.getElementById('stat-cpu-text'); 
     const ramText = document.getElementById('stat-ram-text');
+    const netInText = document.getElementById('stat-netin-text');
+    const netOutText = document.getElementById('stat-netout-text');
 
     if (Date.now() - lastStatsTick > 10000 || !isServerOnline) {
-        latestStats.cpu = 0; latestStats.ram = 0;
+        latestStats.cpu = 0; latestStats.ram = 0; latestStats.netIn = 0; latestStats.netOut = 0;
         if(cpuText) cpuText.innerHTML = `<span class="text-slate-400">Offline</span>`; 
         if(ramText) ramText.innerHTML = `<span class="text-slate-400">Offline</span>`;
+        if(netInText) netInText.innerHTML = `0 B`;
+        if(netOutText) netOutText.innerHTML = `0 B`;
     } else {
         if(cpuText) cpuText.innerHTML = `${latestStats.cpu.toFixed(2)}%`; 
         if(ramText) ramText.innerHTML = `${formatMB(latestStats.ram)}`;
+        if(netInText) netInText.innerHTML = formatNetBytes(latestStats.netIn);
+        if(netOutText) netOutText.innerHTML = formatNetBytes(latestStats.netOut);
     }
 
     cpuData.shift(); cpuData.push(latestStats.cpu); 
@@ -205,17 +220,38 @@ async function loadSettings(forceRefresh = false) {
             const activeEngEl = document.getElementById('current-active-engine'); if(activeEngEl) activeEngEl.innerText = data.engine.toUpperCase(); 
             const catEl = document.getElementById('vm-category'); const softEl = document.getElementById('vm-software'); 
             if(catEl && softEl) { if(data.engine === 'node' || data.engine === 'python') { catEl.value = 'bot'; updateSubCategory(); softEl.value = data.engine; } else { catEl.value = 'mc-java'; updateSubCategory(); } } 
-        } 
+        }
+        setAutoStartUI(data.autoStart === true);
         updateCommandPreview(); 
     } catch(e) {} finally { if (window.finishProgress) window.finishProgress(); }
+}
+
+let _autoStartValue = false;
+function setAutoStartUI(enabled) {
+    _autoStartValue = enabled;
+    const btn = document.getElementById('autoStartToggle');
+    const knob = document.getElementById('autoStartKnob');
+    if (!btn || !knob) return;
+    if (enabled) {
+        btn.classList.replace('bg-slate-600', 'bg-blue-600');
+        knob.classList.replace('translate-x-1', 'translate-x-8');
+        btn.setAttribute('aria-pressed', 'true');
+    } else {
+        btn.classList.replace('bg-blue-600', 'bg-slate-600');
+        knob.classList.replace('translate-x-8', 'translate-x-1');
+        btn.setAttribute('aria-pressed', 'false');
+    }
+}
+function toggleAutoStart() {
+    setAutoStartUI(!_autoStartValue);
 }
 
 async function saveSettings() { 
     if (window.startProgress) window.startProgress();
     try { 
-        const ramInput = document.getElementById('set-ram').value; const newEngine = document.getElementById('set-engine').value; const newJar = document.getElementById('set-jar').value; const newIp = document.getElementById('set-ip').value; const newPort = document.getElementById('set-port').value;
-        await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort }) }); 
-        settingsCache = { engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, installedVersion: settingsCache ? settingsCache.installedVersion : '' };
+        const ramInput = document.getElementById('set-ram') ? document.getElementById('set-ram').value : (settingsCache ? settingsCache.ram : '2G'); const newEngine = document.getElementById('set-engine') ? document.getElementById('set-engine').value : (settingsCache ? settingsCache.engine : 'java'); const newJar = document.getElementById('set-jar') ? document.getElementById('set-jar').value : (settingsCache ? settingsCache.jarFile : 'server.jar'); const newIp = document.getElementById('set-ip') ? document.getElementById('set-ip').value : (settingsCache ? settingsCache.ip : ''); const newPort = document.getElementById('set-port') ? document.getElementById('set-port').value : (settingsCache ? settingsCache.port : '25565');
+        await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, autoStart: _autoStartValue }) }); 
+        settingsCache = { engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, autoStart: _autoStartValue, installedVersion: settingsCache ? settingsCache.installedVersion : '' };
         currentServerRamMB = parseRamToMB(ramInput);
         if (ramChart) { let maxRamInChart = Math.max(...ramData); if (maxRamInChart > currentServerRamMB) { ramChart.options.scales.y.max = Math.ceil(maxRamInChart + 100); } else { ramChart.options.scales.y.max = currentServerRamMB; } ramChart.update({duration: 1000, easing: 'linear'}); }
         showToast('Tersimpan!'); updateCommandPreview(); 
