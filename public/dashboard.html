@@ -19,6 +19,8 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .tab-fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
     </style>
 </head>
 <body class="p-4 md:p-8 relative flex flex-col min-h-screen">
@@ -34,6 +36,7 @@
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto" id="normal-action-btns">
                 <button onclick="showCreateServerModal()" class="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2 shadow-lg shadow-blue-500/20">✨ Buat Server</button>
                 <button onclick="toggleDeleteMode()" class="flex-1 sm:flex-none justify-center bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2 shadow">🗑️ Hapus</button>
+                <button id="admin-btn" onclick="window.location.href='/admin.html'" class="hidden justify-center bg-orange-500/10 text-orange-400 hover:bg-orange-500 hover:text-white px-4 py-2.5 rounded-lg font-bold text-sm transition border border-orange-500/20 active:scale-95 flex items-center gap-2">🛡️ Admin</button>
                 <button onclick="window.location.href='/logout'" class="justify-center bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-4 py-2.5 rounded-lg font-bold text-sm transition border border-red-500/20 active:scale-95 flex items-center gap-2">🚪 Keluar</button>
             </div>
 
@@ -89,7 +92,7 @@
 
     <div id="createServerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 tab-fade-in backdrop-blur-sm"><div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative"><button onclick="document.getElementById('createServerModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✖</button><h3 class="text-xl font-black text-white mb-5 flex items-center gap-2">✨ Buat Server Baru</h3><div class="mb-6"><label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Nama Server</label><input type="text" id="newServerName" placeholder="Contoh: Survival_MC" class="w-full bg-slate-900 p-3.5 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm shadow-inner"><p class="text-[11px] text-slate-500 mt-2">Hanya huruf, angka, strip (-), dan underscore (_).</p></div><div class="flex gap-3"><button onclick="document.getElementById('createServerModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button><button onclick="executeCreateServer()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Buat Server</button></div></div></div>
     <div id="deleteServerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 tab-fade-in backdrop-blur-sm"><div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-[0_0_40px_rgba(220,38,38,0.2)] text-center relative"><span class="text-5xl mb-3 block">⚠️</span><h3 class="text-2xl font-black text-red-500 mb-2">Hapus Server Terpilih?</h3><p class="text-slate-300 text-sm leading-relaxed mb-3">Anda akan menghapus server berikut:</p><div id="deleteServerNameDisplay" class="text-white font-mono bg-slate-900 p-3 rounded-lg border border-slate-700 mb-4 max-h-32 overflow-y-auto text-sm text-left shadow-inner"></div><p class="text-red-400 text-xs font-bold mb-6 bg-red-500/10 p-2 rounded border border-red-500/20">Tindakan ini permanen. Seluruh file akan dihapus!</p><div class="flex gap-3"><button onclick="document.getElementById('deleteServerModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button><button onclick="executeDeleteServer()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-red-500/20">Ya, Hapus Semua</button></div></div></div>
-    <div id="toast-container" class="fixed top-6 right-6 z-[100] space-y-3 w-80"></div>
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] space-y-2 w-80"></div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -104,7 +107,20 @@
 
         const formatMBToPtero = (mb) => { if (!mb || mb === 0) return '0 MiB'; if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GiB'; return mb.toFixed(2) + ' MiB'; };
         const formatBytes = (bytes) => { if (!+bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`; };
-        function showToast(message, type = 'success') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600'; const icon = type === 'success' ? '✅' : '⚠️'; toast.className = `${bgColor} text-white p-4 rounded-xl flex items-center gap-3 font-bold shadow-xl tab-fade-in`; toast.innerHTML = `<span class="text-xl">${icon}</span> <span class="text-sm">${message}</span>`; container.appendChild(toast); setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = '0.5s'; setTimeout(() => toast.remove(), 500); }, 3000); }
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const isSuccess = type === 'success';
+            const isWarning = type === 'warning';
+            const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
+            const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
+            const icon = isSuccess ? '✓' : isWarning ? '!' : '✕';
+            toast.className = `bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 backdrop-blur-sm`;
+            toast.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+            toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${message}</span><button onclick="this.parentElement.remove()" class="text-slate-500 hover:text-white transition text-lg leading-none flex-shrink-0">×</button>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4000);
+        }
 
         function toggleDeleteMode() {
             isDeleteMode = !isDeleteMode; selectedServersForDelete.clear();
@@ -169,10 +185,26 @@
             const name = document.getElementById('newServerName').value.trim();
             if (!name || !/^[a-zA-Z0-9_-]+$/.test(name)) return showToast('Nama tidak valid!', 'error');
             document.getElementById('createServerModal').classList.add('hidden');
-            try { const res = await fetch('/api/create-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName: name }) }); if (res.ok) { showToast('Server dibuat!'); fetchServersList(); } else { showToast('Gagal membuat server', 'error'); } } catch (e) { showToast('Error jaringan', 'error'); }
+            try {
+                const res = await fetch('/api/create-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName: name }) });
+                if (res.ok) { showToast('Server berhasil dibuat!'); fetchServersList(); }
+                else { const data = await res.json().catch(() => ({})); showToast(data.error || 'Gagal membuat server', 'error'); }
+            } catch (e) { showToast('Error jaringan', 'error'); }
         }
 
         fetchServersList();
+
+        (async () => {
+            try {
+                const res = await fetch('/api/whoami');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.isAdmin) {
+                        document.getElementById('admin-btn').classList.remove('hidden');
+                    }
+                }
+            } catch(e) {}
+        })();
 
         socket.on('dashboard_stats', (data) => {
             const card = serverCards[data.serverName];
