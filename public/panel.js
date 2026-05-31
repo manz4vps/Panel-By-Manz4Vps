@@ -22,21 +22,22 @@ function parseRamToMB(ramStr) {
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;
-    if (container.children.length >= 4) container.removeChild(container.firstChild);
+    if (container.children.length >= 5) container.removeChild(container.lastChild);
     let cleanMsg = message.replace(/^[✅⚠️❌🔄]\s*/, '');
-    const configs = {
-        success: { bar: 'bg-green-500', icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`, iconBg: 'bg-green-500/20 text-green-400' },
-        error:   { bar: 'bg-red-500',   icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`, iconBg: 'bg-red-500/20 text-red-400' },
-        info:    { bar: 'bg-blue-500',  icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01"/></svg>`, iconBg: 'bg-blue-500/20 text-blue-400' },
-    };
-    const cfg = configs[type] || configs.success;
+    const isSuccess = type === 'success';
+    const isWarning = type === 'warning';
+    const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
+    const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
+    const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
+    const icon = isSuccess ? '✓' : isWarning ? '!' : '✕';
     const toast = document.createElement('div');
-    toast.style.cssText = 'transform:translateX(110%);transition:transform 0.3s cubic-bezier(.34,1.56,.64,1),opacity 0.3s;opacity:0;';
-    toast.className = 'relative flex items-center gap-3 bg-slate-900 border border-slate-700/80 rounded-2xl px-4 py-3 shadow-2xl overflow-hidden min-w-[220px] max-w-[320px]';
-    toast.innerHTML = `<div class="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center ${cfg.iconBg}">${cfg.icon}</div><p class="text-white font-semibold text-sm leading-tight flex-1">${cleanMsg}</p><div class="absolute bottom-0 left-0 h-0.5 ${cfg.bar} rounded-full toast-bar" style="width:100%;transition:width 3s linear;"></div>`;
-    container.appendChild(toast);
-    requestAnimationFrame(() => { requestAnimationFrame(() => { toast.style.transform = 'translateX(0)'; toast.style.opacity = '1'; setTimeout(() => { const bar = toast.querySelector('.toast-bar'); if(bar) bar.style.width = '0%'; }, 50); }); });
-    setTimeout(() => { toast.style.transform = 'translateX(110%)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 350); }, 3200);
+    toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 backdrop-blur-sm overflow-hidden`;
+    toast.style.cssText = 'animation:toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);';
+    toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${cleanMsg}</span><button onclick="this.closest('.toast-item') ? this.closest('.toast-item').remove() : this.parentElement.remove()" class="text-slate-500 hover:text-white transition text-xl leading-none flex-shrink-0 ml-1">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
+    container.insertBefore(toast, container.firstChild);
+    requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
+    const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
+    toast.querySelector('button').addEventListener('click', () => { clearTimeout(autoRemove); toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); });
 }
 function copyIp() { const ipEl = document.getElementById('stat-ip-text'); if(!ipEl) return; const ipText = ipEl.innerText; if (!ipText || ipText === 'Memuat...' || ipText === 'Offline') return; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(ipText).then(() => showToast('📋 IP disalin', 'success')).catch(err => {}); } else { let textArea = document.createElement("textarea"); textArea.value = ipText; textArea.style.position = "fixed"; textArea.style.opacity = "0"; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try { if (document.execCommand('copy')) showToast('📋 IP disalin', 'success'); } catch (err) {} document.body.removeChild(textArea); } }
 function toggleMenu(event, menuId) { event.stopPropagation(); closeAllDropdowns(); const menu = document.getElementById(menuId); if (menu) menu.classList.remove('hidden'); } 
