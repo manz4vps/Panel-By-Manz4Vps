@@ -16,7 +16,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/tomorrow-night-eighties.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
@@ -24,7 +23,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/properties/properties.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/toml/toml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/nginx/nginx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/go/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/ruby/ruby.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/rust/rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/dockerfile/dockerfile.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/diff/diff.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/lua/lua.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/http/http.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
     
     <script>
     const cssLink = document.createElement('link');
@@ -36,44 +52,75 @@
     <style>
         body { background-color: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
         
-        /* 🔥 TEMA EDITOR 100% PTERODACTYL (WARNA TERANG & TAJAM) 🔥 */
+        /* ═══════════════════════════════════════════
+           TEMA EDITOR — ONE DARK (PERSIS PTERODACTYL)
+           ═══════════════════════════════════════════ */
         .CodeMirror {
             position: absolute; top: 0; bottom: 0; left: 0; right: 0; height: 100%;
-            font-size: 14px; font-family: 'JetBrains Mono', Consolas, monospace;
-            background-color: #1e222a !important; 
-            color: #ffffff !important; 
+            font-size: 13.5px; font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            background-color: #1a1d23 !important;
+            color: #c9d1d9 !important;
         }
-        
         .CodeMirror-gutters {
-            background-color: #1e222a !important;
-            border-right: 1px solid #2c313c !important;
+            background-color: #13151a !important;
+            border-right: 1px solid #2a2d35 !important;
         }
-        .CodeMirror-linenumber { color: #636d83 !important; }
-
+        .CodeMirror-linenumber { color: #3d4350 !important; }
         .CodeMirror-cursor { border-left: 2px solid #528bff !important; }
-        .CodeMirror-selected { background-color: rgba(62, 68, 81, 0.8) !important; }
+        .CodeMirror-selected { background-color: rgba(99,123,156,0.3) !important; }
+        .CodeMirror-activeline-background { background-color: #20242c !important; }
+        .CodeMirror-matchingbracket { color: #ffffff !important; border-bottom: 1px solid #abb2bf; }
 
-        .CodeMirror span.cm-keyword { color: #ff8b39 !important; font-weight: normal !important; }
-        .CodeMirror span.cm-def { color: #fac863 !important; font-weight: normal !important; }
-        .CodeMirror span.cm-variable,
-        .CodeMirror span.cm-variable-2,
+        /* ─────────────────────────────────────────────
+           Tema Editor — Full Syntax, String = Kuning
+           ───────────────────────────────────────────── */
+
+        /* Keywords: const, let, if, return, function ... */
+        .CodeMirror span.cm-keyword    { color: #cc99cd !important; }
+        /* Definitions: nama fungsi saat didefinisikan */
+        .CodeMirror span.cm-def        { color: #6fb3d2 !important; }
+        /* Variables */
+        .CodeMirror span.cm-variable   { color: #c9d1d9 !important; }
+        .CodeMirror span.cm-variable-2 { color: #7ec8e3 !important; }
         .CodeMirror span.cm-variable-3,
-        .CodeMirror span.cm-builtin { color: #ffffff !important; }
+        .CodeMirror span.cm-type       { color: #e5c07b !important; }
+        /* Builtin: console, require, process ... */
+        .CodeMirror span.cm-builtin    { color: #7ec8e3 !important; }
+        /* Strings: KUNING — semua bahasa */
         .CodeMirror span.cm-string,
-        .CodeMirror span.cm-string-2 { color: #a8d56b !important; }
-        .CodeMirror span.cm-atom { color: #c678dd !important; font-weight: normal !important; }
-        .CodeMirror span.cm-number { color: #ff8b39 !important; }
-        .CodeMirror span.cm-property { color: #fac863 !important; }
-        .CodeMirror span.cm-operator,
-        .CodeMirror span.cm-punctuation { color: #ffffff !important; }
-        .CodeMirror span.cm-comment { color: #7f848e !important; font-style: italic !important; }
+        .CodeMirror span.cm-string-2   { color: #e3b341 !important; }
+        /* Atoms: true, false, null + kunci Properties file */
+        .CodeMirror span.cm-atom       { color: #f08d49 !important; }
+        /* Numbers */
+        .CodeMirror span.cm-number     { color: #f08d49 !important; }
+        /* Object properties / CSS props */
+        .CodeMirror span.cm-property   { color: #e5c07b !important; }
+        /* Operators */
+        .CodeMirror span.cm-operator   { color: #c9d1d9 !important; }
+        .CodeMirror span.cm-punctuation{ color: #c9d1d9 !important; }
+        /* Comments: abu italic */
+        .CodeMirror span.cm-comment    { color: #6e7681 !important; font-style: italic !important; }
+        /* HTML/XML tags */
+        .CodeMirror span.cm-tag        { color: #e07b7b !important; }
+        /* HTML attributes */
+        .CodeMirror span.cm-attribute  { color: #e3b341 !important; }
+        .CodeMirror span.cm-bracket    { color: #c9d1d9 !important; }
+        /* Meta: YAML section, Nginx directive */
+        .CodeMirror span.cm-meta       { color: #79c0ff !important; }
+        /* CSS selectors */
+        .CodeMirror span.cm-qualifier  { color: #79c0ff !important; }
+        /* Markdown */
+        .CodeMirror span.cm-header     { color: #e07b7b !important; font-weight: bold !important; }
+        .CodeMirror span.cm-strong     { color: #e5c07b !important; font-weight: bold !important; }
+        .CodeMirror span.cm-em         { color: #cc99cd !important; font-style: italic !important; }
+        .CodeMirror span.cm-link       { color: #79c0ff !important; }
+        .CodeMirror span.cm-url        { color: #e3b341 !important; }
+        .CodeMirror span.cm-hr         { color: #6e7681 !important; }
+        /* Error */
+        .CodeMirror span.cm-error      { color: #e07b7b !important; border-bottom: 1px dotted #e07b7b; }
 
-        .CodeMirror span.cm-tag { color: #ff616e !important; }
-        .CodeMirror span.cm-attribute { color: #ff8b39 !important; }
-        .CodeMirror span.cm-meta { color: #56b6c2 !important; }
-
-        .cm-search-match { background-color: rgba(234, 179, 8, 0.4) !important; color: #ffffff !important; }
-        .cm-search-active { background-color: rgba(234, 179, 8, 1) !important; color: #000000 !important; font-weight: 900 !important; }
+        .cm-search-match { background-color: rgba(234, 179, 8, 0.35) !important; color: #ffffff !important; }
+        .cm-search-active { background-color: rgba(234, 179, 8, 0.9) !important; color: #000000 !important; font-weight: 900 !important; }
         
         #terminal::-webkit-scrollbar { width: 6px; }
         #terminal::-webkit-scrollbar-track { background: #0f172a; }
@@ -88,6 +135,8 @@
         
         #mobile-sidebar.active { transform: translateX(0); }
         .sidebar-bg { background-color: #111827; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen relative bg-[#0f172a] overflow-x-hidden" onclick="if(typeof closeAllDropdowns === 'function') closeAllDropdowns()">
@@ -96,7 +145,7 @@
         <div class="w-14 h-14 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
     </div>
 
-    <div id="toast-container" class="fixed top-6 right-6 z-[999] space-y-3 w-80 max-h-[50vh] overflow-hidden"></div>
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[999] space-y-3 w-80 max-h-[50vh] overflow-hidden flex flex-col-reverse"></div>
 
     <aside class="w-[300px] sidebar-bg border-r border-slate-800 flex-col hidden md:flex h-full fixed md:sticky top-0 z-20 flex-shrink-0">
         <div class="p-6 mb-2 flex items-center gap-4 border-b border-slate-800/50">
@@ -270,7 +319,7 @@
                      <button onclick="editorAction('clear')" class="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/30 hover:bg-red-800/50 text-red-400 rounded-lg text-xs font-bold transition whitespace-nowrap border border-red-900/50 shadow-sm active:scale-95 flex-shrink-0">🗑️ Kosongkan</button>
                  </div>
 
-                    <div class="flex-grow relative w-full h-full bg-[#282c34]">
+                    <div class="flex-grow relative w-full h-full bg-[#1a1d23]">
                         <div id="customSearchBar" class="hidden absolute top-2 right-2 md:right-6 bg-[#1e293b]/90 border border-slate-600 p-2 z-50 flex items-center gap-2 shadow-2xl rounded-lg">
                             <span class="text-slate-400 font-bold text-sm ml-1">🔍</span>
                             <input type="text" id="editorSearchInput" placeholder="Cari teks..." class="bg-[#0f172a]/80 text-white px-3 py-2 rounded border border-slate-600 focus:border-blue-500 outline-none text-sm font-mono w-40 md:w-64 shadow-inner">
@@ -281,6 +330,28 @@
                         </div>
                         <div id="fileContent" class="absolute inset-0"></div>
                     </div>
+                    <!-- Language Selector Bottom Bar (like Pterodactyl) -->
+                    <div class="flex items-center px-4 py-1 bg-[#13151a] border-t border-[#2a2d35] flex-shrink-0 select-none">
+                        <button id="langSelectorBtn" onclick="openLangSelector()" class="flex items-center gap-1.5 text-[#abb2bf] hover:text-white text-xs font-medium transition-colors px-2 py-0.5 rounded hover:bg-white/5 active:bg-white/10">
+                            <svg class="w-3 h-3 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                            <span id="langLabel">Plain Text</span>
+                            <svg class="w-2.5 h-2.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Language Selector Modal -->
+            <div id="langSelectorModal" class="hidden fixed inset-0 z-[180] flex items-end justify-center" onclick="if(event.target===this)closeLangSelector()">
+                <div class="bg-[#1e293b] w-full max-w-md border border-slate-700/80 border-b-0 rounded-t-2xl shadow-2xl flex flex-col" style="max-height:72vh">
+                    <div class="sticky top-0 bg-[#1e293b] px-4 py-3.5 border-b border-slate-700 flex items-center justify-between rounded-t-2xl flex-shrink-0">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                            <span class="font-bold text-white text-sm">Pilih Bahasa</span>
+                        </div>
+                        <button onclick="closeLangSelector()" class="text-slate-500 hover:text-white transition text-xl w-7 h-7 flex items-center justify-center rounded">✖</button>
+                    </div>
+                    <div id="langList" class="overflow-y-auto divide-y divide-slate-700/40 flex-1"></div>
                 </div>
             </div>
 
@@ -289,7 +360,24 @@
             </div>
 
             <div id="startup-view" class="hidden w-full max-w-3xl mx-auto">
-                <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in"><h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2">⚙️ Pengaturan Startup</h2><p class="text-slate-400 text-sm mb-4 mt-2">Atur parameter dan file eksekusi Anda. Untuk mengubah Engine (Node.js/Python), gunakan tab <strong class="text-white">Versi</strong>.</p><div class="mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 font-mono text-sm break-all shadow-inner"><span class="text-slate-500 select-none">Command: </span><span id="cmd-preview" class="text-green-400 font-bold">Memuat...</span></div><input type="hidden" id="set-engine" value="java"><div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8"><div><label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Batas Memori Java (-Xmx)</label><input type="text" id="set-ram" onkeyup="updateCommandPreview()" placeholder="Contoh: 2G" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner"></div><div><label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Nama File Utama</label><input type="text" id="set-jar" onkeyup="updateCommandPreview()" value="server.jar" placeholder="Contoh: server.jar / index.js" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner"></div></div><button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white">💾 SIMPAN PENGATURAN</button></div>
+                <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in">
+                    <h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2">⚙️ Pengaturan Startup</h2>
+                    <p class="text-slate-400 text-sm mb-4 mt-2">Atur parameter dan file eksekusi Anda. Untuk mengubah Engine (Node.js/Python), gunakan tab <strong class="text-white">Versi</strong>.</p>
+                    <div class="mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 font-mono text-sm break-all shadow-inner"><span class="text-slate-500 select-none">Command: </span><span id="cmd-preview" class="text-green-400 font-bold">Memuat...</span></div>
+                    <input type="hidden" id="set-engine" value="java">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                        <div>
+                            <label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Batas Memori Java (-Xmx)</label>
+                            <input type="text" id="set-ram" readonly placeholder="Contoh: 2G" class="w-full bg-slate-800/50 p-3.5 rounded-lg border border-slate-700 text-slate-400 cursor-not-allowed text-base font-mono shadow-inner select-none">
+                            <p class="mt-1.5 text-[11px] text-yellow-400/80 flex items-center gap-1"><svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Hanya dapat diubah melalui <strong class="text-yellow-300">Admin Panel</strong></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Nama File Utama</label>
+                            <input type="text" id="set-jar" onkeyup="updateCommandPreview()" value="server.jar" placeholder="Contoh: server.jar / index.js" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner">
+                        </div>
+                    </div>
+                    <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white">💾 SIMPAN PENGATURAN</button>
+                </div>
             </div>
 
             <div id="plugins-view" class="hiddew-full">
@@ -418,7 +506,28 @@
 
     <div id="installConfirmModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-[0_0_40px_rgba(220,38,38,0.3)] relative text-white"><button onclick="document.getElementById('installConfirmModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✖</button><div class="text-center mb-6 mt-2"><span class="text-5xl mb-3 block">⚠️</span><h3 class="text-2xl font-black text-white mb-2">Konfirmasi Instalasi</h3><p class="text-slate-300 text-sm leading-relaxed mb-4">Anda akan menginstal <span id="installVersionName" class="text-yellow-400 font-bold"></span>.</p></div><div class="flex flex-col gap-3"><button onclick="executeInstall('clean')" class="w-full bg-red-600 hover:bg-red-500 py-3.5 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">🗑️ SAPU BERSIH & INSTALL BARU</button><button onclick="executeInstall('keep')" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">📥 HANYA TIMPA FILE JAR</button><button onclick="document.getElementById('installConfirmModal').classList.add('hidden')" class="w-full bg-slate-700 hover:bg-slate-600 py-3 rounded-lg font-bold transition mt-2 active:scale-95">Batal</button></div></div></div>
     <div id="renameModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl"><h3 class="text-xl font-black text-white mb-4">✏️ Ubah Nama</h3><input type="hidden" id="renameOldPath"><input type="text" id="renameInput" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-blue-500 mb-6 font-mono text-sm shadow-inner"><div class="flex gap-3"><button onclick="document.getElementById('renameModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeRename()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Save</button></div></div></div>
-    <div id="createModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-green-600/50 shadow-2xl"><h3 id="createModalTitle" class="text-xl font-black text-white mb-4">✨ Buat Baru</h3><input type="hidden" id="createType"><input type="text" id="createInput" placeholder="Masukkan nama..." class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-green-500 mb-6 font-mono text-sm shadow-inner"><div class="flex gap-3"><button onclick="document.getElementById('createModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeCreate()" class="w-1/2 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Create</button></div></div></div>
+    <div id="createModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-green-600/50 shadow-2xl"><h3 id="createModalTitle" class="text-xl font-black text-white mb-4">✨ Buat Baru</h3><input type="hidden" id="createType"><input type="text" id="createInput" placeholder="Masukkan nama..." class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-green-500 mb-6 font-mono text-sm shadow-inner" onkeydown="if(event.key==='Enter')executeCreate()"><div class="flex gap-3"><button onclick="document.getElementById('createModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeCreate()" class="w-1/2 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Create</button></div></div></div>
+    <div id="saveAsModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
+        <div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-white leading-tight">Simpan File Baru</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Masukkan nama untuk file ini</p>
+                </div>
+            </div>
+            <input type="text" id="saveAsInput" placeholder="contoh: config.yml / script.js" class="w-full bg-slate-900 p-3.5 rounded-xl border border-slate-600 text-white outline-none focus:border-blue-500 mb-5 font-mono text-sm shadow-inner transition" onkeydown="if(event.key==='Enter')executeSaveAs()">
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('saveAsModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+                <button onclick="executeSaveAs()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    Simpan
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="genericModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-red-600/50 shadow-2xl text-white"><div class="text-center mb-6"><span id="genericModalIcon" class="text-5xl mb-3 block">⚠️</span><h3 id="genericModalTitle" class="text-2xl font-black text-red-500 mb-1">Konfirmasi</h3><p id="genericModalMsg" class="text-slate-300 font-bold">Yakin?</p></div><div class="flex gap-3"><button onclick="document.getElementById('genericModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button id="genericConfirmBtn" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">Yes, Continue</button></div></div></div>
     <div id="eulaModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl text-white"><div class="text-center mb-6"><span class="text-5xl mb-3 block">📜</span><h3 class="text-2xl font-black text-white mb-2">Persetujuan EULA</h3><p class="text-slate-300 font-medium text-sm leading-relaxed">Anda diwajibkan untuk menyetujui End User License Agreement (EULA) dari Mojang untuk menjalankan server ini.</p></div><div class="flex gap-3"><button onclick="document.getElementById('eulaModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">I Disagree</button><button onclick="acceptEula()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">I Accept</button></div></div></div>
     <div id="archiveModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-purple-600/50 shadow-2xl"><h3 class="text-xl font-black text-white mb-4">🗜️ Create Archive</h3><input type="text" id="archiveInput" placeholder="Name (e.g. backup.zip)" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-purple-500 mb-6 font-mono text-sm shadow-inner"><div class="flex gap-3"><button onclick="document.getElementById('archiveModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeArchive()" class="w-1/2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Archive</button></div></div></div>
