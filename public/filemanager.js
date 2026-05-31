@@ -4,6 +4,7 @@
 
 let currentPath = ''; 
 let currentEditFile = '';
+let isNewFile = false;
 let selectedFiles = new Set();
 let activeUploadsCount = 0; 
 let editor = null;
@@ -14,16 +15,132 @@ let lastQuery = '';
 let currentSearchMark = null;
 
 let moveTargetPath = '';
+let currentLangLabel = 'Plain Text';
+
+// ════════════════════════════════════════════════
+//  LANGUAGE LIST  (matches Pterodactyl's list)
+// ════════════════════════════════════════════════
+const LANGUAGES = [
+    { label: 'Plain Text',    mode: null },
+    { label: 'C',             mode: 'text/x-csrc' },
+    { label: 'C++',           mode: 'text/x-c++src' },
+    { label: 'C#',            mode: 'text/x-csharp' },
+    { label: 'CSS',           mode: 'css' },
+    { label: 'Diff',          mode: 'text/x-diff' },
+    { label: 'Dockerfile',    mode: 'text/x-dockerfile' },
+    { label: 'Golang',        mode: 'text/x-go' },
+    { label: 'HTML',          mode: 'text/html' },
+    { label: 'HTTP',          mode: 'message/http' },
+    { label: 'Java',          mode: 'text/x-java' },
+    { label: 'JavaScript',    mode: 'javascript' },
+    { label: 'JSON',          mode: 'application/json' },
+    { label: 'Lua',           mode: 'text/x-lua' },
+    { label: 'Markdown',      mode: 'text/x-markdown' },
+    { label: 'MySQL',         mode: 'text/x-mysql' },
+    { label: 'Nginx',         mode: 'text/x-nginx-conf' },
+    { label: 'PHP',           mode: 'application/x-httpd-php' },
+    { label: 'PostgreSQL',    mode: 'text/x-pgsql' },
+    { label: 'Properties',    mode: 'text/x-properties' },
+    { label: 'Python',        mode: 'python' },
+    { label: 'Ruby',          mode: 'text/x-ruby' },
+    { label: 'Rust',          mode: 'text/x-rustsrc' },
+    { label: 'SCSS',          mode: 'text/x-scss' },
+    { label: 'Shell',         mode: 'text/x-sh' },
+    { label: 'SQL',           mode: 'text/x-sql' },
+    { label: 'TOML',          mode: 'text/x-toml' },
+    { label: 'TypeScript',    mode: 'text/typescript' },
+    { label: 'XML',           mode: 'application/xml' },
+    { label: 'YAML',          mode: 'text/x-yaml' },
+];
+
+// ── Global language detector ──────────────────────────────────
+function detectLanguage(fileName) {
+    const base = (fileName || '').split('/').pop().toLowerCase();
+    const ext  = base.includes('.') ? base.split('.').pop() : '';
+    const map = {
+        'js':['javascript','JavaScript'],'mjs':['javascript','JavaScript'],'cjs':['javascript','JavaScript'],
+        'ts':['text/typescript','TypeScript'],
+        'json':['application/json','JSON'],
+        'html':['text/html','HTML'],'htm':['text/html','HTML'],
+        'css':['css','CSS'],'scss':['text/x-scss','SCSS'],
+        'yml':['text/x-yaml','YAML'],'yaml':['text/x-yaml','YAML'],
+        'toml':['text/x-toml','TOML'],
+        'properties':['text/x-properties','Properties'],'ini':['text/x-properties','Properties'],
+        'conf':['text/x-nginx-conf','Nginx'],'nginx':['text/x-nginx-conf','Nginx'],
+        'xml':['application/xml','XML'],'svg':['application/xml','XML'],
+        'py':['python','Python'],'pyw':['python','Python'],
+        'sh':['text/x-sh','Shell'],'bash':['text/x-sh','Shell'],'zsh':['text/x-sh','Shell'],
+        'java':['text/x-java','Java'],
+        'c':['text/x-csrc','C'],'h':['text/x-csrc','C'],
+        'cpp':['text/x-c++src','C++'],'cc':['text/x-c++src','C++'],'hpp':['text/x-c++src','C++'],
+        'cs':['text/x-csharp','C#'],
+        'go':['text/x-go','Golang'],
+        'rb':['text/x-ruby','Ruby'],
+        'rs':['text/x-rustsrc','Rust'],
+        'php':['application/x-httpd-php','PHP'],
+        'lua':['text/x-lua','Lua'],
+        'sql':['text/x-sql','SQL'],
+        'md':['text/x-markdown','Markdown'],'markdown':['text/x-markdown','Markdown'],
+        'txt':[null,'Plain Text'],
+        'diff':['text/x-diff','Diff'],'patch':['text/x-diff','Diff'],
+    };
+    if (base === 'dockerfile') return ['text/x-dockerfile','Dockerfile'];
+    return map[ext] || [null,'Plain Text'];
+}
+
+function setEditorLanguage(mode, label) {
+    currentLangLabel = label || 'Plain Text';
+    const langLabelEl = document.getElementById('langLabel');
+    if (langLabelEl) langLabelEl.textContent = currentLangLabel;
+    if (editor) editor.setOption('mode', mode || null);
+}
+
+function openLangSelector() {
+    const modal = document.getElementById('langSelectorModal');
+    const list = document.getElementById('langList');
+    if (!modal || !list) return;
+    list.innerHTML = LANGUAGES.map(lang => {
+        const isActive = lang.label === currentLangLabel;
+        return `<button onclick="selectLanguage(${JSON.stringify(lang.label)},${JSON.stringify(lang.mode)})"
+            class="w-full flex items-center justify-between px-5 py-3 text-sm transition hover:bg-slate-700/60 active:bg-slate-700 ${isActive ? 'text-blue-400 font-bold' : 'text-[#abb2bf]'}">
+            <span>${lang.label}</span>
+            ${isActive ? '<svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' : ''}
+        </button>`;
+    }).join('');
+    modal.classList.remove('hidden');
+    modal.style.animation = 'none';
+    requestAnimationFrame(() => {
+        const sheet = modal.querySelector('div');
+        if (sheet) { sheet.style.transform = 'translateY(100%)'; requestAnimationFrame(() => { sheet.style.transition = 'transform 0.25s cubic-bezier(0.32,0.72,0,1)'; sheet.style.transform = 'translateY(0)'; }); }
+    });
+}
+
+function closeLangSelector() {
+    const modal = document.getElementById('langSelectorModal');
+    if (!modal) return;
+    const sheet = modal.querySelector('div');
+    if (sheet) {
+        sheet.style.transform = 'translateY(100%)';
+        setTimeout(() => modal.classList.add('hidden'), 250);
+    } else { modal.classList.add('hidden'); }
+}
+
+function selectLanguage(label, mode) {
+    setEditorLanguage(mode, label);
+    closeLangSelector();
+}
 
 const editorEl = document.getElementById('fileContent');
 if(editorEl) {
     editor = CodeMirror(editorEl, {
-        value: "// Menunggu file...",
-        theme: "tomorrow-night-eighties",
+        value: "",
+        theme: "default",
         lineNumbers: true,
         lineWrapping: true,
-        mode: "javascript",
-        indentUnit: 4
+        mode: null,
+        indentUnit: 4,
+        styleActiveLine: true,
+        matchBrackets: true
     });
 
     // 🔥 CUSTOM CSS: Warna Select All ala Pterodactyl (Biru Keputihan) 🔥
@@ -319,9 +436,41 @@ async function executeRename() {
     } catch(e) {} finally { finishProgress(); }
 }
 
-function showCreateModal(type) { 
+function showCreateModal(type) {
+    if (type === 'file') {
+        isNewFile = true;
+        currentEditFile = '';
+        const editNameEl = document.getElementById('editingFileName');
+        if (editNameEl) editNameEl.innerText = 'File Baru (belum disimpan)';
+
+        if (typeof showTab === 'function') showTab('edit', false);
+        history.pushState({ tab: 'edit', file: 'new' }, '', '#edit/new');
+
+        // Tampilkan spinner sebentar saat persiapan editor
+        const fileContentParent = document.getElementById('fileContent') && document.getElementById('fileContent').parentElement;
+        let editorSpinner = document.getElementById('editor-spinner');
+        if (fileContentParent && !editorSpinner) {
+            editorSpinner = document.createElement('div');
+            editorSpinner.id = 'editor-spinner';
+            editorSpinner.className = 'absolute inset-0 bg-[#1a1d23] z-[60] flex flex-col items-center justify-center gap-3';
+            editorSpinner.innerHTML = `
+                <div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+                <span class="text-slate-400 font-bold text-sm tracking-wide">Menyiapkan editor...</span>
+            `;
+            fileContentParent.appendChild(editorSpinner);
+        }
+        if (editorSpinner) editorSpinner.classList.remove('hidden');
+
+        setTimeout(() => {
+            if (editor) { editor.setValue(""); editor.clearHistory(); }
+            setEditorLanguage(null, 'Plain Text');
+            if (editorSpinner) editorSpinner.classList.add('hidden');
+            if (editor) editor.focus();
+        }, 350);
+        return;
+    }
     if(document.getElementById('createType')) document.getElementById('createType').value = type; 
-    if(document.getElementById('createModalTitle')) document.getElementById('createModalTitle').innerText = type === 'folder' ? 'Create Directory' : 'Create File'; 
+    if(document.getElementById('createModalTitle')) document.getElementById('createModalTitle').innerText = 'Create Directory'; 
     const cInput = document.getElementById('createInput'); if(cInput) cInput.value = ''; 
     const cModal = document.getElementById('createModal'); if(cModal) cModal.classList.remove('hidden'); 
     if(cInput) cInput.focus(); 
@@ -512,7 +661,8 @@ async function loadFiles(dir = '', addToHistory = true) {
     } catch(e) {} finally { finishProgress(); }
 }
 
-async function openFile(filePath, fileName, addToHistory = true) { 
+async function openFile(filePath, fileName, addToHistory = true) {
+    isNewFile = false;
     startProgress(); 
     currentEditFile = filePath; 
     if(!fileName) fileName = filePath.split('/').pop();
@@ -529,15 +679,7 @@ async function openFile(filePath, fileName, addToHistory = true) {
     const searchBar = document.getElementById('customSearchBar');
     if(searchBar) searchBar.classList.add('hidden');
 
-    const ext = fileName.split('.').pop().toLowerCase();
-    let mode = "javascript"; 
-    
-    if (ext === 'yml' || ext === 'yaml') mode = "text/x-yaml";
-    else if (ext === 'json') mode = "application/json";
-    else if (ext === 'html') mode = "text/html";
-    else if (ext === 'css') mode = "css";
-    else if (ext === 'properties') mode = "text/x-properties";
-    else if (ext === 'toml') mode = "text/x-toml"; 
+    const [mode, langLabel] = detectLanguage(filePath);
 
     const fileContentParent = document.getElementById('fileContent').parentElement;
     let editorSpinner = document.getElementById('editor-spinner');
@@ -553,7 +695,8 @@ async function openFile(filePath, fileName, addToHistory = true) {
     }
     editorSpinner.classList.remove('hidden');
 
-    if (editor) { editor.setOption("mode", "javascript"); editor.setValue(""); }
+    setEditorLanguage(null, 'Plain Text');
+    if (editor) editor.setValue("");
 
     if(typeof showTab === 'function') showTab('edit', false);
     if (addToHistory) history.pushState({ tab: 'edit', file: filePath }, '', '#edit/' + filePath);
@@ -562,9 +705,11 @@ async function openFile(filePath, fileName, addToHistory = true) {
         const res = await fetch(`/api/file?path=${encodeURIComponent(filePath)}`); 
         if (res.status === 401) return window.location.href = "/"; 
         const content = await res.text(); 
-        if (editor) { editor.setOption("mode", mode); editor.setValue(content); editor.clearHistory(); }
+        if (editor) { editor.setValue(content); editor.clearHistory(); }
+        setEditorLanguage(mode, langLabel);
     } catch(e) {
         if (editor) editor.setValue("// Gagal memuat isi file. Coba lagi.");
+        setEditorLanguage(null, 'Plain Text');
     } finally { 
         finishProgress(); 
         if (editorSpinner) editorSpinner.classList.add('hidden'); 
@@ -575,15 +720,53 @@ function closeEditor() {
     if(typeof showTab === 'function') showTab('files', false);
     const newHash = currentPath === '' ? '#files' : `#files/${currentPath}`;
     history.pushState({ tab: 'files', path: currentPath }, '', newHash);
+    // Auto-refresh file list supaya file baru/yang diedit langsung muncul
+    delete folderCache[currentPath];
+    loadFiles(currentPath, false);
 }
 
 async function saveFile() { 
     if (!editor) return;
+    if (isNewFile || !currentEditFile) {
+        const modal = document.getElementById('saveAsModal');
+        if (modal) {
+            document.getElementById('saveAsInput').value = '';
+            modal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('saveAsInput').focus(), 100);
+        }
+        return;
+    }
     startProgress(); 
     try { 
         const res = await fetch('/api/file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: currentEditFile, content: editor.getValue() }) }); 
         if(res.ok && typeof showToast === 'function') showToast('File Tersimpan!'); 
     } catch(e) {} finally { finishProgress(); }
+}
+
+async function executeSaveAs() {
+    const nameInput = document.getElementById('saveAsInput');
+    const name = nameInput ? nameInput.value.trim() : '';
+    if (!name) { if (typeof showToast === 'function') showToast('Nama file wajib diisi!', 'error'); return; }
+    const targetPath = currentPath === '' ? name : `${currentPath}/${name}`;
+    document.getElementById('saveAsModal').classList.add('hidden');
+    startProgress();
+    try {
+        const res = await fetch('/api/file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: targetPath, content: editor.getValue() }) });
+        if (res.ok) {
+            isNewFile = false;
+            currentEditFile = targetPath;
+            const editNameEl = document.getElementById('editingFileName');
+            if (editNameEl) editNameEl.innerText = name;
+            history.replaceState({ tab: 'edit', file: targetPath }, '', '#edit/' + targetPath);
+            delete folderCache[currentPath];
+            const [detectedMode, detectedLabel] = detectLanguage(name);
+            setEditorLanguage(detectedMode, detectedLabel);
+            if (typeof showToast === 'function') showToast('File berhasil disimpan!');
+        } else {
+            if (typeof showToast === 'function') showToast('Gagal menyimpan file', 'error');
+        }
+    } catch(e) { if (typeof showToast === 'function') showToast('Error jaringan', 'error'); } 
+    finally { finishProgress(); }
 }
 
 // === 🔥 UPLOAD MANUAL 100% REALTIME VIA SERVER SOCKET + TOLERANSI 5 DETIK 🔥 ===
