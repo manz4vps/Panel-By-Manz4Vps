@@ -206,7 +206,7 @@ app.get('/api/admin/users', checkAdmin, (req, res) => {
     const users = readUsers();
     const result = [];
     for (const username in users) {
-        if (users[username].isAdmin) continue;
+        // Admin juga ditampilkan sebagai user
         const u = users[username];
         const servers = (u.servers || []).map(srvName => {
             const state = activeServers[srvName];
