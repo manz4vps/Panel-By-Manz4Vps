@@ -104,11 +104,14 @@ function getUserDir(serverName) {
     if (!owner) owner = serverName; 
 
     const userFolder = path.join(baseServersDir, owner); 
-    const newDir = path.join(userFolder, serverName); 
-
     if (!fs.existsSync(userFolder)) fs.mkdirSync(userFolder, { recursive: true });
+
+    if (owner === serverName) {
+        return userFolder;
+    }
+
+    const newDir = path.join(userFolder, serverName); 
     if (!fs.existsSync(newDir)) fs.mkdirSync(newDir, { recursive: true });
-    
     return newDir;
 }
 
@@ -135,7 +138,13 @@ function getUserState(serverName) {
     return activeServers[serverName];
 }
 
-const getServerName = (req) => req.session.currentServer || req.session.username;
+const getServerName = (req) => {
+    if (req.session.currentServer) return req.session.currentServer;
+    const users = readUsers();
+    const u = users[req.session.username];
+    if (u && u.servers && u.servers.length > 0) return u.servers[0];
+    return req.session.username;
+};
 
 app.post('/register', (req, res) => {
     const { username, email, password } = req.body;
@@ -146,7 +155,8 @@ app.post('/register', (req, res) => {
     if (users[username]) return res.status(400).json({ error: "Username sudah terdaftar!" });
     for (let u in users) { if (typeof users[u] === 'object' && users[u].email === email) return res.status(400).json({ error: "Email sudah digunakan!" }); }
 
-    users[username] = { password: hashPassword(password), email: email, limits: { ram: 2048, cpu: 100, disk: 51200 }, servers: [] };
+    const isFirst = Object.keys(users).length === 0;
+    users[username] = { password: hashPassword(password), email: email, limits: { ram: 2048, cpu: 100, disk: 5120 }, servers: [], isAdmin: isFirst };
     fs.writeFileSync(usersFile, JSON.stringify(users));
     res.json({ success: true, message: "Akun berhasil dibuat! Silakan Login." });
 });
@@ -155,9 +165,6 @@ app.post('/login', (req, res) => {
     const { username, password } = req.body; 
     let users = readUsers();
     let foundUsername = null;
-
-    if (Object.keys(users).length === 0 && username === 'admin' && password === 'password123') { req.session.loggedIn = true; req.session.username = 'admin'; return res.json({ success: true }); }
-    if (username === 'admin' && users['admin'] && users['admin'].password === hashPassword(password)) { req.session.loggedIn = true; req.session.username = 'admin'; return res.json({ success: true }); }
 
     for (let userKey in users) { let u = users[userKey]; if (typeof u === 'object' && (userKey === username || u.email === username) && u.password === hashPassword(password)) { foundUsername = userKey; break; } }
     if (!foundUsername) return res.status(401).json({ error: "Username/Email atau password salah!" });
@@ -177,10 +184,90 @@ const checkAuth = (req, res, next) => {
     res.redirect('/'); 
 };
 
+const checkAdmin = (req, res, next) => {
+    res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.header('Expires', '-1');
+    res.header('Pragma', 'no-cache');
+    if (req.session && req.session.loggedIn && req.session.username) {
+        const users = readUsers();
+        if (users[req.session.username] && users[req.session.username].isAdmin) return next();
+    }
+    if (req.path.startsWith('/api/')) return res.status(403).json({ error: 'Akses ditolak.' });
+    res.redirect('/');
+};
+
 app.use(express.static('public'));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/dashboard.html', checkAuth, (req, res) => { req.session.currentServer = null; res.sendFile(path.join(__dirname, 'public', 'dashboard.html')) });
 app.get('/panel.html', checkAuth, (req, res) => { if(!req.session.currentServer) return res.redirect('/dashboard.html'); res.sendFile(path.join(__dirname, 'public', 'panel.html')) });
+app.get('/admin.html', checkAdmin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+
+app.get('/api/admin/users', checkAdmin, (req, res) => {
+    const users = readUsers();
+    const result = [];
+    for (const username in users) {
+        if (users[username].isAdmin) continue;
+        const u = users[username];
+        const servers = (u.servers || []).map(srvName => {
+            const state = activeServers[srvName];
+            return { name: srvName, isOnline: !!(state && state.startTime) };
+        });
+        result.push({ username, email: u.email || '', limits: u.limits || { ram: 2048, cpu: 100, disk: 5120 }, servers });
+    }
+    res.json(result);
+});
+
+app.post('/api/admin/stop-server', checkAdmin, (req, res) => {
+    const { serverName, force } = req.body;
+    const state = activeServers[serverName];
+    if (!state || !state.process) return res.status(400).json({ error: 'Server tidak berjalan.' });
+    try {
+        state.process.kill(force ? 'SIGKILL' : 'SIGTERM');
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/delete-user', checkAdmin, (req, res) => {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ error: 'Tidak valid.' });
+    const users2 = readUsers();
+    if (users2[username] && users2[username].isAdmin) return res.status(400).json({ error: 'Tidak bisa menghapus admin.' });
+    let users = readUsers();
+    if (!users[username]) return res.status(404).json({ error: 'User tidak ditemukan.' });
+    (users[username].servers || []).forEach(srvName => {
+        const state = activeServers[srvName];
+        if (state && state.process) { try { state.process.kill('SIGKILL'); } catch(e){} delete activeServers[srvName]; }
+    });
+    const userDirPath = path.join(baseServersDir, username);
+    if (fs.existsSync(userDirPath)) { try { fs.rmSync(userDirPath, { recursive: true, force: true }); } catch(e){} }
+    delete users[username];
+    fs.writeFileSync(usersFile, JSON.stringify(users));
+    res.json({ success: true });
+});
+
+app.post('/api/admin/update-limits', checkAdmin, (req, res) => {
+    const { username, ram, cpu, disk } = req.body;
+    if (!username) return res.status(400).json({ error: 'Tidak valid.' });
+    let users = readUsers();
+    if (!users[username]) return res.status(404).json({ error: 'User tidak ditemukan.' });
+    if (!users[username].limits) users[username].limits = {};
+    if (ram) users[username].limits.ram = parseInt(ram);
+    if (cpu) users[username].limits.cpu = parseInt(cpu);
+    if (disk) users[username].limits.disk = parseInt(disk);
+    fs.writeFileSync(usersFile, JSON.stringify(users));
+    res.json({ success: true });
+});
+
+app.post('/api/admin/reset-password', checkAdmin, (req, res) => {
+    const { username, newPassword } = req.body;
+    if (!username) return res.status(400).json({ error: 'Tidak valid.' });
+    if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'Password minimal 6 karakter.' });
+    let users = readUsers();
+    if (!users[username]) return res.status(404).json({ error: 'User tidak ditemukan.' });
+    users[username].password = hashPassword(newPassword);
+    fs.writeFileSync(usersFile, JSON.stringify(users));
+    res.json({ success: true });
+});
 
 app.post('/api/delete-account', checkAuth, (req, res) => {
     const username = req.session.username; 
@@ -212,6 +299,7 @@ app.post('/api/delete-account', checkAuth, (req, res) => {
 
 app.get('/api/servers-list', checkAuth, (req, res) => {
     const username = req.session.username; let users = readUsers();
+    if (!users[username]) return res.json([]);
     if (!users[username].servers) { users[username].servers = [username]; fs.writeFileSync(usersFile, JSON.stringify(users)); }
     const servers = users[username].servers; let results = [];
 
@@ -240,6 +328,7 @@ app.post('/api/create-server', checkAuth, (req, res) => {
     const { serverName } = req.body;
     if (!serverName || !/^[a-zA-Z0-9_-]+$/.test(serverName)) return res.status(400).json({error: "Nama hanya boleh huruf, angka, strip, dan underscore."});
     let users = readUsers(); const username = req.session.username;
+    if (!users[username]) return res.status(403).json({ error: 'Akun tidak ditemukan.' });
     if (!users[username].servers) users[username].servers = [];
     let allServers = []; for(let u in users) { if(users[u].servers) allServers.push(...users[u].servers); }
     if (allServers.includes(serverName)) return res.status(400).json({error: "Nama server sudah dipakai, coba nama lain!"});
@@ -249,6 +338,7 @@ app.post('/api/create-server', checkAuth, (req, res) => {
 });
 
 app.post('/api/select-server', checkAuth, (req, res) => { req.session.currentServer = req.body.serverName; res.json({success: true}); });
+app.get('/api/whoami', checkAuth, (req, res) => { const users = readUsers(); const u = users[req.session.username]; res.json({ username: req.session.username, isAdmin: !!(u && u.isAdmin) }); });
 
 app.get('/api/settings', checkAuth, (req, res) => { res.json(getUserSettings(getServerName(req))); });
 app.post('/api/settings', checkAuth, (req, res) => { const srv = getServerName(req); const settings = getUserSettings(srv); if (req.body.ram) settings.ram = req.body.ram.trim(); if (req.body.jarFile) settings.jarFile = req.body.jarFile.trim(); if (req.body.ip !== undefined) settings.ip = req.body.ip.trim(); if (req.body.port) settings.port = String(req.body.port).trim(); if (req.body.engine) settings.engine = String(req.body.engine).trim(); if (req.body.autoStart !== undefined) settings.autoStart = Boolean(req.body.autoStart); fs.writeFileSync(path.join(getUserDir(srv), 'panel_settings.json'), JSON.stringify(settings)); res.send('Pengaturan disimpan'); });
