@@ -1,285 +1,284 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Manz4vps Panel V26</title>
-    
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <link rel="apple-touch-icon" href="/logo.png">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .bg-panel { background-color: #1e293b; }
-        .animate-spin-pro { animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .tab-fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
-        @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
-    </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Dashboard - Manz4vps Panel V26</title>
+ 
+ <link rel="manifest" href="/manifest.json">
+ <meta name="theme-color" content="#0f172a">
+ <link rel="apple-touch-icon" href="/logo.png">
+ 
+ <script src="https://cdn.tailwindcss.com"></script>
+ <style>
+ body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+ .bg-panel { background-color: #1e293b; }
+ .animate-spin-pro { animation: spin 1s linear infinite; }
+ @keyframes spin { to { transform: rotate(360deg); } }
+ .scrollbar-hide::-webkit-scrollbar { display: none; }
+ .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+ .tab-fade-in { animation: fadeIn 0.3s ease-in-out; }
+ @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+ @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+ @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
+ </style>
 </head>
 <body class="p-4 md:p-8 relative flex flex-col min-h-screen">
-    <div class="max-w-6xl mx-auto flex-grow w-full">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-700/60 pb-5 mt-2">
-            <div class="flex flex-col">
-                <h1 class="text-2xl md:text-3xl font-black flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
-                    🎮 Manz4vps Dashboard
-                </h1>
-                <span class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Panel Version 26</span>
-            </div>
-            
-            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto" id="normal-action-btns">
-                <button onclick="showCreateServerModal()" class="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition active:scale-95 flex items-center gap-2 shadow-lg shadow-blue-500/30 border border-blue-500/30">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    Buat Server
-                </button>
-                <button onclick="toggleDeleteMode()" class="flex-1 sm:flex-none justify-center bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 px-4 py-2.5 rounded-xl font-bold text-sm transition active:scale-95 flex items-center gap-2 border border-slate-700 hover:border-red-500/40">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    Hapus
-                </button>
-                <button id="admin-btn" onclick="window.location.href='/admin.html'" class="hidden justify-center bg-orange-500/10 text-orange-400 hover:bg-orange-500 hover:text-white px-4 py-2.5 rounded-xl font-bold text-sm transition border border-orange-500/30 active:scale-95 flex items-center gap-2 shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    Admin
-                </button>
-                <button onclick="window.location.href='/logout'" class="justify-center bg-slate-800 hover:bg-red-500/10 text-slate-400 hover:text-red-400 px-4 py-2.5 rounded-xl font-bold text-sm transition border border-slate-700 hover:border-red-500/30 active:scale-95 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    Keluar
-                </button>
-            </div>
+ <div class="max-w-6xl mx-auto flex-grow w-full">
+ <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-700/60 pb-5 mt-2">
+ <div class="flex flex-col">
+ <h1 class="text-2xl md:text-3xl font-black flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
+ Manz4vps Dashboard
+ </h1>
+ <span class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Panel Version 26</span>
+ </div>
+ 
+ <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto" id="normal-action-btns">
+ <button onclick="showCreateServerModal()" class="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition active:scale-95 flex items-center gap-2 shadow-lg shadow-blue-500/30 border border-blue-500/30">
+ Buat Server
+ </button>
+ <button onclick="toggleDeleteMode()" class="flex-1 sm:flex-none justify-center bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 px-4 py-2.5 rounded-xl font-bold text-sm transition active:scale-95 flex items-center gap-2 border border-slate-700 hover:border-red-500/40">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+ Hapus
+ </button>
+ <button id="admin-btn" onclick="window.location.href='/admin.html'" class="hidden justify-center bg-orange-500/10 text-orange-400 hover:bg-orange-500 hover:text-white px-4 py-2.5 rounded-xl font-bold text-sm transition border border-orange-500/30 active:scale-95 flex items-center gap-2 shadow-sm">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+ Admin
+ </button>
+ <button onclick="window.location.href='/logout'" class="justify-center bg-slate-800 hover:bg-red-500/10 text-slate-400 hover:text-red-400 px-4 py-2.5 rounded-xl font-bold text-sm transition border border-slate-700 hover:border-red-500/30 active:scale-95 flex items-center gap-2">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+ Keluar
+ </button>
+ </div>
 
-            <div class="hidden flex-wrap items-center gap-2 w-full sm:w-auto" id="delete-action-btns">
-                <button onclick="toggleDeleteMode()" class="flex-1 sm:flex-none justify-center bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2 shadow">✖ Batal</button>
-                <button onclick="confirmBulkDelete()" id="btn-confirm-bulk" class="flex-1 sm:flex-none justify-center bg-red-600 hover:bg-red-500 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2 shadow disabled:opacity-50 disabled:cursor-not-allowed">🗑️ Hapus Terpilih (0)</button>
-            </div>
-        </div>
+ <div class="hidden flex-wrap items-center gap-2 w-full sm:w-auto" id="delete-action-btns">
+ <button onclick="toggleDeleteMode()" class="flex-1 sm:flex-none justify-center bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2 shadow"> Batal</button>
+ <button onclick="confirmBulkDelete()" id="btn-confirm-bulk" class="flex-1 sm:flex-none justify-center bg-red-600 hover:bg-red-500 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2 shadow disabled:opacity-50 disabled:cursor-not-allowed"> Hapus Terpilih (0)</button>
+ </div>
+ </div>
 
-        <div id="pwa-install-banner" class="mb-6 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg relative overflow-hidden tab-fade-in">
-            <div class="absolute -right-4 -top-8 opacity-[0.07] pointer-events-none">
-                <svg class="w-48 h-48 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4483-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.2536 13.8533 7.8546 12 7.8546c-1.8533 0-3.5902.399-5.1367 1.0957L4.841 5.4474a.416.416 0 00-.5676-.1521.416.416 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"></path></svg>
-            </div>
-            <div class="flex items-center gap-4 z-10 w-full md:w-auto">
-                <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/50 shrink-0 shadow-inner">
-                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                </div>
-                <div>
-                    <h3 class="text-white font-black text-lg leading-tight mb-1">Install Aplikasi Panel!</h3>
-                    <p class="text-blue-200/80 text-[13px] md:text-sm font-medium">Pasang ke Home Screen untuk akses secepat kilat.</p>
-                </div>
-            </div>
-            <button id="pwa-install-btn" class="z-10 w-full md:w-auto text-center bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-black transition active:scale-95 shadow-lg shadow-blue-600/20 whitespace-nowrap flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                INSTALL SEKARANG
-            </button>
-        </div>
+ <div id="pwa-install-banner" class="mb-6 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg relative overflow-hidden tab-fade-in">
+ <div class="absolute -right-4 -top-8 opacity-[0.07] pointer-events-none">
+ <svg class="w-48 h-48 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4483-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.2536 13.8533 7.8546 12 7.8546c-1.8533 0-3.5902.399-5.1367 1.0957L4.841 5.4474a.416.416 0 00-.5676-.1521.416.416 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"></path></svg>
+ </div>
+ <div class="flex items-center gap-4 z-10 w-full md:w-auto">
+ <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/50 shrink-0 shadow-inner">
+ <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+ </div>
+ <div>
+ <h3 class="text-white font-black text-lg leading-tight mb-1">Install Aplikasi Panel!</h3>
+ <p class="text-blue-200/80 text-[13px] md:text-sm font-medium">Pasang ke Home Screen untuk akses secepat kilat.</p>
+ </div>
+ </div>
+ <button id="pwa-install-btn" class="z-10 w-full md:w-auto text-center bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-black transition active:scale-95 shadow-lg shadow-blue-600/20 whitespace-nowrap flex items-center justify-center gap-2">
+ <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+ INSTALL SEKARANG
+ </button>
+ </div>
 
-        <div id="server-list" class="flex flex-col gap-4">
-            <div class="text-center py-12" id="loading-indicator">
-                <div class="inline-block w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-pro"></div>
-                <p class="text-slate-400 mt-4 font-bold text-sm">Menyinkronkan data server...</p>
-            </div>
+ <div id="server-list" class="flex flex-col gap-4">
+ <div class="text-center py-12" id="loading-indicator">
+ <div class="inline-block w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-pro"></div>
+ <p class="text-slate-400 mt-4 font-bold text-sm">Menyinkronkan data server...</p>
+ </div>
 
-            <div id="server-card-template" class="hidden bg-[#1e293b] border border-slate-700/50 hover:border-blue-500/50 rounded-xl p-4 md:p-5 flex flex-row items-center justify-between cursor-pointer transition-all duration-300 relative overflow-hidden shadow-lg w-full group">
-                <div id="status-line" class="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-600 transition-all duration-500"></div>
-                <div class="flex flex-row items-center gap-3 md:gap-4 flex-shrink-0 pl-3">
-                    <div class="hidden mr-1 md:mr-2 delete-checkbox-container transition-all"><input type="checkbox" class="w-5 h-5 rounded cursor-pointer accent-red-500 pointer-events-none"></div>
-                    <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 icon-bg-container transition-colors shadow-inner border border-slate-700"><svg class="w-5 h-5 md:w-6 md:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm0 10a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM6 6h.01M6 16h.01"></path></svg></div>
-                    <div class="flex flex-col justify-center">
-                        <h3 id="server-name" class="text-[15px] md:text-[18px] font-black text-slate-100 leading-none mb-1 md:mb-1.5">Memuat...</h3>
-                        <p class="text-[11px] md:text-[12px] font-medium text-slate-500">Manz4VPS Cloud Node</p>
-                    </div>
-                </div>
-                <div class="flex flex-row items-center gap-4 md:gap-12 pr-2 ml-auto overflow-x-auto scrollbar-hide">
-                    <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">CPU</span><span id="val-cpu" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0.00 %</span></div>
-                    <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">RAM</span><span id="val-ram" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0 MiB</span></div>
-                    <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">DISK</span><span id="val-disk" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0 MiB</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
+ <div id="server-card-template" class="hidden bg-[#1e293b] border border-slate-700/50 hover:border-blue-500/50 rounded-xl p-4 md:p-5 flex flex-row items-center justify-between cursor-pointer transition-all duration-300 relative overflow-hidden shadow-lg w-full group">
+ <div id="status-line" class="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-600 transition-all duration-500"></div>
+ <div class="flex flex-row items-center gap-3 md:gap-4 flex-shrink-0 pl-3">
+ <div class="hidden mr-1 md:mr-2 delete-checkbox-container transition-all"><input type="checkbox" class="w-5 h-5 rounded cursor-pointer accent-red-500 pointer-events-none"></div>
+ <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 icon-bg-container transition-colors shadow-inner border border-slate-700"><svg class="w-5 h-5 md:w-6 md:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm0 10a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM6 6h.01M6 16h.01"></path></svg></div>
+ <div class="flex flex-col justify-center">
+ <h3 id="server-name" class="text-[15px] md:text-[18px] font-black text-slate-100 leading-none mb-1 md:mb-1.5">Memuat...</h3>
+ <p class="text-[11px] md:text-[12px] font-medium text-slate-500">Manz4VPS Cloud Node</p>
+ </div>
+ </div>
+ <div class="flex flex-row items-center gap-4 md:gap-12 pr-2 ml-auto overflow-x-auto scrollbar-hide">
+ <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">CPU</span><span id="val-cpu" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0.00 %</span></div>
+ <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">RAM</span><span id="val-ram" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0 MiB</span></div>
+ <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">DISK</span><span id="val-disk" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0 MiB</span></div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    <div id="createServerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 tab-fade-in backdrop-blur-sm"><div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative"><button onclick="document.getElementById('createServerModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✖</button><h3 class="text-xl font-black text-white mb-5 flex items-center gap-2">✨ Buat Server Baru</h3><div class="mb-6"><label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Nama Server</label><input type="text" id="newServerName" placeholder="Contoh: Survival_MC" class="w-full bg-slate-900 p-3.5 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm shadow-inner"><p class="text-[11px] text-slate-500 mt-2">Hanya huruf, angka, strip (-), dan underscore (_).</p></div><div class="flex gap-3"><button onclick="document.getElementById('createServerModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button><button onclick="executeCreateServer()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Buat Server</button></div></div></div>
-    <div id="deleteServerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 tab-fade-in backdrop-blur-sm"><div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-[0_0_40px_rgba(220,38,38,0.2)] text-center relative"><span class="text-5xl mb-3 block">⚠️</span><h3 class="text-2xl font-black text-red-500 mb-2">Hapus Server Terpilih?</h3><p class="text-slate-300 text-sm leading-relaxed mb-3">Anda akan menghapus server berikut:</p><div id="deleteServerNameDisplay" class="text-white font-mono bg-slate-900 p-3 rounded-lg border border-slate-700 mb-4 max-h-32 overflow-y-auto text-sm text-left shadow-inner"></div><p class="text-red-400 text-xs font-bold mb-6 bg-red-500/10 p-2 rounded border border-red-500/20">Tindakan ini permanen. Seluruh file akan dihapus!</p><div class="flex gap-3"><button onclick="document.getElementById('deleteServerModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button><button onclick="executeDeleteServer()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-red-500/20">Ya, Hapus Semua</button></div></div></div>
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] space-y-2 w-80"></div>
+ <div id="createServerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 tab-fade-in backdrop-blur-sm"><div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative"><button onclick="document.getElementById('createServerModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition"></button><h3 class="text-xl font-black text-white mb-5 flex items-center gap-2"> Buat Server Baru</h3><div class="mb-6"><label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Nama Server</label><input type="text" id="newServerName" placeholder="Contoh: Survival_MC" class="w-full bg-slate-900 p-3.5 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm shadow-inner"><p class="text-[11px] text-slate-500 mt-2">Hanya huruf, angka, strip (-), dan underscore (_).</p></div><div class="flex gap-3"><button onclick="document.getElementById('createServerModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button><button onclick="executeCreateServer()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Buat Server</button></div></div></div>
+ <div id="deleteServerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 tab-fade-in backdrop-blur-sm"><div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-[0_0_40px_rgba(220,38,38,0.2)] text-center relative"><span class="text-5xl mb-3 block"></span><h3 class="text-2xl font-black text-red-500 mb-2">Hapus Server Terpilih?</h3><p class="text-slate-300 text-sm leading-relaxed mb-3">Anda akan menghapus server berikut:</p><div id="deleteServerNameDisplay" class="text-white font-mono bg-slate-900 p-3 rounded-lg border border-slate-700 mb-4 max-h-32 overflow-y-auto text-sm text-left shadow-inner"></div><p class="text-red-400 text-xs font-bold mb-6 bg-red-500/10 p-2 rounded border border-red-500/20">Tindakan ini permanen. Seluruh file akan dihapus!</p><div class="flex gap-3"><button onclick="document.getElementById('deleteServerModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button><button onclick="executeDeleteServer()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-red-500/20">Ya, Hapus Semua</button></div></div></div>
+ <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-1.5 w-72"></div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        let serverCards = {}; 
-        let isDeleteMode = false;
-        let selectedServersForDelete = new Set();
-        
-        // 🔥 Variabel buat tracking status transisi (Offline -> Online)
-        let serverOnlineStatus = {}; 
-        let serverStartTimes = {}; 
+ <script src="/socket.io/socket.io.js"></script>
+ <script>
+ const socket = io();
+ let serverCards = {}; 
+ let isDeleteMode = false;
+ let selectedServersForDelete = new Set();
+ 
+ // Variabel buat tracking status transisi (Offline -> Online)
+ let serverOnlineStatus = {}; 
+ let serverStartTimes = {}; 
 
-        const formatMBToPtero = (mb) => { if (!mb || mb === 0) return '0 MiB'; if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GiB'; return mb.toFixed(2) + ' MiB'; };
-        const formatBytes = (bytes) => { if (!+bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`; };
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            if (container.children.length >= 5) container.removeChild(container.lastChild);
-            const isSuccess = type === 'success';
-            const isWarning = type === 'warning';
-            const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
-            const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
-            const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
-            const icon = isSuccess ? '✓' : isWarning ? '!' : '✕';
-            const toast = document.createElement('div');
-            toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 backdrop-blur-sm overflow-hidden`;
-            toast.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1)';
-            toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${message}</span><button class="text-slate-500 hover:text-white transition text-xl leading-none flex-shrink-0 ml-1">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
-            container.insertBefore(toast, container.firstChild);
-            requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
-            const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
-            toast.querySelector('button').addEventListener('click', () => { clearTimeout(autoRemove); toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); });
-        }
+ const formatMBToPtero = (mb) => { if (!mb || mb === 0) return '0 MiB'; if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GiB'; return mb.toFixed(2) + ' MiB'; };
+ const formatBytes = (bytes) => { if (!+bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`; };
+ function showToast(message, type = 'success') {
+ const container = document.getElementById('toast-container');
+ if (container.children.length >= 5) container.removeChild(container.lastChild);
+ const isSuccess = type === 'success';
+ const isWarning = type === 'warning';
+ const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
+ const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
+ const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
+ const icon = isSuccess ? '' : isWarning ? '!' : '';
+ const toast = document.createElement('div');
+ toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 backdrop-blur-sm overflow-hidden`;
+ toast.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+ toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${message}</span><button class="text-slate-500 hover:text-white transition text-xl leading-none flex-shrink-0 ml-1">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
+ container.insertBefore(toast, container.firstChild);
+ requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
+ const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
+ toast.querySelector('button').addEventListener('click', () => { clearTimeout(autoRemove); toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); });
+ }
 
-        function toggleDeleteMode() {
-            isDeleteMode = !isDeleteMode; selectedServersForDelete.clear();
-            document.getElementById('normal-action-btns').classList.toggle('hidden');
-            document.getElementById('delete-action-btns').classList.toggle('hidden');
-            updateBulkDeleteBtn();
-            Object.values(serverCards).forEach(card => {
-                const cbContainer = card.querySelector('.delete-checkbox-container');
-                const cb = card.querySelector('input[type="checkbox"]');
-                if (isDeleteMode) { cbContainer.classList.remove('hidden'); cb.checked = false; card.classList.add('hover:border-red-500/50', 'border-slate-700/50'); card.classList.remove('hover:border-blue-500/50'); } 
-                else { cbContainer.classList.add('hidden'); card.classList.remove('border-red-500/50', 'hover:border-red-500/50', 'bg-red-900/10'); card.classList.add('hover:border-blue-500/50', 'border-slate-700/50'); }
-            });
-        }
+ function toggleDeleteMode() {
+ isDeleteMode = !isDeleteMode; selectedServersForDelete.clear();
+ document.getElementById('normal-action-btns').classList.toggle('hidden');
+ document.getElementById('delete-action-btns').classList.toggle('hidden');
+ updateBulkDeleteBtn();
+ Object.values(serverCards).forEach(card => {
+ const cbContainer = card.querySelector('.delete-checkbox-container');
+ const cb = card.querySelector('input[type="checkbox"]');
+ if (isDeleteMode) { cbContainer.classList.remove('hidden'); cb.checked = false; card.classList.add('hover:border-red-500/50', 'border-slate-700/50'); card.classList.remove('hover:border-blue-500/50'); } 
+ else { cbContainer.classList.add('hidden'); card.classList.remove('border-red-500/50', 'hover:border-red-500/50', 'bg-red-900/10'); card.classList.add('hover:border-blue-500/50', 'border-slate-700/50'); }
+ });
+ }
 
-        function toggleServerSelection(name, card) {
-            const cb = card.querySelector('input[type="checkbox"]');
-            if (selectedServersForDelete.has(name)) { selectedServersForDelete.delete(name); card.classList.remove('border-red-500/50', 'bg-red-900/10'); card.classList.add('border-slate-700/50'); cb.checked = false; } 
-            else { selectedServersForDelete.add(name); card.classList.add('border-red-500/50', 'bg-red-900/10'); card.classList.remove('border-slate-700/50'); cb.checked = true; }
-            updateBulkDeleteBtn();
-        }
+ function toggleServerSelection(name, card) {
+ const cb = card.querySelector('input[type="checkbox"]');
+ if (selectedServersForDelete.has(name)) { selectedServersForDelete.delete(name); card.classList.remove('border-red-500/50', 'bg-red-900/10'); card.classList.add('border-slate-700/50'); cb.checked = false; } 
+ else { selectedServersForDelete.add(name); card.classList.add('border-red-500/50', 'bg-red-900/10'); card.classList.remove('border-slate-700/50'); cb.checked = true; }
+ updateBulkDeleteBtn();
+ }
 
-        function updateBulkDeleteBtn() { const btn = document.getElementById('btn-confirm-bulk'); btn.innerText = `🗑️ Hapus Terpilih (${selectedServersForDelete.size})`; btn.disabled = selectedServersForDelete.size === 0; }
-        function confirmBulkDelete() { if (selectedServersForDelete.size === 0) return; const listNames = Array.from(selectedServersForDelete).map(n => `• ${n}`).join('<br>'); document.getElementById('deleteServerNameDisplay').innerHTML = listNames; document.getElementById('deleteServerModal').classList.remove('hidden'); }
+ function updateBulkDeleteBtn() { const btn = document.getElementById('btn-confirm-bulk'); btn.innerText = ` Hapus Terpilih (${selectedServersForDelete.size})`; btn.disabled = selectedServersForDelete.size === 0; }
+ function confirmBulkDelete() { if (selectedServersForDelete.size === 0) return; const listNames = Array.from(selectedServersForDelete).map(n => `• ${n}`).join('<br>'); document.getElementById('deleteServerNameDisplay').innerHTML = listNames; document.getElementById('deleteServerModal').classList.remove('hidden'); }
 
-        async function executeDeleteServer() {
-            document.getElementById('deleteServerModal').classList.add('hidden');
-            const servers = Array.from(selectedServersForDelete);
-            for (const name of servers) { try { await fetch('/api/delete-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName: name }) }); } catch (e) {} }
-            showToast(`Server berhasil diproses!`); toggleDeleteMode(); fetchServersList(); 
-        }
+ async function executeDeleteServer() {
+ document.getElementById('deleteServerModal').classList.add('hidden');
+ const servers = Array.from(selectedServersForDelete);
+ for (const name of servers) { try { await fetch('/api/delete-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName: name }) }); } catch (e) {} }
+ showToast(`Server berhasil diproses!`); toggleDeleteMode(); fetchServersList(); 
+ }
 
-        async function selectServerAction(serverName) {
-            if (isDeleteMode) { toggleServerSelection(serverName, serverCards[serverName]); return; }
-            try { 
-                const res = await fetch('/api/select-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName }) }); 
-                // 🔥 EDIT DI SINI BIAR MAKSA MASUK KE #CONSOLE 🔥
-                if (res.ok) window.location.href = '/panel.html#console'; 
-            } catch (e) {}
-        }
+ async function selectServerAction(serverName) {
+ if (isDeleteMode) { toggleServerSelection(serverName, serverCards[serverName]); return; }
+ try { 
+ const res = await fetch('/api/select-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName }) }); 
+ // EDIT DI SINI BIAR MAKSA MASUK KE #CONSOLE 
+ if (res.ok) window.location.href = '/panel.html#console'; 
+ } catch (e) {}
+ }
 
-        async function fetchServersList() {
-            try {
-                document.getElementById('loading-indicator').classList.remove('hidden');
-                const listContainer = document.getElementById('server-list');
-                const template = document.getElementById('server-card-template');
-                Array.from(listContainer.children).forEach(child => { if (child.id !== 'loading-indicator' && child.id !== 'server-card-template') child.remove(); });
-                serverCards = {};
-                const res = await fetch('/api/servers-list?t=' + Date.now());
-                if (res.status === 401) return window.location.href = "/";
-                const servers = await res.json();
-                document.getElementById('loading-indicator').classList.add('hidden');
-                if (servers.length === 0) { listContainer.innerHTML += `<div class="text-center py-16 border-2 border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20"><p class="text-slate-400 font-bold text-lg mb-2">Belum ada server 😢</p></div>`; return; }
-                servers.forEach(srv => { const clone = template.cloneNode(true); clone.id = `card-${srv.name}`; clone.classList.remove('hidden'); clone.querySelector('#server-name').innerText = srv.name; clone.querySelector('#val-disk').innerText = formatBytes(srv.diskUsed); clone.onclick = () => selectServerAction(srv.name); listContainer.appendChild(clone); serverCards[srv.name] = clone; });
-            } catch (err) { document.getElementById('loading-indicator').classList.add('hidden'); }
-        }
-          function showCreateServerModal() {
-            document.getElementById('newServerName').value = '';
-            document.getElementById('createServerModal').classList.remove('hidden');
-            document.getElementById('newServerName').focus();
-        }
-        async function executeCreateServer() {
-            const name = document.getElementById('newServerName').value.trim();
-            if (!name || !/^[a-zA-Z0-9_-]+$/.test(name)) return showToast('Nama tidak valid!', 'error');
-            document.getElementById('createServerModal').classList.add('hidden');
-            try {
-                const res = await fetch('/api/create-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName: name }) });
-                if (res.ok) { showToast('Server berhasil dibuat!'); fetchServersList(); }
-                else { const data = await res.json().catch(() => ({})); showToast(data.error || 'Gagal membuat server', 'error'); }
-            } catch (e) { showToast('Error jaringan', 'error'); }
-        }
+ async function fetchServersList() {
+ try {
+ document.getElementById('loading-indicator').classList.remove('hidden');
+ const listContainer = document.getElementById('server-list');
+ const template = document.getElementById('server-card-template');
+ Array.from(listContainer.children).forEach(child => { if (child.id !== 'loading-indicator' && child.id !== 'server-card-template') child.remove(); });
+ serverCards = {};
+ const res = await fetch('/api/servers-list?t=' + Date.now());
+ if (res.status === 401) return window.location.href = "/";
+ const servers = await res.json();
+ document.getElementById('loading-indicator').classList.add('hidden');
+ if (servers.length === 0) { listContainer.innerHTML += `<div class="text-center py-16 border-2 border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20"><p class="text-slate-400 font-bold text-lg mb-2">Belum ada server </p></div>`; return; }
+ servers.forEach(srv => { const clone = template.cloneNode(true); clone.id = `card-${srv.name}`; clone.classList.remove('hidden'); clone.querySelector('#server-name').innerText = srv.name; clone.querySelector('#val-disk').innerText = formatBytes(srv.diskUsed); clone.onclick = () => selectServerAction(srv.name); listContainer.appendChild(clone); serverCards[srv.name] = clone; });
+ } catch (err) { document.getElementById('loading-indicator').classList.add('hidden'); }
+ }
+ function showCreateServerModal() {
+ document.getElementById('newServerName').value = '';
+ document.getElementById('createServerModal').classList.remove('hidden');
+ document.getElementById('newServerName').focus();
+ }
+ async function executeCreateServer() {
+ const name = document.getElementById('newServerName').value.trim();
+ if (!name || !/^[a-zA-Z0-9_-]+$/.test(name)) return showToast('Nama tidak valid!', 'error');
+ document.getElementById('createServerModal').classList.add('hidden');
+ try {
+ const res = await fetch('/api/create-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName: name }) });
+ if (res.ok) { showToast('Server berhasil dibuat!'); fetchServersList(); }
+ else { const data = await res.json().catch(() => ({})); showToast(data.error || 'Gagal membuat server', 'error'); }
+ } catch (e) { showToast('Error jaringan', 'error'); }
+ }
 
-        fetchServersList();
+ fetchServersList();
 
-        (async () => {
-            try {
-                const res = await fetch('/api/whoami');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.isAdmin) {
-                        document.getElementById('admin-btn').classList.remove('hidden');
-                    }
-                }
-            } catch(e) {}
-        })();
+ (async () => {
+ try {
+ const res = await fetch('/api/whoami');
+ if (res.ok) {
+ const data = await res.json();
+ if (data.isAdmin) {
+ document.getElementById('admin-btn').classList.remove('hidden');
+ }
+ }
+ } catch(e) {}
+ })();
 
-        socket.on('dashboard_stats', (data) => {
-            const card = serverCards[data.serverName];
-            if (!card) return; 
+ socket.on('dashboard_stats', (data) => {
+ const card = serverCards[data.serverName];
+ if (!card) return; 
 
-            card.querySelector('#val-cpu').innerText = data.cpu + ' %';
-            card.querySelector('#val-ram').innerText = formatMBToPtero(data.ramMB);
+ card.querySelector('#val-cpu').innerText = data.cpu + ' %';
+ card.querySelector('#val-ram').innerText = formatMBToPtero(data.ramMB);
 
-            const statusLine = card.querySelector('#status-line');
-            const iconBg = card.querySelector('.icon-bg-container'); 
-            
-            // 🔥 LOGIKA MURNI DARI BACKEND (TANPA TIMER!) 🔥
-            if (data.isOnline) {
-                // Kalo backend ngomong "starting", warnain OREN
-                if (data.status === 'starting' || data.state === 'starting') {
-                    statusLine.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.6)] transition-all duration-500";
-                    iconBg.className = "w-10 h-10 md:w-12 md:h-12 bg-orange-600/20 rounded-xl flex items-center justify-center text-orange-400 border border-orange-500/30";
-                } 
-                // Kalo ga starting, berarti UDAH RUNNING, warnain HIJAU
-                else {
-                    statusLine.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-[#10b981] shadow-[0_0_15px_rgba(16,185,129,0.6)] transition-all duration-500";
-                    iconBg.className = "w-10 h-10 md:w-12 md:h-12 bg-green-600/20 rounded-xl flex items-center justify-center text-green-400 border border-green-500/30"; 
-                }
+ const statusLine = card.querySelector('#status-line');
+ const iconBg = card.querySelector('.icon-bg-container'); 
+ 
+ // LOGIKA MURNI DARI BACKEND (TANPA TIMER!) 
+ if (data.isOnline) {
+ // Kalo backend ngomong "starting", warnain OREN
+ if (data.status === 'starting' || data.state === 'starting') {
+ statusLine.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.6)] transition-all duration-500";
+ iconBg.className = "w-10 h-10 md:w-12 md:h-12 bg-orange-600/20 rounded-xl flex items-center justify-center text-orange-400 border border-orange-500/30";
+ } 
+ // Kalo ga starting, berarti UDAH RUNNING, warnain HIJAU
+ else {
+ statusLine.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-[#10b981] shadow-[0_0_15px_rgba(16,185,129,0.6)] transition-all duration-500";
+ iconBg.className = "w-10 h-10 md:w-12 md:h-12 bg-green-600/20 rounded-xl flex items-center justify-center text-green-400 border border-green-500/30"; 
+ }
 
-                card.querySelector('#val-cpu').className = "font-bold text-slate-400";
-                card.querySelector('#val-ram').className = "font-bold text-slate-400";
-                card.querySelector('#val-disk').className = "font-bold text-slate-400"; 
-            } else {
-                // MATI (Abu-abu)
-                statusLine.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-slate-600 transition-all duration-500";
-                iconBg.className = "w-10 h-10 md:w-12 md:h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 border border-slate-700";
-                card.querySelector('#val-cpu').innerText = '0.00 %'; card.querySelector('#val-cpu').className = "font-bold text-slate-500";
-                card.querySelector('#val-ram').innerText = '0 MiB'; card.querySelector('#val-ram').className = "font-bold text-slate-500";
-                card.querySelector('#val-disk').className = "font-bold text-slate-500";
-            }
-        });
+ card.querySelector('#val-cpu').className = "font-bold text-slate-400";
+ card.querySelector('#val-ram').className = "font-bold text-slate-400";
+ card.querySelector('#val-disk').className = "font-bold text-slate-400"; 
+ } else {
+ // MATI (Abu-abu)
+ statusLine.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-slate-600 transition-all duration-500";
+ iconBg.className = "w-10 h-10 md:w-12 md:h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 border border-slate-700";
+ card.querySelector('#val-cpu').innerText = '0.00 %'; card.querySelector('#val-cpu').className = "font-bold text-slate-500";
+ card.querySelector('#val-ram').innerText = '0 MiB'; card.querySelector('#val-ram').className = "font-bold text-slate-500";
+ card.querySelector('#val-disk').className = "font-bold text-slate-500";
+ }
+ });
 
-        // 🔥 LOGIKA PWA (Tombol Permanen + Pop-up Kecil Chrome Aktif) 🔥
-        let deferredPrompt;
-        const installBtn = document.getElementById('pwa-install-btn');
+ // LOGIKA PWA (Tombol Permanen + Pop-up Kecil Chrome Aktif) 
+ let deferredPrompt;
+ const installBtn = document.getElementById('pwa-install-btn');
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Kita sengaja ga pake e.preventDefault() biar pop-up kecil Chrome tetep muncul
-            deferredPrompt = e;
-        });
+ window.addEventListener('beforeinstallprompt', (e) => {
+ // Kita sengaja ga pake e.preventDefault() biar pop-up kecil Chrome tetep muncul
+ deferredPrompt = e;
+ });
 
-        if (installBtn) {
-            installBtn.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    deferredPrompt = null;
-                } else {
-                    showToast('Aplikasi mungkin sudah terinstall! Jika belum, coba refresh halaman ini untuk mengulang.', 'error');
-                }
-            });
-        }
+ if (installBtn) {
+ installBtn.addEventListener('click', async () => {
+ if (deferredPrompt) {
+ deferredPrompt.prompt();
+ const { outcome } = await deferredPrompt.userChoice;
+ deferredPrompt = null;
+ } else {
+ showToast('Aplikasi mungkin sudah terinstall! Jika belum, coba refresh halaman ini untuk mengulang.', 'error');
+ }
+ });
+ }
 
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); }); }
-    </script>
+ if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); }); }
+ </script>
 </body>
 </html>
