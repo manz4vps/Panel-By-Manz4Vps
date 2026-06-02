@@ -22,18 +22,18 @@ function parseRamToMB(ramStr) {
 function showToast(message, type = 'success') {
  const container = document.getElementById('toast-container');
  if (!container) return;
- if (container.children.length >= 5) container.removeChild(container.lastChild);
- let cleanMsg = message.replace(/^[]\s*/, '');
+ if (container.children.length >= 3) container.removeChild(container.lastChild);
+ let cleanMsg = message.replace(/^[^\x20-\x7E\xA0-\uD7FF\uE000-\uFFFD]+\s*/u, '').trim();
  const isSuccess = type === 'success';
  const isWarning = type === 'warning';
  const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
  const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
  const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
- const icon = isSuccess ? '' : isWarning ? '!' : '';
+ const icon = isSuccess ? '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : isWarning ? '!' : '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>';
  const toast = document.createElement('div');
- toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 backdrop-blur-sm overflow-hidden`;
+ toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-3 py-2.5 rounded-xl flex items-center gap-2.5 shadow-2xl shadow-black/40 backdrop-blur-sm overflow-hidden`;
  toast.style.cssText = 'animation:toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);';
- toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${cleanMsg}</span><button onclick="this.closest('.toast-item') ? this.closest('.toast-item').remove() : this.parentElement.remove()" class="text-slate-500 hover:text-white transition text-xl leading-none flex-shrink-0 ml-1">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
+ toast.innerHTML = `<div class="w-6 h-6 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[12px] font-semibold leading-snug flex-1">${cleanMsg}</span><button onclick="this.closest('.toast-item') ? this.closest('.toast-item').remove() : this.parentElement.remove()" class="text-slate-500 hover:text-white transition text-base leading-none flex-shrink-0 ml-0.5">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
  container.insertBefore(toast, container.firstChild);
  requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
  const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
@@ -213,6 +213,9 @@ async function fetchVersions() {
  } catch(e) { if(versionSelect) versionSelect.innerHTML = '<option value=""> Gagal memuat API.</option>'; } finally { if (window.finishProgress) window.finishProgress(); }
 }
 
+const tabVisited = new Set();
+
+
 let pendingInstallConfig = null;
 async function prepareInstall() { const cat = document.getElementById('vm-category').value; const software = document.getElementById('vm-software').value; if (cat === 'bot') { document.getElementById('set-engine').value = software; document.getElementById('set-jar').value = software === 'node' ? 'index.js' : 'main.py'; await saveSettings(); showToast(`Environment diubah!`); showTab('startup'); return; } const version = document.getElementById('vm-version').value; if (!version) return showToast('Pilih versi dulu!', 'error'); pendingInstallConfig = { software, version }; if(document.getElementById('installVersionName')) document.getElementById('installVersionName').innerText = `${software.toUpperCase()} ${version}`; document.getElementById('installConfirmModal').classList.remove('hidden'); }
 
@@ -298,7 +301,7 @@ async function saveSettings() {
  } catch(e) {} finally { if (window.finishProgress) window.finishProgress(); }
 }
 
-function showTab(tab, addToHistory = true) {
+function showTab(tab, addToHistory = true, forceRefresh = false) {
  if (window.startProgress) window.startProgress(); 
  if (tab !== 'edit') localStorage.setItem('activeTab', tab); 
  ['console', 'files', 'versions', 'plugins', 'network', 'startup', 'settings', 'edit'].forEach(t => { 
@@ -314,9 +317,11 @@ function showTab(tab, addToHistory = true) {
  }
  });
  });
- if (tab !== 'files' && tab !== 'edit') { const bar = document.getElementById('pteroFloatingBar'); if(bar) { bar.classList.add('translate-y-20', 'opacity-0'); setTimeout(() => { if(bar) bar.classList.add('hidden'); }, 300); } } else if (tab === 'files' && typeof loadFiles === 'function') { if (addToHistory) loadFiles(typeof currentPath !== 'undefined' ? currentPath : '', true); }
- if(tab === 'startup' || tab === 'network' || tab === 'settings') loadSettings();
- if(tab === 'plugins' && typeof loadDefaultPlugins === 'function') { switchPluginTab('search'); }
+ const isFirstVisit = !tabVisited.has(tab) || forceRefresh;
+ if (tab !== 'edit') tabVisited.add(tab);
+ if (tab !== 'files' && tab !== 'edit') { const bar = document.getElementById('pteroFloatingBar'); if(bar) { bar.classList.add('translate-y-20', 'opacity-0'); setTimeout(() => { if(bar) bar.classList.add('hidden'); }, 300); } } else if (tab === 'files' && typeof loadFiles === 'function') { if (typeof currentPath !== 'undefined') currentPath = ''; if (typeof folderCache !== 'undefined') { Object.keys(folderCache).forEach(k => delete folderCache[k]); } loadFiles('', true); }
+ if((tab === 'startup' || tab === 'network' || tab === 'settings') && isFirstVisit) loadSettings();
+ if(tab === 'plugins' && isFirstVisit) { const sr = document.getElementById('pluginSearchResults'); if(sr) sr.innerHTML = ''; if(typeof loadDefaultPlugins === 'function') switchPluginTab('search'); }
  if(tab === 'versions') { const vmCat = document.getElementById('vm-category'); if(document.getElementById('vm-software') && document.getElementById('vm-software').options.length === 0) updateSubCategory(); }
  if (addToHistory && tab !== 'files' && tab !== 'edit' && window.location.hash !== '#' + tab) history.pushState({ tab: tab }, '', '#' + tab);
  if (tab === 'edit' && typeof editor !== 'undefined' && editor) setTimeout(() => { editor.refresh(); }, 150);
@@ -367,50 +372,46 @@ async function checkSingleUpdate(filename) {
  if(!statusDiv) return;
  statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-400 flex items-center justify-center gap-2 cursor-not-allowed animate-pulse border border-slate-700"> MENGECEK...</button>`;
  try {
- // Strip version numbers and everything after from filename to get clean plugin name
- // e.g. "TAB v6.0.2 - Vanilla.jar" → "TAB", "SkinRestorer-15.0.0.jar" → "SkinRestorer"
- let cleanName = filename
- .replace(/\.jar$/i, '')
- .replace(/[\s\-_]v?\d+[\d._\-].*$/i, '') // remove from first version-like number to end
- .replace(/[\s\-_]+$/, '')
- .trim();
- if (!cleanName) cleanName = filename.replace(/\.jar$/i, '');
-
- // Search with higher limit and find the best match by title similarity
- const searchRes = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(cleanName)}&facets=[["project_type:plugin"]]&limit=5`);
- const searchData = await searchRes.json();
- if (!searchData.hits || searchData.hits.length === 0) {
- statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed"> TIDAK KETEMU DI MODRINTH</button>`;
- return;
- }
- // Pick the hit whose slug/title most closely matches the clean name
- const lc = cleanName.toLowerCase();
- const bestHit = searchData.hits.find(h => h.slug.toLowerCase() === lc || h.title.toLowerCase() === lc)
- || searchData.hits.find(h => h.slug.toLowerCase().startsWith(lc) || h.title.toLowerCase().startsWith(lc))
- || searchData.hits[0];
-
- const loaders = encodeURIComponent('["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]');
- const verRes = await fetch(`https://api.modrinth.com/v2/project/${bestHit.project_id}/version?loaders=${loaders}`);
- const versions = await verRes.json();
- if (!versions || versions.length === 0) {
- statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed"> UP TO DATE</button>`;
- return;
- }
- const latestVersion = versions.find(v => v.version_type === 'release') || versions[0];
- const latestFile = _getBestFile(latestVersion.files);
- if (!latestFile) { statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed"> FILE TIDAK DITEMUKAN</button>`; return; }
- if (latestFile.filename === filename) {
- statusDiv.innerHTML = `<button disabled class="w-full bg-green-500/10 py-2.5 rounded-lg font-bold text-xs text-green-500 border border-green-500/20 cursor-not-allowed"> UP TO DATE</button>`;
- } else {
- statusDiv.innerHTML = `<button onclick="executePluginUpdate('${filename}', '${latestFile.url}', '${latestFile.filename}')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2"> PERBARUI ke V.${latestVersion.version_number}</button>`;
- }
+  const metaRes = await fetch('/api/plugin-meta');
+  const allMeta = await metaRes.json();
+  const meta = allMeta[filename];
+  if (!meta || meta.source !== 'modrinth') {
+   statusDiv.innerHTML = `<button disabled class="w-full bg-slate-700/50 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700/50 cursor-not-allowed">UPLOAD MANUAL</button>`;
+   return;
+  }
+  const loaders = encodeURIComponent('["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]');
+  const verRes = await fetch(`https://api.modrinth.com/v2/project/${meta.project_id}/version?loaders=${loaders}`);
+  const versions = await verRes.json();
+  if (!versions || versions.length === 0) {
+   statusDiv.innerHTML = `<button disabled class="w-full bg-green-500/10 py-2.5 rounded-lg font-bold text-xs text-green-500 border border-green-500/20 cursor-not-allowed"> UP TO DATE</button>`;
+   return;
+  }
+  const latestVersion = versions.find(v => v.version_type === 'release') || versions[0];
+  const latestFile = _getBestFile(latestVersion.files);
+  if (!latestFile) { statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed"> FILE TIDAK DITEMUKAN</button>`; return; }
+  if (latestFile.filename === filename) {
+   statusDiv.innerHTML = `<button disabled class="w-full bg-green-500/10 py-2.5 rounded-lg font-bold text-xs text-green-500 border border-green-500/20 cursor-not-allowed"> UP TO DATE</button>`;
+  } else {
+   statusDiv.innerHTML = `<button onclick="executePluginUpdate('${filename}', '${latestFile.url}', '${latestFile.filename}')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2"> PERBARUI ke V.${latestVersion.version_number}</button>`;
+  }
  } catch (e) {
- statusDiv.innerHTML = `<button onclick="checkSingleUpdate('${filename}')" class="w-full bg-red-500/20 hover:bg-red-500/30 py-2.5 rounded-lg font-bold text-xs text-red-400 border border-red-500/30 transition active:scale-95"> GAGAL CEK (COBA LAGI)</button>`;
+  statusDiv.innerHTML = `<button onclick="checkSingleUpdate('${filename}')" class="w-full bg-red-500/20 hover:bg-red-500/30 py-2.5 rounded-lg font-bold text-xs text-red-400 border border-red-500/30 transition active:scale-95"> GAGAL CEK (COBA LAGI)</button>`;
  }
 }
 async function checkInstalledUpdates(manual = false) { if(manual) showToast('Mengecek update plugin...', 'success'); const resultsDiv = document.getElementById('pluginInstalledResults'); const buttons = resultsDiv.querySelectorAll('button[onclick^="checkSingleUpdate"]'); for (let btn of buttons) { btn.click(); await new Promise(r => setTimeout(r, 500)); } }
-async function executePluginUpdate(oldFilename, newUrl, newFilename) { const safeId = oldFilename.replace(/[^a-zA-Z0-9]/g, ''); const statusDiv = document.getElementById(`update-status-${safeId}`); if(statusDiv) statusDiv.innerHTML = `<button disabled class="w-full bg-blue-800 py-2.5 rounded-lg font-bold text-xs text-blue-300 flex items-center justify-center gap-2 cursor-not-allowed animate-pulse"> MENGUNDUH...</button>`; try { await fetch('/api/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items: [`plugins/${oldFilename}`] }) }); socket.emit('download_plugin', newUrl, newFilename); setTimeout(() => { loadInstalledPlugins(); }, 2500); } catch (e) { showToast('Gagal memperbarui', 'error'); } }
+async function executePluginUpdate(oldFilename, newUrl, newFilename) {
+ const safeId = oldFilename.replace(/[^a-zA-Z0-9]/g, '');
+ const statusDiv = document.getElementById(`update-status-${safeId}`);
+ if(statusDiv) statusDiv.innerHTML = `<button disabled class="w-full bg-blue-800 py-2.5 rounded-lg font-bold text-xs text-blue-300 flex items-center justify-center gap-2 cursor-not-allowed animate-pulse"> MENGUNDUH...</button>`;
+ try {
+  await fetch('/api/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items: [`plugins/${oldFilename}`] }) });
+  socket.emit('download_plugin', newUrl, newFilename);
+  fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ rename: { from: oldFilename, to: newFilename } }) }).catch(()=>{});
+  setTimeout(() => { loadInstalledPlugins(); }, 2500);
+ } catch (e) { showToast('Gagal memperbarui', 'error'); }
+}
 let currentPluginData = [];
+let currentPluginMeta = null;
 let currentPluginPlatform = 'spigot';
 
 function setPluginPlatform(platform) {
@@ -437,7 +438,9 @@ function _getPlatformConfig() {
  return { type: 'plugin', loaders: '["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]', label: 'Spigot/Paper' };
 }
 
-async function openPluginVersionModal(projectId, title, iconUrl) { if (projectId === 'vault-original-bypass') { const vaultLink = 'https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar'; socket.emit('download_plugin', vaultLink, 'Vault.jar'); return; } const modal = document.getElementById('pluginVersionModal'); const titleEl = document.getElementById('pv-title'); const iconEl = document.getElementById('pv-icon'); const listEl = document.getElementById('pv-list'); if(!modal || !listEl) return; titleEl.innerText = title; if (iconUrl) { iconEl.src = iconUrl; iconEl.classList.remove('hidden'); } else { iconEl.classList.add('hidden'); } listEl.innerHTML = '<div class="flex flex-col items-center justify-center py-12 gap-3"><div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div><p class="text-slate-400 font-bold text-sm animate-pulse">Memuat versi...</p></div>'; modal.classList.remove('hidden'); filterPluginVersions('all', true); try { const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`); currentPluginData = await res.json(); if (!currentPluginData || currentPluginData.length === 0) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold"> Tidak ada versi tersedia.</p>'; return; } renderVersionList(currentPluginData); } catch(e) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold"> Gagal mengambil daftar versi.</p>'; } }
+async function openPluginVersionModal(projectId, title, iconUrl) {
+ currentPluginMeta = { project_id: projectId, title, icon_url: iconUrl };
+ if (projectId === 'vault-original-bypass') { currentPluginMeta = null; const vaultLink = 'https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar'; socket.emit('download_plugin', vaultLink, 'Vault.jar'); return; } const modal = document.getElementById('pluginVersionModal'); const titleEl = document.getElementById('pv-title'); const iconEl = document.getElementById('pv-icon'); const listEl = document.getElementById('pv-list'); if(!modal || !listEl) return; titleEl.innerText = title; if (iconUrl) { iconEl.src = iconUrl; iconEl.classList.remove('hidden'); } else { iconEl.classList.add('hidden'); } listEl.innerHTML = '<div class="flex flex-col items-center justify-center py-12 gap-3"><div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div><p class="text-slate-400 font-bold text-sm animate-pulse">Memuat versi...</p></div>'; modal.classList.remove('hidden'); filterPluginVersions('all', true); try { const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`); currentPluginData = await res.json(); if (!currentPluginData || currentPluginData.length === 0) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold"> Tidak ada versi tersedia.</p>'; return; } renderVersionList(currentPluginData); } catch(e) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold"> Gagal mengambil daftar versi.</p>'; } }
 function _getBestFile(files) {
  if (!files || files.length === 0) return null;
  const n = f => f.filename.toLowerCase();
@@ -450,10 +453,18 @@ function _getBestFile(files) {
 
 function _getLoaderBadges(loaders) {
  if (!loaders || loaders.length === 0) return '';
- const known = ['paper','spigot','purpur','bukkit','folia','waterfall','velocity','fabric','neoforge','forge','quilt'];
- const show = loaders.filter(l => known.includes(l.toLowerCase()));
+ const serverLoaders = ['paper','spigot','purpur','bukkit','folia','waterfall','velocity'];
+ const show = loaders.filter(l => serverLoaders.includes(l.toLowerCase()));
  if (show.length === 0) return '';
- const colors = { fabric: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', neoforge: 'bg-orange-500/20 text-orange-300 border-orange-500/30', forge: 'bg-red-500/20 text-red-300 border-red-500/30', quilt: 'bg-purple-500/20 text-purple-300 border-purple-500/30' };
+ const colors = {
+  paper: 'bg-green-500/20 text-green-300 border-green-500/30',
+  spigot: 'bg-green-500/20 text-green-300 border-green-500/30',
+  purpur: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  bukkit: 'bg-green-500/20 text-green-300 border-green-500/30',
+  folia: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+  velocity: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  waterfall: 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+ };
  return show.map(l => { const c = colors[l.toLowerCase()] || 'bg-slate-600/50 text-slate-300 border-slate-500/30'; return `<span class="text-[9px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${c}">${l}</span>`; }).join(' ');
 }
 
@@ -485,7 +496,17 @@ function renderVersionList(versionsArray) {
  }).join('');
 }
 function filterPluginVersions(type, justUpdateUI = false) { document.querySelectorAll('.pv-filter-btn').forEach(btn => { btn.classList.remove('bg-blue-600', 'text-white'); btn.classList.add('bg-slate-700', 'text-slate-300'); }); const activeBtn = document.getElementById(`pv-btn-${type}`); if (activeBtn) { activeBtn.classList.remove('bg-slate-700', 'text-slate-300'); activeBtn.classList.add('bg-blue-600', 'text-white'); } if (justUpdateUI) return; let filtered = []; if (type === 'all') filtered = currentPluginData; else if (type === 'release') filtered = currentPluginData.filter(v => v.version_type === 'release'); else if (type === 'beta') filtered = currentPluginData.filter(v => v.version_type === 'beta' || v.version_type === 'alpha'); renderVersionList(filtered); }
-function downloadSpecificPlugin(url, filename) { document.getElementById('pluginVersionModal').classList.add('hidden'); showToast(`Memproses ${filename}...`); socket.emit('download_plugin', url, filename); }
+async function downloadSpecificPlugin(url, filename) {
+ document.getElementById('pluginVersionModal').classList.add('hidden');
+ showToast(`Memproses ${filename}...`);
+ socket.emit('download_plugin', url, filename);
+ if (currentPluginMeta) {
+  try {
+   await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ filename, meta: { source: 'modrinth', project_id: currentPluginMeta.project_id, title: currentPluginMeta.title, icon_url: currentPluginMeta.icon_url } }) });
+  } catch(e) {}
+  currentPluginMeta = null;
+ }
+}
 socket.on('download_lock_state', (isDownloading) => { const startBtn = document.getElementById('startBtn'); const vmBtn = document.getElementById('vm-install-btn'); if (isDownloading) { if(startBtn) { startBtn.disabled = true; startBtn.innerText = "..."; } if(vmBtn) { vmBtn.disabled = true; vmBtn.innerText = "..."; } } else { if(startBtn) { startBtn.disabled = false; startBtn.innerText = "Start"; } if(vmBtn) { vmBtn.disabled = false; vmBtn.innerText = " INSTALL VERSI INI"; } } });
 socket.on('download_success_toast', () => { showToast('Berhasil Mengunduh!'); }); 
 socket.on('plugin_success_toast', (name) => { showToast(`Plugin ${name} terinstall!`); });
