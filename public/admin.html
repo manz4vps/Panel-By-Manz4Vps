@@ -1,400 +1,408 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Manz4vps V26</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .bg-panel { background-color: #1e293b; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .animate-spin-pro { animation: spin 1s linear infinite; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
-        @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
-    </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Admin Panel - Manz4vps V26</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <style>
+ body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+ .bg-panel { background-color: #1e293b; }
+ @keyframes spin { to { transform: rotate(360deg); } }
+ .animate-spin-pro { animation: spin 1s linear infinite; }
+ @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+ .fade-in { animation: fadeIn 0.3s ease-in-out; }
+ @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+ @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
+ </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen">
-    <div class="max-w-6xl mx-auto">
+ <div class="max-w-6xl mx-auto">
 
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-slate-700/60 pb-5 mt-2">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500 flex items-center gap-2">
-                    🛡️ Admin Panel
-                </h1>
-                <span class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Manz4vps Management Console</span>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="window.location.href='/dashboard.html'" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2">🏠 Dashboard</button>
-                <button onclick="window.location.href='/logout'" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-4 py-2.5 rounded-lg font-bold text-sm transition border border-red-500/20 active:scale-95 flex items-center gap-2">🚪 Keluar</button>
-            </div>
-        </div>
+ <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-slate-700/60 pb-5 mt-2">
+ <div>
+ <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500 flex items-center gap-2">
+ Admin Panel
+ </h1>
+ <span class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Manz4vps Management Console</span>
+ </div>
+ <div class="flex gap-2">
+ <button onclick="window.location.href='/dashboard.html'" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2">← Kembali</button>
+ </div>
+ </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="stats-bar">
-            <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total User</p>
-                <p class="text-3xl font-black text-white" id="stat-users">-</p>
-            </div>
-            <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Server</p>
-                <p class="text-3xl font-black text-white" id="stat-servers">-</p>
-            </div>
-            <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Server Online</p>
-                <p class="text-3xl font-black text-green-400" id="stat-online">-</p>
-            </div>
-            <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Server Offline</p>
-                <p class="text-3xl font-black text-slate-500" id="stat-offline">-</p>
-            </div>
-        </div>
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="stats-bar">
+ <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
+ <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total User</p>
+ <p class="text-3xl font-black text-white" id="stat-users">-</p>
+ </div>
+ <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
+ <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Server</p>
+ <p class="text-3xl font-black text-white" id="stat-servers">-</p>
+ </div>
+ <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
+ <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Server Online</p>
+ <p class="text-3xl font-black text-green-400" id="stat-online">-</p>
+ </div>
+ <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
+ <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Server Offline</p>
+ <p class="text-3xl font-black text-slate-500" id="stat-offline">-</p>
+ </div>
+ </div>
 
-        <div class="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <h2 class="text-lg font-black text-white flex items-center gap-2">👥 Daftar User & Server</h2>
-            <div class="flex gap-2 w-full sm:w-auto">
-                <input type="text" id="search-input" placeholder="Cari user / server..." oninput="filterUsers()" class="flex-1 sm:w-64 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500 transition placeholder-slate-500">
-                <button onclick="loadData()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition active:scale-95">🔄</button>
-            </div>
-        </div>
+ <div class="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+ <h2 class="text-lg font-black text-white flex items-center gap-2"> Daftar User & Server</h2>
+ <div class="flex gap-2 w-full sm:w-auto">
+ <input type="text" id="search-input" placeholder="Cari user / server..." oninput="filterUsers()" class="flex-1 sm:w-64 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500 transition placeholder-slate-500">
+ <button onclick="loadData()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition active:scale-95"></button>
+ </div>
+ </div>
 
-        <div id="user-list" class="flex flex-col gap-4">
-            <div class="text-center py-12" id="loading-indicator">
-                <div class="inline-block w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin-pro"></div>
-                <p class="text-slate-400 mt-4 font-bold text-sm">Memuat data admin...</p>
-            </div>
-        </div>
-    </div>
+ <div id="user-list" class="flex flex-col gap-4">
+ <div class="text-center py-12" id="loading-indicator">
+ <div class="inline-block w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin-pro"></div>
+ <p class="text-slate-400 mt-4 font-bold text-sm">Memuat data admin...</p>
+ </div>
+ </div>
 
-    <div id="modal-limits" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✖</button>
-            <h3 class="text-xl font-black text-white mb-1">✏️ Edit Limit</h3>
-            <p class="text-sm text-slate-400 mb-5">User: <span id="modal-username" class="font-bold text-white"></span></p>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">RAM (MB)</label>
-                    <input type="number" id="input-ram" placeholder="Contoh: 2048" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">CPU (%)</label>
-                    <input type="number" id="input-cpu" placeholder="Contoh: 100" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Disk (MB)</label>
-                    <input type="number" id="input-disk" placeholder="Contoh: 51200" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
-                </div>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="closeModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
-                <button onclick="saveLimits()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Simpan</button>
-            </div>
-        </div>
-    </div>
+ </div>
 
-    <div id="modal-reset-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
-            <button onclick="closeResetModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✖</button>
-            <h3 class="text-xl font-black text-white mb-1">🔑 Reset Password</h3>
-            <p class="text-sm text-slate-400 mb-5">User: <span id="reset-modal-username" class="font-bold text-white"></span></p>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Password Baru</label>
-                    <div class="relative">
-                        <input type="password" id="input-new-password" placeholder="Minimal 6 karakter" class="w-full bg-slate-900 p-3 pr-12 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
-                        <button type="button" onclick="togglePassVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition text-lg">👁️</button>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Konfirmasi Password</label>
-                    <input type="password" id="input-confirm-password" placeholder="Ulangi password baru" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
-                </div>
-                <p id="reset-error" class="hidden text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="closeResetModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
-                <button onclick="executeResetPassword()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Reset Password</button>
-            </div>
-        </div>
-    </div>
+ <div id="modal-limits" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+ <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
+ <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition"></button>
+ <h3 class="text-xl font-black text-white mb-1"> Edit Limit</h3>
+ <p class="text-sm text-slate-400 mb-5">User: <span id="modal-username" class="font-bold text-white"></span></p>
+ <div class="space-y-4">
+ <div>
+ <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">RAM (GB) — contoh: 2G, 5G</label>
+ <input type="text" id="input-ram" placeholder="Contoh: 2G" oninput="this.value=this.value.replace(/g/g,'G')" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+ </div>
+ <div>
+ <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">CPU (%)</label>
+ <input type="number" id="input-cpu" placeholder="Contoh: 100" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+ </div>
+ <div>
+ <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Disk (GB) — contoh: 5G, 10G</label>
+ <input type="text" id="input-disk" placeholder="Contoh: 5G" oninput="this.value=this.value.replace(/g/g,'G')" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+ </div>
+ </div>
+ <div class="flex gap-3 mt-6">
+ <button onclick="closeModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+ <button onclick="saveLimits()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Simpan</button>
+ </div>
+ </div>
+ </div>
 
-    <div id="modal-delete-user" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-        <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-2xl text-center fade-in">
-            <span class="text-5xl mb-3 block">⚠️</span>
-            <h3 class="text-2xl font-black text-red-500 mb-2">Hapus User?</h3>
-            <p class="text-slate-300 text-sm mb-4">User <span id="delete-username-display" class="font-black text-white"></span> dan semua servernya akan dihapus permanen.</p>
-            <p class="text-red-400 text-xs font-bold mb-6 bg-red-500/10 p-2 rounded border border-red-500/20">Tindakan ini tidak bisa dibatalkan!</p>
-            <div class="flex gap-3">
-                <button onclick="document.getElementById('modal-delete-user').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
-                <button onclick="executeDeleteUser()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition active:scale-95">Ya, Hapus</button>
-            </div>
-        </div>
-    </div>
+ <div id="modal-reset-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+ <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
+ <button onclick="closeResetModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition"></button>
+ <h3 class="text-xl font-black text-white mb-1"> Reset Password</h3>
+ <p class="text-sm text-slate-400 mb-5">User: <span id="reset-modal-username" class="font-bold text-white"></span></p>
+ <div class="space-y-4">
+ <div>
+ <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Password Baru</label>
+ <div class="relative">
+ <input type="password" id="input-new-password" placeholder="Minimal 6 karakter" class="w-full bg-slate-900 p-3 pr-12 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+ <button type="button" onclick="togglePassVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition text-lg"></button>
+ </div>
+ </div>
+ <div>
+ <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Konfirmasi Password</label>
+ <input type="password" id="input-confirm-password" placeholder="Ulangi password baru" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+ </div>
+ <p id="reset-error" class="hidden text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
+ </div>
+ <div class="flex gap-3 mt-6">
+ <button onclick="closeResetModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+ <button onclick="executeResetPassword()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Reset Password</button>
+ </div>
+ </div>
+ </div>
 
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] space-y-2 w-80 flex flex-col-reverse gap-2"></div>
+ <div id="modal-delete-user" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+ <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-2xl text-center fade-in">
+ <span class="text-5xl mb-3 block"></span>
+ <h3 class="text-2xl font-black text-red-500 mb-2">Hapus User?</h3>
+ <p class="text-slate-300 text-sm mb-4">User <span id="delete-username-display" class="font-black text-white"></span> dan semua servernya akan dihapus permanen.</p>
+ <p class="text-red-400 text-xs font-bold mb-6 bg-red-500/10 p-2 rounded border border-red-500/20">Tindakan ini tidak bisa dibatalkan!</p>
+ <div class="flex gap-3">
+ <button onclick="document.getElementById('modal-delete-user').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+ <button onclick="executeDeleteUser()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition active:scale-95">Ya, Hapus</button>
+ </div>
+ </div>
+ </div>
 
-    <script>
-        let allUsers = [];
-        let pendingDeleteUser = null;
-        let editingUser = null;
+ <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-1.5 w-72 flex flex-col gap-1.5"></div>
 
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            if (container.children.length >= 5) container.removeChild(container.lastChild);
-            const isSuccess = type === 'success';
-            const isWarning = type === 'warning';
-            const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
-            const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
-            const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
-            const icon = isSuccess ? '✓' : isWarning ? '!' : '✕';
-            const toast = document.createElement('div');
-            toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 overflow-hidden`;
-            toast.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1)';
-            toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${message}</span><button class="text-slate-500 hover:text-white transition text-xl leading-none flex-shrink-0 ml-1">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
-            container.insertBefore(toast, container.firstChild);
-            requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
-            const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
-            toast.querySelector('button').addEventListener('click', () => { clearTimeout(autoRemove); toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); });
-        }
+ <script>
+ let allUsers = [];
+ let pendingDeleteUser = null;
+ let editingUser = null;
 
-        async function loadData() {
-            document.getElementById('loading-indicator').classList.remove('hidden');
-            document.querySelectorAll('.user-card').forEach(el => el.remove());
-            try {
-                const res = await fetch('/api/admin/users');
-                if (res.status === 403) return window.location.href = '/';
-                allUsers = await res.json();
-                renderUsers(allUsers);
-            } catch(e) {
-                showToast('Gagal memuat data', 'error');
-            }
-            document.getElementById('loading-indicator').classList.add('hidden');
-        }
+ function showToast(message, type = 'success') {
+ const container = document.getElementById('toast-container');
+ if (container.children.length >= 5) container.removeChild(container.lastChild);
+ const isSuccess = type === 'success';
+ const isWarning = type === 'warning';
+ const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
+ const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
+ const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
+ const icon = isSuccess ? '' : isWarning ? '!' : '';
+ const toast = document.createElement('div');
+ toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 overflow-hidden`;
+ toast.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+ toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${message}</span><button class="text-slate-500 hover:text-white transition text-xl leading-none flex-shrink-0 ml-1">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
+ container.insertBefore(toast, container.firstChild);
+ requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
+ const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
+ toast.querySelector('button').addEventListener('click', () => { clearTimeout(autoRemove); toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); });
+ }
 
-        function filterUsers() {
-            const q = document.getElementById('search-input').value.toLowerCase();
-            if (!q) { renderUsers(allUsers); return; }
-            const filtered = allUsers.filter(u =>
-                u.username.toLowerCase().includes(q) ||
-                u.email.toLowerCase().includes(q) ||
-                u.servers.some(s => s.name.toLowerCase().includes(q))
-            );
-            renderUsers(filtered);
-        }
+ async function loadData() {
+ document.getElementById('loading-indicator').classList.remove('hidden');
+ document.querySelectorAll('.user-card').forEach(el => el.remove());
+ try {
+ const res = await fetch('/api/admin/users');
+ if (res.status === 403) return window.location.href = '/';
+ allUsers = await res.json();
+ renderUsers(allUsers);
+ } catch(e) {
+ showToast('Gagal memuat data', 'error');
+ }
+ document.getElementById('loading-indicator').classList.add('hidden');
+ }
 
-        function renderUsers(users) {
-            document.querySelectorAll('.user-card').forEach(el => el.remove());
+ function filterUsers() {
+ const q = document.getElementById('search-input').value.toLowerCase();
+ if (!q) { renderUsers(allUsers); return; }
+ const filtered = allUsers.filter(u =>
+ u.username.toLowerCase().includes(q) ||
+ u.email.toLowerCase().includes(q) ||
+ u.servers.some(s => s.name.toLowerCase().includes(q))
+ );
+ renderUsers(filtered);
+ }
 
-            let totalServers = 0, totalOnline = 0;
-            document.getElementById('stat-users').textContent = users === allUsers ? allUsers.length : document.getElementById('stat-users').textContent;
+ function renderUsers(users) {
+ document.querySelectorAll('.user-card').forEach(el => el.remove());
 
-            if (users.length === 0) {
-                document.getElementById('user-list').insertAdjacentHTML('beforeend', `<div class="user-card text-center py-16 border-2 border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20"><p class="text-slate-400 font-bold">Tidak ada user ditemukan</p></div>`);
-                return;
-            }
+ let totalServers = 0, totalOnline = 0;
+ document.getElementById('stat-users').textContent = users === allUsers ? allUsers.length : document.getElementById('stat-users').textContent;
 
-            users.forEach(user => {
-                const onlineCount = user.servers.filter(s => s.isOnline).length;
-                totalServers += user.servers.length;
-                totalOnline += onlineCount;
+ if (users.length === 0) {
+ document.getElementById('user-list').insertAdjacentHTML('beforeend', `<div class="user-card text-center py-16 border-2 border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20"><p class="text-slate-400 font-bold">Tidak ada user ditemukan</p></div>`);
+ return;
+ }
 
-                const serversHtml = user.servers.length === 0
-                    ? `<p class="text-slate-500 text-xs italic">Tidak ada server</p>`
-                    : user.servers.map(srv => `
-                        <div class="flex items-center justify-between bg-slate-900/60 rounded-lg px-3 py-2 border border-slate-700/40">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full flex-shrink-0 ${srv.isOnline ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]' : 'bg-slate-600'}"></span>
-                                <span class="text-sm font-mono font-bold text-slate-200">${srv.name}</span>
-                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${srv.isOnline ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-500'}">${srv.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
-                            </div>
-                            ${srv.isOnline ? `
-                            <div class="flex gap-1.5">
-                                <button onclick="stopServer('${srv.name}', false)" class="text-[11px] font-bold bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Stop</button>
-                                <button onclick="stopServer('${srv.name}', true)" class="text-[11px] font-bold bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Kill</button>
-                            </div>` : ''}
-                        </div>`).join('');
+ users.forEach(user => {
+ const onlineCount = user.servers.filter(s => s.isOnline).length;
+ totalServers += user.servers.length;
+ totalOnline += onlineCount;
 
-                const ramGB = (user.limits.ram / 1024).toFixed(1);
-                const diskGB = (user.limits.disk / 1024).toFixed(1);
+ const serversHtml = user.servers.length === 0
+ ? `<p class="text-slate-500 text-xs italic">Tidak ada server</p>`
+ : user.servers.map(srv => `
+ <div class="flex items-center justify-between bg-slate-900/60 rounded-lg px-3 py-2 border border-slate-700/40">
+ <div class="flex items-center gap-2">
+ <span class="w-2 h-2 rounded-full flex-shrink-0 ${srv.isOnline ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]' : 'bg-slate-600'}"></span>
+ <span class="text-sm font-mono font-bold text-slate-200">${srv.name}</span>
+ <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${srv.isOnline ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-500'}">${srv.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+ </div>
+ ${srv.isOnline ? `
+ <div class="flex gap-1.5">
+ <button onclick="stopServer('${srv.name}', false)" class="text-[11px] font-bold bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Stop</button>
+ <button onclick="stopServer('${srv.name}', true)" class="text-[11px] font-bold bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Kill</button>
+ </div>` : ''}
+ </div>`).join('');
 
-                const card = document.createElement('div');
-                card.className = 'user-card bg-panel border border-slate-700/50 rounded-xl p-5 shadow-lg fade-in';
-                card.innerHTML = `
-                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 rounded-xl flex items-center justify-center border border-blue-500/30 font-black text-blue-400 text-lg">
-                                ${user.username.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <h3 class="font-black text-white text-[15px]">${user.username}</h3>
-                                <p class="text-xs text-slate-500">${user.email}</p>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-2 sm:items-start">
-                            <div class="flex gap-2 text-[11px] font-bold">
-                                <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700">💾 RAM ${ramGB} GB</span>
-                                <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700">🖥️ CPU ${user.limits.cpu}%</span>
-                                <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700">💿 Disk ${diskGB} GB</span>
-                            </div>
-                            <button onclick="openLimits('${user.username}', ${user.limits.ram}, ${user.limits.cpu}, ${user.limits.disk})" class="text-[12px] font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 transition active:scale-95">✏️ Edit Limit</button>
-                            <button onclick="openResetPassword('${user.username}')" class="text-[12px] font-bold bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-3 py-1.5 rounded-lg border border-yellow-500/20 transition active:scale-95">🔑 Reset Password</button>
-                            <button onclick="confirmDeleteUser('${user.username}')" class="text-[12px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg border border-red-500/20 transition active:scale-95">🗑️ Hapus User</button>
-                        </div>
-                    </div>
-                    <div>
-                        <p class="text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-2">
-                            Server (${user.servers.length}) — ${onlineCount} Online
-                        </p>
-                        <div class="flex flex-col gap-2">${serversHtml}</div>
-                    </div>`;
-                document.getElementById('user-list').appendChild(card);
-            });
+ const ramGB = (user.limits.ram / 1024).toFixed(1);
+ const diskGB = (user.limits.disk / 1024).toFixed(1);
 
-            if (users === allUsers) {
-                document.getElementById('stat-users').textContent = allUsers.length;
-                document.getElementById('stat-servers').textContent = totalServers;
-                document.getElementById('stat-online').textContent = totalOnline;
-                document.getElementById('stat-offline').textContent = totalServers - totalOnline;
-            }
-        }
+ const card = document.createElement('div');
+ card.className = 'user-card bg-panel border border-slate-700/50 rounded-xl p-5 shadow-lg fade-in';
+ card.innerHTML = `
+ <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+ <div class="flex items-center gap-3">
+ <div class="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 rounded-xl flex items-center justify-center border border-blue-500/30 font-black text-blue-400 text-lg">
+ ${user.username.charAt(0).toUpperCase()}
+ </div>
+ <div>
+ <h3 class="font-black text-white text-[15px]">${user.username}</h3>
+ <p class="text-xs text-slate-500">${user.email}</p>
+ </div>
+ </div>
+ <div class="flex flex-wrap gap-2 sm:items-start">
+ <div class="flex flex-wrap gap-2 text-[11px] font-bold">
+ <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700"> RAM ${ramGB} GB</span>
+ <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700"> CPU ${user.limits.cpu}%</span>
+ <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700"> Disk ${diskGB} GB</span>
 
-        async function stopServer(serverName, force) {
-            try {
-                const res = await fetch('/api/admin/stop-server', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ serverName, force })
-                });
-                const data = await res.json();
-                if (res.ok) { showToast(`Server "${serverName}" ${force ? 'di-kill' : 'distop'}!`); setTimeout(loadData, 1500); }
-                else showToast(data.error || 'Gagal', 'error');
-            } catch(e) { showToast('Error jaringan', 'error'); }
-        }
+ </div>
+ <button onclick="openLimits('${user.username}', ${user.limits.ram}, ${user.limits.cpu}, ${user.limits.disk})" class="text-[12px] font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 transition active:scale-95"> Edit Limit</button>
+ <button onclick="openResetPassword('${user.username}')" class="text-[12px] font-bold bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-3 py-1.5 rounded-lg border border-yellow-500/20 transition active:scale-95"> Reset Password</button>
+ <button onclick="confirmDeleteUser('${user.username}')" class="text-[12px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg border border-red-500/20 transition active:scale-95"> Hapus User</button>
+ </div>
+ </div>
+ <div>
+ <p class="text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-2">
+ Server (${user.servers.length}) — ${onlineCount} Online
+ </p>
+ <div class="flex flex-col gap-2">${serversHtml}</div>
+ </div>`;
+ document.getElementById('user-list').appendChild(card);
+ });
 
-        function confirmDeleteUser(username) {
-            pendingDeleteUser = username;
-            document.getElementById('delete-username-display').textContent = username;
-            document.getElementById('modal-delete-user').classList.remove('hidden');
-        }
+ if (users === allUsers) {
+ document.getElementById('stat-users').textContent = allUsers.length;
+ document.getElementById('stat-servers').textContent = totalServers;
+ document.getElementById('stat-online').textContent = totalOnline;
+ document.getElementById('stat-offline').textContent = totalServers - totalOnline;
+ }
+ }
 
-        async function executeDeleteUser() {
-            document.getElementById('modal-delete-user').classList.add('hidden');
-            if (!pendingDeleteUser) return;
-            try {
-                const res = await fetch('/api/admin/delete-user', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: pendingDeleteUser })
-                });
-                const data = await res.json();
-                if (res.ok) { showToast(`User "${pendingDeleteUser}" dihapus!`); loadData(); }
-                else showToast(data.error || 'Gagal menghapus user', 'error');
-            } catch(e) { showToast('Error jaringan', 'error'); }
-            pendingDeleteUser = null;
-        }
+ async function stopServer(serverName, force) {
+ try {
+ const res = await fetch('/api/admin/stop-server', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ serverName, force })
+ });
+ const data = await res.json();
+ if (res.ok) { showToast(`Server "${serverName}" ${force ? 'di-kill' : 'distop'}!`); setTimeout(loadData, 1500); }
+ else showToast(data.error || 'Gagal', 'error');
+ } catch(e) { showToast('Error jaringan', 'error'); }
+ }
 
-        function openLimits(username, ram, cpu, disk) {
-            editingUser = username;
-            document.getElementById('modal-username').textContent = username;
-            document.getElementById('input-ram').value = ram;
-            document.getElementById('input-cpu').value = cpu;
-            document.getElementById('input-disk').value = disk;
-            document.getElementById('modal-limits').classList.remove('hidden');
-        }
+ function confirmDeleteUser(username) {
+ pendingDeleteUser = username;
+ document.getElementById('delete-username-display').textContent = username;
+ document.getElementById('modal-delete-user').classList.remove('hidden');
+ }
 
-        function closeModal() {
-            document.getElementById('modal-limits').classList.add('hidden');
-            editingUser = null;
-        }
+ async function executeDeleteUser() {
+ document.getElementById('modal-delete-user').classList.add('hidden');
+ if (!pendingDeleteUser) return;
+ try {
+ const res = await fetch('/api/admin/delete-user', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ username: pendingDeleteUser })
+ });
+ const data = await res.json();
+ if (res.ok) { showToast(`User "${pendingDeleteUser}" dihapus!`); loadData(); }
+ else showToast(data.error || 'Gagal menghapus user', 'error');
+ } catch(e) { showToast('Error jaringan', 'error'); }
+ pendingDeleteUser = null;
+ }
 
-        async function saveLimits() {
-            if (!editingUser) return;
-            const ram = document.getElementById('input-ram').value;
-            const cpu = document.getElementById('input-cpu').value;
-            const disk = document.getElementById('input-disk').value;
-            try {
-                const res = await fetch('/api/admin/update-limits', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: editingUser, ram, cpu, disk })
-                });
-                const data = await res.json();
-                if (res.ok) { showToast('Limit berhasil disimpan!'); closeModal(); loadData(); }
-                else showToast(data.error || 'Gagal menyimpan', 'error');
-            } catch(e) { showToast('Error jaringan', 'error'); }
-        }
+ function mbToG(mb) { const g = mb / 1024; return Number.isInteger(g) ? g + 'G' : g.toFixed(1) + 'G'; }
+ function gToMb(str) { const s = String(str).trim().toUpperCase(); if (s.endsWith('G')) return Math.round(parseFloat(s) * 1024); if (s.endsWith('M')) return Math.round(parseFloat(s)); return parseInt(s) || 0; }
 
-        let resetingUser = null;
+ function openLimits(username, ram, cpu, disk) {
+ editingUser = username;
+ document.getElementById('modal-username').textContent = username;
+ document.getElementById('input-ram').value = mbToG(ram);
+ document.getElementById('input-cpu').value = cpu;
+ document.getElementById('input-disk').value = mbToG(disk);
+ document.getElementById('modal-limits').classList.remove('hidden');
+ }
 
-        function openResetPassword(username) {
-            resetingUser = username;
-            document.getElementById('reset-modal-username').textContent = username;
-            document.getElementById('input-new-password').value = '';
-            document.getElementById('input-confirm-password').value = '';
-            document.getElementById('input-new-password').type = 'password';
-            const errEl = document.getElementById('reset-error');
-            errEl.classList.add('hidden');
-            errEl.textContent = '';
-            document.getElementById('modal-reset-password').classList.remove('hidden');
-            setTimeout(() => document.getElementById('input-new-password').focus(), 100);
-        }
+ function closeModal() {
+ document.getElementById('modal-limits').classList.add('hidden');
+ editingUser = null;
+ }
 
-        function closeResetModal() {
-            document.getElementById('modal-reset-password').classList.add('hidden');
-            resetingUser = null;
-        }
+ async function saveLimits() {
+ if (!editingUser) return;
+ const ramRaw = document.getElementById('input-ram').value;
+ const cpu = document.getElementById('input-cpu').value;
+ const diskRaw = document.getElementById('input-disk').value;
+ const ram = gToMb(ramRaw);
+ const disk = gToMb(diskRaw);
+ if (!ram || ram < 128) return showToast('RAM minimal 128M / 0.125G', 'error');
+ if (!disk || disk < 512) return showToast('Disk minimal 512M / 0.5G', 'error');
+ try {
+ const res = await fetch('/api/admin/update-limits', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ username: editingUser, ram, cpu, disk })
+ });
+ const data = await res.json();
+ if (res.ok) { showToast('Limit berhasil disimpan!'); closeModal(); loadData(); }
+ else showToast(data.error || 'Gagal menyimpan', 'error');
+ } catch(e) { showToast('Error jaringan', 'error'); }
+ }
 
-        function togglePassVisibility() {
-            const inp = document.getElementById('input-new-password');
-            inp.type = inp.type === 'password' ? 'text' : 'password';
-        }
+ let resetingUser = null;
 
-        async function executeResetPassword() {
-            if (!resetingUser) return;
-            const newPassword = document.getElementById('input-new-password').value;
-            const confirmPassword = document.getElementById('input-confirm-password').value;
-            const errEl = document.getElementById('reset-error');
+ function openResetPassword(username) {
+ resetingUser = username;
+ document.getElementById('reset-modal-username').textContent = username;
+ document.getElementById('input-new-password').value = '';
+ document.getElementById('input-confirm-password').value = '';
+ document.getElementById('input-new-password').type = 'password';
+ const errEl = document.getElementById('reset-error');
+ errEl.classList.add('hidden');
+ errEl.textContent = '';
+ document.getElementById('modal-reset-password').classList.remove('hidden');
+ setTimeout(() => document.getElementById('input-new-password').focus(), 100);
+ }
 
-            errEl.classList.add('hidden');
+ function closeResetModal() {
+ document.getElementById('modal-reset-password').classList.add('hidden');
+ resetingUser = null;
+ }
 
-            if (!newPassword || newPassword.length < 6) {
-                errEl.textContent = 'Password minimal 6 karakter.';
-                errEl.classList.remove('hidden');
-                return;
-            }
-            if (newPassword !== confirmPassword) {
-                errEl.textContent = 'Konfirmasi password tidak cocok!';
-                errEl.classList.remove('hidden');
-                return;
-            }
+ function togglePassVisibility() {
+ const inp = document.getElementById('input-new-password');
+ inp.type = inp.type === 'password' ? 'text' : 'password';
+ }
 
-            try {
-                const res = await fetch('/api/admin/reset-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: resetingUser, newPassword })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    showToast(`Password "${resetingUser}" berhasil direset!`);
-                    closeResetModal();
-                } else {
-                    errEl.textContent = data.error || 'Gagal mereset password.';
-                    errEl.classList.remove('hidden');
-                }
-            } catch(e) {
-                errEl.textContent = 'Error jaringan.';
-                errEl.classList.remove('hidden');
-            }
-        }
+ async function executeResetPassword() {
+ if (!resetingUser) return;
+ const newPassword = document.getElementById('input-new-password').value;
+ const confirmPassword = document.getElementById('input-confirm-password').value;
+ const errEl = document.getElementById('reset-error');
 
-        document.getElementById('input-confirm-password').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') executeResetPassword();
-        });
+ errEl.classList.add('hidden');
 
-        loadData();
-        setInterval(loadData, 10000);
-    </script>
+ if (!newPassword || newPassword.length < 6) {
+ errEl.textContent = 'Password minimal 6 karakter.';
+ errEl.classList.remove('hidden');
+ return;
+ }
+ if (newPassword !== confirmPassword) {
+ errEl.textContent = 'Konfirmasi password tidak cocok!';
+ errEl.classList.remove('hidden');
+ return;
+ }
+
+ try {
+ const res = await fetch('/api/admin/reset-password', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ username: resetingUser, newPassword })
+ });
+ const data = await res.json();
+ if (res.ok) {
+ showToast(`Password "${resetingUser}" berhasil direset!`);
+ closeResetModal();
+ } else {
+ errEl.textContent = data.error || 'Gagal mereset password.';
+ errEl.classList.remove('hidden');
+ }
+ } catch(e) {
+ errEl.textContent = 'Error jaringan.';
+ errEl.classList.remove('hidden');
+ }
+ }
+
+ document.getElementById('input-confirm-password').addEventListener('keydown', (e) => {
+ if (e.key === 'Enter') executeResetPassword();
+ });
+
+ loadData();
+ setInterval(loadData, 10000);
+ </script>
 </body>
 </html>
