@@ -1,616 +1,616 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Panel V26</title>
-    
-    <!-- 🔥 KODE PWA DIMULAI DARI SINI 🔥 -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1154/1154868.png">
-    <!-- 🔥 BATAS KODE PWA 🔥 -->
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Enterprise Panel V26</title>
+ 
+ <!-- KODE PWA DIMULAI DARI SINI -->
+ <link rel="manifest" href="/manifest.json">
+ <meta name="theme-color" content="#0f172a">
+ <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1154/1154868.png">
+ <!-- BATAS KODE PWA -->
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/properties/properties.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/toml/toml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/nginx/nginx.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/go/go.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/ruby/ruby.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/rust/rust.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/dockerfile/dockerfile.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/diff/diff.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/lua/lua.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/http/http.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
-    
-    <script>
-    const cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = '/panel.css?v=' + new Date().getTime();
-    document.head.appendChild(cssLink);
-    </script>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ 
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/properties/properties.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/toml/toml.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/nginx/nginx.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/go/go.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/ruby/ruby.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/rust/rust.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/dockerfile/dockerfile.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/diff/diff.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/lua/lua.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/http/http.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+ 
+ <script>
+ const cssLink = document.createElement('link');
+ cssLink.rel = 'stylesheet';
+ cssLink.href = '/panel.css?v=' + new Date().getTime();
+ document.head.appendChild(cssLink);
+ </script>
 
-    <style>
-        body { background-color: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
-        
-        /* ═══════════════════════════════════════════
-           TEMA EDITOR — ONE DARK (PERSIS PTERODACTYL)
-           ═══════════════════════════════════════════ */
-        .CodeMirror {
-            position: absolute; top: 0; bottom: 0; left: 0; right: 0; height: 100%;
-            font-size: 13.5px; font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-            background-color: #1a1d23 !important;
-            color: #c9d1d9 !important;
-        }
-        .CodeMirror-gutters {
-            background-color: #13151a !important;
-            border-right: 1px solid #2a2d35 !important;
-        }
-        .CodeMirror-linenumber { color: #3d4350 !important; }
-        .CodeMirror-cursor { border-left: 2px solid #528bff !important; }
-        .CodeMirror-selected { background-color: rgba(99,123,156,0.3) !important; }
-        .CodeMirror-activeline-background { background-color: #20242c !important; }
-        .CodeMirror-matchingbracket { color: #ffffff !important; border-bottom: 1px solid #abb2bf; }
+ <style>
+ body { background-color: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
+ 
+ /* 
+ TEMA EDITOR — ONE DARK (PERSIS PTERODACTYL)
+ */
+ .CodeMirror {
+ position: absolute; top: 0; bottom: 0; left: 0; right: 0; height: 100%;
+ font-size: 13.5px; font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+ background-color: #1a1d23 !important;
+ color: #c9d1d9 !important;
+ }
+ .CodeMirror-gutters {
+ background-color: #13151a !important;
+ border-right: 1px solid #2a2d35 !important;
+ }
+ .CodeMirror-linenumber { color: #3d4350 !important; }
+ .CodeMirror-cursor { border-left: 2px solid #528bff !important; }
+ .CodeMirror-selected { background-color: rgba(99,123,156,0.3) !important; }
+ .CodeMirror-activeline-background { background-color: #20242c !important; }
+ .CodeMirror-matchingbracket { color: #ffffff !important; border-bottom: 1px solid #abb2bf; }
 
-        /* ─────────────────────────────────────────────
-           Tema Editor — Full Syntax, String = Kuning
-           ───────────────────────────────────────────── */
+ /* 
+ Tema Editor — Full Syntax, String = Kuning
+ */
 
-        /* Keywords: const, let, if, return, function ... */
-        .CodeMirror span.cm-keyword    { color: #cc99cd !important; }
-        /* Definitions: nama fungsi saat didefinisikan */
-        .CodeMirror span.cm-def        { color: #6fb3d2 !important; }
-        /* Variables */
-        .CodeMirror span.cm-variable   { color: #c9d1d9 !important; }
-        .CodeMirror span.cm-variable-2 { color: #7ec8e3 !important; }
-        .CodeMirror span.cm-variable-3,
-        .CodeMirror span.cm-type       { color: #e5c07b !important; }
-        /* Builtin: console, require, process ... */
-        .CodeMirror span.cm-builtin    { color: #7ec8e3 !important; }
-        /* Strings: KUNING — semua bahasa */
-        .CodeMirror span.cm-string,
-        .CodeMirror span.cm-string-2   { color: #e3b341 !important; }
-        /* Atoms: true, false, null + kunci Properties file */
-        .CodeMirror span.cm-atom       { color: #f08d49 !important; }
-        /* Numbers */
-        .CodeMirror span.cm-number     { color: #f08d49 !important; }
-        /* Object properties / CSS props */
-        .CodeMirror span.cm-property   { color: #e5c07b !important; }
-        /* Operators */
-        .CodeMirror span.cm-operator   { color: #c9d1d9 !important; }
-        .CodeMirror span.cm-punctuation{ color: #c9d1d9 !important; }
-        /* Comments: abu italic */
-        .CodeMirror span.cm-comment    { color: #6e7681 !important; font-style: italic !important; }
-        /* HTML/XML tags */
-        .CodeMirror span.cm-tag        { color: #e07b7b !important; }
-        /* HTML attributes */
-        .CodeMirror span.cm-attribute  { color: #e3b341 !important; }
-        .CodeMirror span.cm-bracket    { color: #c9d1d9 !important; }
-        /* Meta: YAML section, Nginx directive */
-        .CodeMirror span.cm-meta       { color: #79c0ff !important; }
-        /* CSS selectors */
-        .CodeMirror span.cm-qualifier  { color: #79c0ff !important; }
-        /* Markdown */
-        .CodeMirror span.cm-header     { color: #e07b7b !important; font-weight: bold !important; }
-        .CodeMirror span.cm-strong     { color: #e5c07b !important; font-weight: bold !important; }
-        .CodeMirror span.cm-em         { color: #cc99cd !important; font-style: italic !important; }
-        .CodeMirror span.cm-link       { color: #79c0ff !important; }
-        .CodeMirror span.cm-url        { color: #e3b341 !important; }
-        .CodeMirror span.cm-hr         { color: #6e7681 !important; }
-        /* Error */
-        .CodeMirror span.cm-error      { color: #e07b7b !important; border-bottom: 1px dotted #e07b7b; }
+ /* Keywords: const, let, if, return, function ... */
+ .CodeMirror span.cm-keyword { color: #cc99cd !important; }
+ /* Definitions: nama fungsi saat didefinisikan */
+ .CodeMirror span.cm-def { color: #6fb3d2 !important; }
+ /* Variables */
+ .CodeMirror span.cm-variable { color: #c9d1d9 !important; }
+ .CodeMirror span.cm-variable-2 { color: #7ec8e3 !important; }
+ .CodeMirror span.cm-variable-3,
+ .CodeMirror span.cm-type { color: #e5c07b !important; }
+ /* Builtin: console, require, process ... */
+ .CodeMirror span.cm-builtin { color: #7ec8e3 !important; }
+ /* Strings: KUNING — semua bahasa */
+ .CodeMirror span.cm-string,
+ .CodeMirror span.cm-string-2 { color: #e3b341 !important; }
+ /* Atoms: true, false, null + kunci Properties file */
+ .CodeMirror span.cm-atom { color: #f08d49 !important; }
+ /* Numbers */
+ .CodeMirror span.cm-number { color: #f08d49 !important; }
+ /* Object properties / CSS props */
+ .CodeMirror span.cm-property { color: #e5c07b !important; }
+ /* Operators */
+ .CodeMirror span.cm-operator { color: #c9d1d9 !important; }
+ .CodeMirror span.cm-punctuation{ color: #c9d1d9 !important; }
+ /* Comments: abu italic */
+ .CodeMirror span.cm-comment { color: #6e7681 !important; font-style: italic !important; }
+ /* HTML/XML tags */
+ .CodeMirror span.cm-tag { color: #e07b7b !important; }
+ /* HTML attributes */
+ .CodeMirror span.cm-attribute { color: #e3b341 !important; }
+ .CodeMirror span.cm-bracket { color: #c9d1d9 !important; }
+ /* Meta: YAML section, Nginx directive */
+ .CodeMirror span.cm-meta { color: #79c0ff !important; }
+ /* CSS selectors */
+ .CodeMirror span.cm-qualifier { color: #79c0ff !important; }
+ /* Markdown */
+ .CodeMirror span.cm-header { color: #e07b7b !important; font-weight: bold !important; }
+ .CodeMirror span.cm-strong { color: #e5c07b !important; font-weight: bold !important; }
+ .CodeMirror span.cm-em { color: #cc99cd !important; font-style: italic !important; }
+ .CodeMirror span.cm-link { color: #79c0ff !important; }
+ .CodeMirror span.cm-url { color: #e3b341 !important; }
+ .CodeMirror span.cm-hr { color: #6e7681 !important; }
+ /* Error */
+ .CodeMirror span.cm-error { color: #e07b7b !important; border-bottom: 1px dotted #e07b7b; }
 
-        .cm-search-match { background-color: rgba(234, 179, 8, 0.35) !important; color: #ffffff !important; }
-        .cm-search-active { background-color: rgba(234, 179, 8, 0.9) !important; color: #000000 !important; font-weight: 900 !important; }
-        
-        #terminal::-webkit-scrollbar { width: 6px; }
-        #terminal::-webkit-scrollbar-track { background: #0f172a; }
-        #terminal::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        
-        .ptero-scrollbar::-webkit-scrollbar { width: 4px; }
-        .ptero-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .ptero-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        
-        .tab-fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        #mobile-sidebar.active { transform: translateX(0); }
-        .sidebar-bg { background-color: #111827; }
-        @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
-        @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
-    </style>
+ .cm-search-match { background-color: rgba(234, 179, 8, 0.35) !important; color: #ffffff !important; }
+ .cm-search-active { background-color: rgba(234, 179, 8, 0.9) !important; color: #000000 !important; font-weight: 900 !important; }
+ 
+ #terminal::-webkit-scrollbar { width: 6px; }
+ #terminal::-webkit-scrollbar-track { background: #0f172a; }
+ #terminal::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+ 
+ .ptero-scrollbar::-webkit-scrollbar { width: 4px; }
+ .ptero-scrollbar::-webkit-scrollbar-track { background: transparent; }
+ .ptero-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+ 
+ .tab-fade-in { animation: fadeIn 0.3s ease-in-out; }
+ @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+ 
+ #mobile-sidebar.active { transform: translateX(0); }
+ .sidebar-bg { background-color: #111827; }
+ @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+ @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
+ </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen relative bg-[#0f172a] overflow-x-hidden" onclick="if(typeof closeAllDropdowns === 'function') closeAllDropdowns()">
-    
-    <div id="page-loader" class="fixed inset-0 bg-[#0f172a] z-[9999] flex items-center justify-center transition-opacity duration-300">
-        <div class="w-14 h-14 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
-    </div>
+ 
+ <div id="page-loader" class="fixed inset-0 bg-[#0f172a] z-[9999] flex items-center justify-center transition-opacity duration-300">
+ <div class="w-14 h-14 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+ </div>
 
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[999] space-y-3 w-80 max-h-[50vh] overflow-hidden flex flex-col-reverse"></div>
+ <div id="toast-container" class="fixed top-4 right-4 z-[999] space-y-2 w-72 max-h-[50vh] overflow-hidden flex flex-col gap-1.5"></div>
 
-    <aside class="w-[300px] sidebar-bg border-r border-slate-800 flex-col hidden md:flex h-full fixed md:sticky top-0 z-20 flex-shrink-0">
-        <div class="p-6 mb-2 flex items-center gap-4 border-b border-slate-800/50">
-            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
-            </div>
-            <div>
-                <h1 class="text-xl font-black text-slate-100 leading-tight">Manz4vps</h1>
-                <div class="text-sm font-bold text-slate-500">Panel V26</div>
-            </div>
-        </div>
-        
-        <nav class="flex-1 px-4 py-3 flex flex-col gap-2.5 overflow-y-auto ptero-scrollbar" id="sidebar-nav">
-            <button onclick="window.location.href='/dashboard.html'" class="w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
-                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg> Home
-            </button>
-            <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
-            <button onclick="showTab('console')" class="tab-btn-console w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
-                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Terminal
-            </button>
-            <button onclick='currentPath=""; showTab("files")' class="tab-btn-files w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
-                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg> Files
-            </button>
-            <button onclick="showTab('network')" class="tab-btn-network w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
-                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Network
-            </button>
-            <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
-                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Startup
-            </button>
-            <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
-                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg> Plugin
-            </button>
-            <button onclick="showTab('versions')" class="tab-btn-versions w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
-                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg> Version
-            </button>
-            <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
-            <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg mb-1">
-                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Settings
-            </button>
-            <button onclick="window.location.href='/logout'" class="w-full text-left px-5 py-4 mb-4 rounded-xl text-slate-400 font-bold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-4 transition-colors duration-200 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> Logout</button>
-        </nav>
-    </aside>
+ <aside class="w-[300px] sidebar-bg border-r border-slate-800 flex-col hidden md:flex h-full fixed md:sticky top-0 z-20 flex-shrink-0">
+ <div class="p-6 mb-2 flex items-center gap-4 border-b border-slate-800/50">
+ <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+ <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+ </div>
+ <div>
+ <h1 class="text-xl font-black text-slate-100 leading-tight">Manz4vps</h1>
+ <div class="text-sm font-bold text-slate-500">Panel V26</div>
+ </div>
+ </div>
+ 
+ <nav class="flex-1 px-4 py-3 flex flex-col gap-2.5 overflow-y-auto ptero-scrollbar" id="sidebar-nav">
+ <button onclick="window.location.href='/dashboard.html'" class="w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg> Home
+ </button>
+ <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
+ <button onclick="showTab('console')" class="tab-btn-console w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Terminal
+ </button>
+ <button onclick='currentPath=""; showTab("files")' class="tab-btn-files w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg> Files
+ </button>
+ <button onclick="showTab('network')" class="tab-btn-network w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Network
+ </button>
+ <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Startup
+ </button>
+ <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg> Plugin
+ </button>
+ <button onclick="showTab('versions')" class="tab-btn-versions w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg> Version
+ </button>
+ <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
+ <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg mb-1">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Settings
+ </button>
+ <button onclick="window.location.href='/logout'" class="w-full text-left px-5 py-4 mb-4 rounded-xl text-slate-400 font-bold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-4 transition-colors duration-200 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> Logout</button>
+ </nav>
+ </aside>
 
-    <div id="mobile-overlay" class="fixed inset-0 bg-black/80 z-40 hidden md:hidden" onclick="closeMobileMenu()"></div>
-    
-    <aside id="mobile-sidebar" class="fixed top-0 left-0 bottom-0 w-[300px] sidebar-bg border-r border-slate-800 flex flex-col z-50 md:hidden transition-transform duration-300 transform -translate-x-full shadow-2xl">
-        <div class="p-6 flex justify-between items-center border-b border-slate-800/50">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg></div>
-                <div><h1 class="text-xl font-black text-slate-100 leading-tight">Manz4vps</h1><div class="text-sm font-bold text-slate-500">Panel V26</div></div>
-            </div>
-            <button onclick="closeMobileMenu()" class="text-slate-400 hover:text-white text-3xl transition-colors">✖</button>
-        </div>
-        <nav class="flex-1 px-4 py-3 flex flex-col gap-2.5 overflow-y-auto ptero-scrollbar" onclick="closeMobileMenu()">
-            <button onclick="window.location.href='/dashboard.html'" class="w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>Home</button>
-            <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
-            <button onclick="showTab('console')" class="tab-btn-console w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Terminal</button>
-            <button onclick='currentPath=""; showTab("files")' class="tab-btn-files w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>Files</button>
-            <button onclick="showTab('network')" class="tab-btn-network w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>Network</button>
-            <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Startup</button>
-            <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>Plugin</button>
-            <button onclick="showTab('versions')" class="tab-btn-versions w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>Version</button>
-            <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
-            <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg mb-1"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Settings</button>
-            <button onclick="window.location.href='/logout'" class="w-full text-left px-5 py-4 mb-4 rounded-xl text-slate-400 font-bold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>Logout</button>
-        </nav>
-    </aside>
+ <div id="mobile-overlay" class="fixed inset-0 bg-black/80 z-40 hidden md:hidden" onclick="closeMobileMenu()"></div>
+ 
+ <aside id="mobile-sidebar" class="fixed top-0 left-0 bottom-0 w-[300px] sidebar-bg border-r border-slate-800 flex flex-col z-50 md:hidden transition-transform duration-300 transform -translate-x-full shadow-2xl">
+ <div class="p-6 flex justify-between items-center border-b border-slate-800/50">
+ <div class="flex items-center gap-4">
+ <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg></div>
+ <div><h1 class="text-xl font-black text-slate-100 leading-tight">Manz4vps</h1><div class="text-sm font-bold text-slate-500">Panel V26</div></div>
+ </div>
+ <button onclick="closeMobileMenu()" class="text-slate-400 hover:text-white text-3xl transition-colors"></button>
+ </div>
+ <nav class="flex-1 px-4 py-3 flex flex-col gap-2.5 overflow-y-auto ptero-scrollbar" onclick="closeMobileMenu()">
+ <button onclick="window.location.href='/dashboard.html'" class="w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>Home</button>
+ <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
+ <button onclick="showTab('console')" class="tab-btn-console w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Terminal</button>
+ <button onclick='currentPath=""; showTab("files")' class="tab-btn-files w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>Files</button>
+ <button onclick="showTab('network')" class="tab-btn-network w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>Network</button>
+ <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Startup</button>
+ <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>Plugin</button>
+ <button onclick="showTab('versions')" class="tab-btn-versions w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>Version</button>
+ <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
+ <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg mb-1"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Settings</button>
+ <button onclick="window.location.href='/logout'" class="w-full text-left px-5 py-4 mb-4 rounded-xl text-slate-400 font-bold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>Logout</button>
+ </nav>
+ </aside>
 
-    <div class="md:hidden fixed bottom-16 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-7">
-        <button onclick="window.location.href='/dashboard.html'" class="w-16 h-16 flex items-center justify-center text-slate-400 hover:text-white bg-[#111827] border border-slate-700/80 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.8)] transition active:scale-90 hover:border-slate-500" title="Dashboard">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-        </button>
-        <button onclick="showTab('settings')" class="w-16 h-16 flex items-center justify-center text-slate-400 hover:text-white bg-[#111827] border border-slate-700/80 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.8)] transition active:scale-90 hover:border-slate-500" title="Account/Settings">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-        </button>
-        <button onclick="toggleMobileMenu()" class="w-16 h-16 flex items-center justify-center text-slate-400 hover:text-white bg-[#111827] border border-slate-700/80 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.8)] transition active:scale-90 hover:border-slate-500" title="Menu">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-        </button>
-    </div>
+ <div class="md:hidden fixed bottom-20 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-10">
+ <button onclick="window.location.href='/dashboard.html'" class="w-16 h-16 flex items-center justify-center text-slate-400 hover:text-white bg-[#111827] border border-slate-700/80 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.8)] transition active:scale-90 hover:border-slate-500" title="Dashboard">
+ <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+ </button>
+ <button onclick="showTab('settings')" class="w-16 h-16 flex items-center justify-center text-slate-400 hover:text-white bg-[#111827] border border-slate-700/80 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.8)] transition active:scale-90 hover:border-slate-500" title="Account/Settings">
+ <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+ </button>
+ <button onclick="toggleMobileMenu()" class="w-16 h-16 flex items-center justify-center text-slate-400 hover:text-white bg-[#111827] border border-slate-700/80 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.8)] transition active:scale-90 hover:border-slate-500" title="Menu">
+ <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+ </button>
+ </div>
 
-    <main class="flex-1 flex flex-col min-w-0 min-h-screen md:h-screen md:overflow-y-auto relative pb-28 md:pb-0 w-full">
-        <div class="p-2 md:p-4 flex-1 w-full relative">
-            
-            <div id="console-view" class="hidden">
-                <div class="bg-[#1e293b] rounded-xl shadow-lg border border-slate-700 overflow-hidden mb-5"><div class="p-4 bg-[#1e293b] border-b border-slate-700 flex flex-row gap-3"><button id="startBtn" class="flex-1 min-w-0 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Start</button><button id="restartBtn" class="flex-1 min-w-0 bg-slate-600 hover:bg-slate-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Restart</button><button id="stopBtn" class="flex-1 min-w-0 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Stop</button></div><div class="relative bg-[#0f172a] h-[42vh] md:h-[38vh]"><div id="terminal" class="absolute inset-0 p-4 overflow-y-auto overflow-x-hidden break-words break-all text-[11px] md:text-xs leading-tight font-mono whitespace-pre-wrap"></div><div class="absolute bottom-4 right-6 flex flex-col gap-2 z-10"><button onclick="toggleAutoScroll()" id="btnAutoScroll" class="bg-blue-600/90 hover:bg-blue-500 text-white p-2.5 rounded shadow-lg backdrop-blur text-xs transition border border-blue-400/30" title="Toggle Auto Scroll"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg></button><button onclick="clearTerminal()" class="bg-slate-700/90 hover:bg-red-500/90 text-white p-2.5 rounded shadow-lg backdrop-blur text-xs transition border border-slate-600" title="Bersihkan Console"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></div><div class="flex bg-slate-800 border-t border-slate-700 p-2"><input type="text" id="cmdInput" placeholder="Type a command..." class="w-full bg-[#1e293b] p-3 rounded-lg outline-none text-white font-mono text-sm border border-slate-700 focus:border-blue-500 transition shadow-inner"></div></div>
-                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6">
-                    <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Address</span><span id="stat-ip-text" onclick="copyIp()" class="text-sm md:text-base font-black text-white truncate cursor-pointer hover:text-teal-400 transition" title="Klik untuk menyalin IP">Memuat...</span></div></div>
-                    <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Uptime</span><span id="stat-uptime-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
-                    <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">CPU Load</span><span id="stat-cpu-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
-                    <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Memory</span><span id="stat-ram-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
-                    <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Network (Inbound)</span><span id="stat-netin-text" class="text-sm md:text-base font-black text-white truncate">0 KB/s</span></div></div>
-                    <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Network (Outbound)</span><span id="stat-netout-text" class="text-sm md:text-base font-black text-white truncate">0 KB/s</span></div></div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
-                    <div class="bg-[#1e293b] pt-4 rounded-xl border border-slate-700 shadow-lg overflow-hidden flex flex-col h-[300px]"><div class="px-5 mb-2"><h3 class="text-xs font-bold text-slate-400 uppercase">CPU Load</h3></div><div class="flex-grow relative w-full h-full"><canvas id="cpuChart"></canvas></div></div>
-                    <div class="bg-[#1e293b] pt-4 rounded-xl border border-slate-700 shadow-lg overflow-hidden flex flex-col h-[300px]"><div class="px-5 mb-2"><h3 class="text-xs font-bold text-slate-400 uppercase">Memory</h3></div><div class="flex-grow relative w-full h-full"><canvas id="ramChart"></canvas></div></div>
-                    <div class="bg-[#1e293b] pt-4 rounded-xl border border-slate-700 shadow-lg overflow-hidden flex flex-col h-[300px]"><div class="px-5 mb-2"><h3 class="text-xs font-bold text-slate-400 uppercase">Disk Usage</h3></div><div class="flex-grow relative w-full h-full"><canvas id="diskChart"></canvas></div></div>
-                </div>
-            </div>
+ <main class="flex-1 flex flex-col min-w-0 min-h-screen md:h-screen md:overflow-y-auto relative pb-28 md:pb-0 w-full">
+ <div class="p-2 md:p-4 flex-1 w-full relative">
+ 
+ <div id="console-view" class="hidden">
+ <div class="bg-[#1e293b] rounded-xl shadow-lg border border-slate-700 overflow-hidden mb-5"><div class="p-4 bg-[#1e293b] border-b border-slate-700 flex flex-row gap-3"><button id="startBtn" class="flex-1 min-w-0 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Start</button><button id="restartBtn" class="flex-1 min-w-0 bg-slate-600 hover:bg-slate-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Restart</button><button id="stopBtn" class="flex-1 min-w-0 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Stop</button></div><div id="terminal-wrapper" class="relative bg-[#0f172a] h-[42vh] md:h-[38vh] transition-all duration-300"><div id="terminal" class="absolute inset-0 p-4 overflow-y-auto overflow-x-hidden break-words break-all text-[11px] md:text-xs leading-tight font-mono whitespace-pre-wrap"></div><div class="absolute top-2 right-2 z-10 flex items-center gap-1 bg-slate-800/90 backdrop-blur rounded border border-slate-600 shadow-lg overflow-hidden"><button onclick="termZoom(-1)" class="text-slate-300 hover:text-white hover:bg-slate-600 transition px-2 py-1.5 text-sm font-bold leading-none" title="Perkecil Teks">−</button><span id="termZoomLabel" class="text-[10px] font-bold text-slate-400 px-1 select-none min-w-[3rem] text-center">38vh</span><button onclick="termZoom(+1)" class="text-slate-300 hover:text-white hover:bg-slate-600 transition px-2 py-1.5 text-sm font-bold leading-none" title="Perbesar Teks">+</button></div><div class="absolute bottom-4 right-6 flex flex-col gap-2 z-10"><button onclick="toggleAutoScroll()" id="btnAutoScroll" class="bg-blue-600/90 hover:bg-blue-500 text-white p-2.5 rounded shadow-lg backdrop-blur text-xs transition border border-blue-400/30" title="Toggle Auto Scroll"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg></button><button onclick="clearTerminal()" class="bg-slate-700/90 hover:bg-red-500/90 text-white p-2.5 rounded shadow-lg backdrop-blur text-xs transition border border-slate-600" title="Bersihkan Console"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></div><div class="flex bg-slate-800 border-t border-slate-700 p-2"><input type="text" id="cmdInput" placeholder="Type a command..." class="w-full bg-[#1e293b] p-3 rounded-lg outline-none text-white font-mono text-sm border border-slate-700 focus:border-blue-500 transition shadow-inner"></div></div>
+ <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6">
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Address</span><span id="stat-ip-text" onclick="copyIp()" class="text-sm md:text-base font-black text-white truncate cursor-pointer hover:text-teal-400 transition" title="Klik untuk menyalin IP">Memuat...</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Uptime</span><span id="stat-uptime-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">CPU Load</span><span id="stat-cpu-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Memory</span><span id="stat-ram-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Network (Inbound)</span><span id="stat-netin-text" class="text-sm md:text-base font-black text-white truncate">0 KB/s</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Network (Outbound)</span><span id="stat-netout-text" class="text-sm md:text-base font-black text-white truncate">0 KB/s</span></div></div>
+ </div>
+ <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
+ <div class="bg-[#1e293b] pt-4 rounded-xl border border-slate-700 shadow-lg overflow-hidden flex flex-col h-[300px]"><div class="px-5 mb-2"><h3 class="text-xs font-bold text-slate-400 uppercase">CPU Load</h3></div><div class="flex-grow relative w-full h-full"><canvas id="cpuChart"></canvas></div></div>
+ <div class="bg-[#1e293b] pt-4 rounded-xl border border-slate-700 shadow-lg overflow-hidden flex flex-col h-[300px]"><div class="px-5 mb-2"><h3 class="text-xs font-bold text-slate-400 uppercase">Memory</h3></div><div class="flex-grow relative w-full h-full"><canvas id="ramChart"></canvas></div></div>
+ <div class="bg-[#1e293b] pt-4 rounded-xl border border-slate-700 shadow-lg overflow-hidden flex flex-col h-[300px]"><div class="px-5 mb-2"><h3 class="text-xs font-bold text-slate-400 uppercase">Disk Usage</h3></div><div class="flex-grow relative w-full h-full"><canvas id="diskChart"></canvas></div></div>
+ </div>
+ </div>
 
-            <div id="files-view" class="hidden w-full h-full">
-                <div class="bg-transparent flex flex-col h-full relative tab-fade-in">
-                    
-                    <div class="p-0 md:p-2 mb-4 flex flex-col gap-5 shrink-0">
-                        <div class="flex items-center gap-3">
-                            <h2 class="font-black text-white text-2xl tracking-wide">File Manager</h2>
-                        </div>
+ <div id="files-view" class="hidden w-full h-full">
+ <div class="bg-transparent flex flex-col h-full relative tab-fade-in">
+ 
+ <div class="p-0 md:p-2 mb-4 flex flex-col gap-5 shrink-0">
+ <div class="flex items-center gap-3">
+ <h2 class="font-black text-white text-2xl tracking-wide">File Manager</h2>
+ </div>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
-                            <button onclick="showRemoteDownloadModal()" class="group relative w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl font-black text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(37,99,235,0.3)] border border-blue-500 overflow-hidden">
-                                <div class="absolute inset-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
-                                <span class="text-[12px] sm:text-base whitespace-nowrap">Tarik URL</span>
-                            </button>
+ <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
+ <button onclick="showRemoteDownloadModal()" class="group relative w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl font-black text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(37,99,235,0.3)] border border-blue-500 overflow-hidden">
+ <div class="absolute inset-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+ <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
+ <span class="text-[12px] sm:text-base whitespace-nowrap">Tarik URL</span>
+ </button>
 
-                            <label class="group relative w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3.5 rounded-xl cursor-pointer font-black text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.2)] border border-slate-700 overflow-hidden">
-                                <div class="absolute inset-0 w-full h-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                <span class="text-[12px] sm:text-base whitespace-nowrap">Upload File</span>
-                                <input type="file" id="fileUploader" multiple class="hidden" onchange="uploadFile()">
-                            </label>
+ <label class="group relative w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3.5 rounded-xl cursor-pointer font-black text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.2)] border border-slate-700 overflow-hidden">
+ <div class="absolute inset-0 w-full h-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+ <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+ <span class="text-[12px] sm:text-base whitespace-nowrap">Upload File</span>
+ <input type="file" id="fileUploader" multiple class="hidden" onchange="uploadFile()">
+ </label>
 
-                            <button onclick="showCreateModal('file')" class="group relative w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3.5 rounded-xl font-black text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.2)] border border-slate-700 overflow-hidden">
-                                <div class="absolute inset-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                <span class="text-[12px] sm:text-base whitespace-nowrap">New File</span>
-                            </button>
+ <button onclick="showCreateModal('file')" class="group relative w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3.5 rounded-xl font-black text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.2)] border border-slate-700 overflow-hidden">
+ <div class="absolute inset-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+ <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+ <span class="text-[12px] sm:text-base whitespace-nowrap">New File</span>
+ </button>
 
-                            <button onclick="showCreateModal('folder')" class="group relative w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3.5 rounded-xl font-black text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.2)] border border-slate-700 overflow-hidden">
-                                <div class="absolute inset-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
-                                <span class="text-[12px] sm:text-base whitespace-nowrap">New Folder</span>
-                            </button>
-                        </div>
-                    </div>
+ <button onclick="showCreateModal('folder')" class="group relative w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3.5 rounded-xl font-black text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.2)] border border-slate-700 overflow-hidden">
+ <div class="absolute inset-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+ <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+ <span class="text-[12px] sm:text-base whitespace-nowrap">New Folder</span>
+ </button>
+ </div>
+ </div>
 
-                    <div class="px-5 py-4 bg-[#1e293b] flex items-center gap-4 shrink-0 border-b border-slate-700/50">
-                        <input type="checkbox" id="selectAll" class="w-5 h-5 rounded cursor-pointer accent-blue-500 shadow transition-transform active:scale-90" onclick="toggleSelectAll()" title="Pilih Semua">
-                        <div class="w-px h-5 bg-slate-600"></div>
-                        
-                        <!-- 🔥 BREADCRUMBS BISA DI KLIK (MIRIP PTERO) 🔥 -->
-                        <div id="currentDirPath" class="flex items-center overflow-x-auto ptero-scrollbar text-sm whitespace-nowrap font-mono flex-nowrap w-full">
-                            <!-- Injected by JS -->
-                        </div>
-                    </div>
+ <div class="px-5 py-4 bg-[#1e293b] flex items-center gap-4 shrink-0 border-b border-slate-700/50">
+ <input type="checkbox" id="selectAll" class="w-5 h-5 rounded cursor-pointer accent-blue-500 shadow transition-transform active:scale-90" onclick="toggleSelectAll()" title="Pilih Semua">
+ <div class="w-px h-5 bg-slate-600"></div>
+ 
+ <!-- BREADCRUMBS BISA DI KLIK (MIRIP PTERO) -->
+ <div id="currentDirPath" class="flex items-center overflow-x-auto ptero-scrollbar text-sm whitespace-nowrap font-mono flex-nowrap w-full">
+ <!-- Injected by JS -->
+ </div>
+ </div>
 
-                    <div class="h-[75vh] md:h-[calc(100vh-240px)] overflow-y-auto bg-[#0f172a] pb-24 pt-2 ptero-scrollbar">
-                        <ul id="fileList" class="flex flex-col gap-2 font-medium px-2 md:px-4"></ul>
-                    </div>
+ <div class="h-[75vh] md:h-[calc(100vh-240px)] overflow-y-auto bg-[#0f172a] pb-24 pt-2 ptero-scrollbar">
+ <ul id="fileList" class="flex flex-col gap-2 font-medium px-2 md:px-4"></ul>
+ </div>
 
-                </div>
-            </div>
+ </div>
+ </div>
 
-            <div id="fileEditor" class="hidden w-full h-[85vh]">
-                <div class="bg-[#1e293b] rounded-xl shadow-lg border border-slate-700 flex flex-col h-full overflow-hidden">
-                    <div class="p-4 bg-slate-800 border-b border-slate-700 flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 flex-shrink-0 z-10">
-                        <div class="flex items-center gap-3 w-full md:w-auto">
-                            <button onclick="closeEditor()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 active:scale-95">⬅️ Kembali</button>
-                            <h3 id="editingFileName" class="font-bold text-blue-400 font-mono text-sm truncate flex-1 md:flex-none">Edit File</h3>
-                        </div>
-                        <button onclick="saveFile()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-bold text-white transition text-sm shadow active:scale-95">💾 Simpan</button>
-                    </div>
+ <div id="fileEditor" class="hidden w-full h-[85vh]">
+ <div class="bg-[#1e293b] rounded-xl shadow-lg border border-slate-700 flex flex-col h-full overflow-hidden">
+ <div class="p-4 bg-slate-800 border-b border-slate-700 flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 flex-shrink-0 z-10">
+ <div class="flex items-center gap-3 w-full md:w-auto">
+ <button onclick="closeEditor()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 active:scale-95"> Kembali</button>
+ <h3 id="editingFileName" class="font-bold text-blue-400 font-mono text-sm truncate flex-1 md:flex-none">Edit File</h3>
+ </div>
+ <button onclick="saveFile()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-bold text-white transition text-sm shadow active:scale-95"> Simpan</button>
+ </div>
 
-                <div class="bg-[#111827] px-4 py-2 flex items-center gap-2 overflow-x-auto ptero-scrollbar border-b border-slate-700 flex-shrink-0 z-10">
-                      <button onclick="toggleSearchBar()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0">🔍 Cari (Ctrl+F)</button>
-                      <div class="w-px h-4 bg-slate-700 mx-1 flex-shrink-0"></div>
-                      <button onclick="editorAction('selectAll')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0">📑 Pilih Semua</button>
-                      <button onclick="editorAction('copy')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0">📋 Salin</button>
-                      <button onclick="editorAction('cut')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0">✂️ Potong</button>
-                     <button onclick="editorAction('paste')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0">📝 Tempel</button>
-                     <button onclick="editorAction('clear')" class="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/30 hover:bg-red-800/50 text-red-400 rounded-lg text-xs font-bold transition whitespace-nowrap border border-red-900/50 shadow-sm active:scale-95 flex-shrink-0">🗑️ Kosongkan</button>
-                 </div>
+ <div class="bg-[#111827] px-4 py-2 flex items-center gap-2 overflow-x-auto ptero-scrollbar border-b border-slate-700 flex-shrink-0 z-10">
+ <button onclick="toggleSearchBar()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0"> Cari (Ctrl+F)</button>
+ <div class="w-px h-4 bg-slate-700 mx-1 flex-shrink-0"></div>
+ <button onclick="editorAction('selectAll')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0"> Pilih Semua</button>
+ <button onclick="editorAction('copy')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0"> Salin</button>
+ <button onclick="editorAction('cut')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0"> Potong</button>
+ <button onclick="editorAction('paste')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition whitespace-nowrap border border-slate-700 shadow-sm active:scale-95 flex-shrink-0"> Tempel</button>
+ <button onclick="editorAction('clear')" class="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/30 hover:bg-red-800/50 text-red-400 rounded-lg text-xs font-bold transition whitespace-nowrap border border-red-900/50 shadow-sm active:scale-95 flex-shrink-0"> Kosongkan</button>
+ </div>
 
-                    <div class="flex-grow relative w-full h-full bg-[#1a1d23]">
-                        <div id="customSearchBar" class="hidden absolute top-2 right-2 md:right-6 bg-[#1e293b]/90 border border-slate-600 p-2 z-50 flex items-center gap-2 shadow-2xl rounded-lg">
-                            <span class="text-slate-400 font-bold text-sm ml-1">🔍</span>
-                            <input type="text" id="editorSearchInput" placeholder="Cari teks..." class="bg-[#0f172a]/80 text-white px-3 py-2 rounded border border-slate-600 focus:border-blue-500 outline-none text-sm font-mono w-40 md:w-64 shadow-inner">
-                            <button onclick="editorSearchPrev()" class="px-3 py-2 bg-slate-700 hover:bg-blue-600 rounded text-white font-black transition text-base shadow-sm" title="Sebelumnya">⬆️</button>
-                            <button onclick="editorSearchNext()" class="px-3 py-2 bg-slate-700 hover:bg-blue-600 rounded text-white font-black transition text-base shadow-sm" title="Selanjutnya">⬇️</button>
-                            <div class="w-px h-5 bg-slate-600 mx-1"></div>
-                            <button onclick="toggleSearchBar()" class="text-slate-400 hover:text-red-400 px-2 font-bold transition active:scale-95 text-lg">✖</button>
-                        </div>
-                        <div id="fileContent" class="absolute inset-0"></div>
-                    </div>
-                    <!-- Language Selector Bottom Bar (like Pterodactyl) -->
-                    <div class="flex items-center px-4 py-1 bg-[#13151a] border-t border-[#2a2d35] flex-shrink-0 select-none">
-                        <button id="langSelectorBtn" onclick="openLangSelector()" class="flex items-center gap-1.5 text-[#abb2bf] hover:text-white text-xs font-medium transition-colors px-2 py-0.5 rounded hover:bg-white/5 active:bg-white/10">
-                            <svg class="w-3 h-3 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                            <span id="langLabel">Plain Text</span>
-                            <svg class="w-2.5 h-2.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
+ <div class="flex-grow relative w-full h-full bg-[#1a1d23]">
+ <div id="customSearchBar" class="hidden absolute top-2 right-2 md:right-6 bg-[#1e293b]/90 border border-slate-600 p-2 z-50 flex items-center gap-2 shadow-2xl rounded-lg">
+ <span class="text-slate-400 font-bold text-sm ml-1"></span>
+ <input type="text" id="editorSearchInput" placeholder="Cari teks..." class="bg-[#0f172a]/80 text-white px-3 py-2 rounded border border-slate-600 focus:border-blue-500 outline-none text-sm font-mono w-40 md:w-64 shadow-inner">
+ <button onclick="editorSearchPrev()" class="px-3 py-2 bg-slate-700 hover:bg-blue-600 rounded text-white font-black transition text-base shadow-sm" title="Sebelumnya"></button>
+ <button onclick="editorSearchNext()" class="px-3 py-2 bg-slate-700 hover:bg-blue-600 rounded text-white font-black transition text-base shadow-sm" title="Selanjutnya"></button>
+ <div class="w-px h-5 bg-slate-600 mx-1"></div>
+ <button onclick="toggleSearchBar()" class="text-slate-400 hover:text-red-400 px-2 font-bold transition active:scale-95 text-lg"></button>
+ </div>
+ <div id="fileContent" class="absolute inset-0"></div>
+ </div>
+ <!-- Language Selector Bottom Bar (like Pterodactyl) -->
+ <div class="flex items-center px-4 py-1 bg-[#13151a] border-t border-[#2a2d35] flex-shrink-0 select-none">
+ <button id="langSelectorBtn" onclick="openLangSelector()" class="flex items-center gap-1.5 text-[#abb2bf] hover:text-white text-xs font-medium transition-colors px-2 py-0.5 rounded hover:bg-white/5 active:bg-white/10">
+ <svg class="w-3 h-3 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+ <span id="langLabel">Plain Text</span>
+ <svg class="w-2.5 h-2.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+ </button>
+ </div>
+ </div>
+ </div>
 
-            <!-- Language Selector Modal -->
-            <div id="langSelectorModal" class="hidden fixed inset-0 z-[180] flex items-end justify-center" onclick="if(event.target===this)closeLangSelector()">
-                <div class="bg-[#1e293b] w-full max-w-md border border-slate-700/80 border-b-0 rounded-t-2xl shadow-2xl flex flex-col" style="max-height:72vh">
-                    <div class="sticky top-0 bg-[#1e293b] px-4 py-3.5 border-b border-slate-700 flex items-center justify-between rounded-t-2xl flex-shrink-0">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                            <span class="font-bold text-white text-sm">Pilih Bahasa</span>
-                        </div>
-                        <button onclick="closeLangSelector()" class="text-slate-500 hover:text-white transition text-xl w-7 h-7 flex items-center justify-center rounded">✖</button>
-                    </div>
-                    <div id="langList" class="overflow-y-auto divide-y divide-slate-700/40 flex-1"></div>
-                </div>
-            </div>
+ <!-- Language Selector Modal -->
+ <div id="langSelectorModal" class="hidden fixed inset-0 z-[180] flex items-end justify-center" onclick="if(event.target===this)closeLangSelector()">
+ <div class="bg-[#1e293b] w-full max-w-md border border-slate-700/80 border-b-0 rounded-t-2xl shadow-2xl flex flex-col" style="max-height:72vh">
+ <div class="sticky top-0 bg-[#1e293b] px-4 py-3.5 border-b border-slate-700 flex items-center justify-between rounded-t-2xl flex-shrink-0">
+ <div class="flex items-center gap-2">
+ <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+ <span class="font-bold text-white text-sm">Pilih Bahasa</span>
+ </div>
+ <button onclick="closeLangSelector()" class="text-slate-500 hover:text-white transition text-xl w-7 h-7 flex items-center justify-center rounded"></button>
+ </div>
+ <div id="langList" class="overflow-y-auto divide-y divide-slate-700/40 flex-1"></div>
+ </div>
+ </div>
 
-            <div id="network-view" class="hidden w-full max-w-2xl mx-auto">
-                <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in"><h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2">🌐 Pengaturan Jaringan</h2><p class="text-slate-400 text-sm mb-6 mt-2">Atur port utama dan domain tampilan Anda. Sistem otomatis mengatasi konflik binding pada IP.</p><div class="mb-5"><label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Masukan Port Dari (playit.gg)</label><input type="number" id="set-port" placeholder="Contoh: 25565" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner"></div><div class="mb-5"><label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Masukan IP Dari (playit.gg)</label><input type="text" id="set-ip" placeholder="Contoh: mc.playit.gg" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner"></div><div class="mb-8 p-4 bg-slate-800 rounded-lg border border-slate-700"><label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">IP Internal (Binding)</label><input type="text" value="0.0.0.0" disabled class="w-full bg-transparent text-slate-500 cursor-not-allowed text-lg font-mono font-bold"></div><button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white">💾 SIMPAN JARINGAN</button></div>
-            </div>
+ <div id="network-view" class="hidden w-full max-w-2xl mx-auto">
+ <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in"><h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2"> Pengaturan Jaringan</h2><p class="text-slate-400 text-sm mb-6 mt-2">Atur port utama dan domain tampilan Anda. Sistem otomatis mengatasi konflik binding pada IP.</p><div class="mb-5"><label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Masukan Port Dari (playit.gg)</label><input type="number" id="set-port" placeholder="Contoh: 25565" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner"></div><div class="mb-5"><label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Masukan IP Dari (playit.gg)</label><input type="text" id="set-ip" placeholder="Contoh: mc.playit.gg" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner"></div><div class="mb-8 p-4 bg-slate-800 rounded-lg border border-slate-700"><label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">IP Internal (Binding)</label><input type="text" value="0.0.0.0" disabled class="w-full bg-transparent text-slate-500 cursor-not-allowed text-lg font-mono font-bold"></div><button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white"> SIMPAN JARINGAN</button></div>
+ </div>
 
-            <div id="startup-view" class="hidden w-full max-w-3xl mx-auto">
-                <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in">
-                    <h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2">⚙️ Pengaturan Startup</h2>
-                    <p class="text-slate-400 text-sm mb-4 mt-2">Atur parameter dan file eksekusi Anda. Untuk mengubah Engine (Node.js/Python), gunakan tab <strong class="text-white">Versi</strong>.</p>
-                    <div class="mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 font-mono text-sm break-all shadow-inner"><span class="text-slate-500 select-none">Command: </span><span id="cmd-preview" class="text-green-400 font-bold">Memuat...</span></div>
-                    <input type="hidden" id="set-engine" value="java">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-                        <div>
-                            <label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Batas Memori Java (-Xmx)</label>
-                            <input type="text" id="set-ram" readonly placeholder="Contoh: 2G" class="w-full bg-slate-800/50 p-3.5 rounded-lg border border-slate-700 text-slate-400 cursor-not-allowed text-base font-mono shadow-inner select-none">
-                            <p class="mt-1.5 text-[11px] text-yellow-400/80 flex items-center gap-1"><svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Hanya dapat diubah melalui <strong class="text-yellow-300">Admin Panel</strong></p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Nama File Utama</label>
-                            <input type="text" id="set-jar" onkeyup="updateCommandPreview()" value="server.jar" placeholder="Contoh: server.jar / index.js" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner">
-                        </div>
-                    </div>
-                    <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white">💾 SIMPAN PENGATURAN</button>
-                </div>
-            </div>
+ <div id="startup-view" class="hidden w-full max-w-3xl mx-auto">
+ <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in">
+ <h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2"> Pengaturan Startup</h2>
+ <p class="text-slate-400 text-sm mb-4 mt-2">Atur parameter dan file eksekusi Anda. Untuk mengubah Engine (Node.js/Python), gunakan tab <strong class="text-white">Versi</strong>.</p>
+ <div class="mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 font-mono text-sm break-all shadow-inner"><span class="text-slate-500 select-none">Command: </span><span id="cmd-preview" class="text-green-400 font-bold">Memuat...</span></div>
+ <input type="hidden" id="set-engine" value="java">
+ <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+ <div>
+ <label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Batas Memori Java (-Xmx)</label>
+ <input type="text" id="set-ram" readonly placeholder="Contoh: 2G" class="w-full bg-slate-800/50 p-3.5 rounded-lg border border-slate-700 text-slate-400 cursor-not-allowed text-base font-mono shadow-inner select-none">
+ <p class="mt-1.5 text-[11px] text-yellow-400/80 flex items-center gap-1"><svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Hanya dapat diubah melalui <strong class="text-yellow-300">Admin Panel</strong></p>
+ </div>
+ <div>
+ <label class="block text-sm font-black text-slate-400 mb-1.5 uppercase tracking-wider">Nama File Utama</label>
+ <input type="text" id="set-jar" onkeyup="updateCommandPreview()" value="server.jar" placeholder="Contoh: server.jar / index.js" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition text-base font-mono shadow-inner">
+ </div>
+ </div>
+ <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white"> SIMPAN PENGATURAN</button>
+ </div>
+ </div>
 
-            <div id="plugins-view" class="hiddew-full">
-                <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 shadow-lg mb-6 tab-fade-in">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-700 pb-4">
-                        <h2 class="text-xl font-black flex items-center gap-2">🧩 Plugin Manager</h2>
-                        <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700 w-full sm:w-auto">
-                            <button onclick="switchPluginTab('search')" id="ptab-search" class="flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors bg-blue-600 text-white shadow">Cari Plugin</button>
-                            <button onclick="switchPluginTab('installed')" id="ptab-installed" class="flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors text-slate-400 hover:text-white hover:bg-slate-800">Terpasang & Update</button>
-                        </div>
-                    </div>
-                    
-                    <div id="pcontrol-search" class="block tab-fade-in">
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <input type="text" id="pluginSearchQuery" oninput="if(typeof debouncePluginSearch === 'function') debouncePluginSearch()" onkeydown="if(event.key === 'Enter' && typeof searchPlugins === 'function') searchPlugins()" placeholder="Cari plugin (contoh: SkinRestorer, ViaVersion...)" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono shadow-inner">
-                            <button id="searchPluginBtn" onclick="searchPlugins()" class="bg-blue-600 hover:bg-blue-500 p-3.5 sm:px-8 rounded-lg font-black transition shadow whitespace-nowrap active:scale-95 text-white">🔍 Cari</button>
-                        </div>
-                    </div>
+ <div id="plugins-view" class="hiddew-full">
+ <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 shadow-lg mb-6 tab-fade-in">
+ <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-700 pb-4">
+ <h2 class="text-xl font-black flex items-center gap-2"> Plugin Manager</h2>
+ <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700 w-full sm:w-auto">
+ <button onclick="switchPluginTab('search')" id="ptab-search" class="flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors bg-blue-600 text-white shadow">Cari Plugin</button>
+ <button onclick="switchPluginTab('installed')" id="ptab-installed" class="flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors text-slate-400 hover:text-white hover:bg-slate-800">Terpasang & Update</button>
+ </div>
+ </div>
+ 
+ <div id="pcontrol-search" class="block tab-fade-in">
+ <div class="flex flex-col sm:flex-row gap-3">
+ <input type="text" id="pluginSearchQuery" oninput="if(typeof debouncePluginSearch === 'function') debouncePluginSearch()" onkeydown="if(event.key === 'Enter' && typeof searchPlugins === 'function') searchPlugins()" placeholder="Cari plugin (contoh: SkinRestorer, ViaVersion...)" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono shadow-inner">
+ <button id="searchPluginBtn" onclick="searchPlugins()" class="bg-blue-600 hover:bg-blue-500 p-3.5 sm:px-8 rounded-lg font-black transition shadow whitespace-nowrap active:scale-95 text-white"> Cari</button>
+ </div>
+ </div>
 
-                    <div id="pcontrol-installed" class="hidden tab-fade-in">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <p class="text-slate-400 text-sm">Daftar plugin di folder <code class="bg-slate-800 text-blue-400 px-1 py-0.5 rounded">plugins/</code>. <span class="text-yellow-400">Auto-check berjalan setiap 30 menit.</span></p>
-                            <button onclick="checkInstalledUpdates(true)" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 px-5 py-2.5 rounded-lg font-bold text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> CEK UPDATE
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="pluginSearchResults" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-10"></div>
-                <div id="pluginInstalledResults" class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-10"></div>
-            </div>
+ <div id="pcontrol-installed" class="hidden tab-fade-in">
+ <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+ <p class="text-slate-400 text-sm">Daftar plugin di folder <code class="bg-slate-800 text-blue-400 px-1 py-0.5 rounded">plugins/</code>. <span class="text-yellow-400">Auto-check berjalan setiap 30 menit.</span></p>
+ <button onclick="checkInstalledUpdates(true)" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 px-5 py-2.5 rounded-lg font-bold text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> CEK UPDATE
+ </button>
+ </div>
+ </div>
+ </div>
+ 
+ <div id="pluginSearchResults" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-10"></div>
+ <div id="pluginInstalledResults" class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-10"></div>
+ </div>
 
-            <div id="versions-view" class="hidden w-full max-w-3xl mx-auto">
-                <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in pb-10"><h2 class="text-xl md:text-2xl font-black mb-2 flex items-center gap-2 border-b border-slate-700 pb-3">📦 Setup & Version Manager</h2><div class="mt-4 mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 flex justify-between items-center shadow-inner gap-4 overflow-x-auto"><div><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">File Server Saat Ini:</span><span id="current-active-jar" class="text-blue-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">Memuat...</span></div><div class="text-right"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Engine:</span><span id="current-active-engine" class="text-green-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">...</span></div></div><p class="text-slate-400 text-sm mb-6">Pilih kategori engine atau jenis server yang ingin digunakan.</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8"><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Kategori Software</label><select id="vm-category" onchange="updateSubCategory()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="mc-java">🎮 Minecraft Java (Server)</option><option value="proxy">🔗 Proxy Server (Bungee/Velocity)</option><option value="bedrock">📱 Minecraft Bedrock (Geyser)</option><option value="bot">🤖 Bot & Apps (Node.js/Python)</option></select></div><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Software</label><select id="vm-software" onchange="fetchVersions()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"></select></div></div><div id="vm-version-container" class="mb-8 block"><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Versi Build</label><select id="vm-version" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="">Memuat versi...</option></select></div><button id="vm-install-btn" onclick="prepareInstall()" class="w-full bg-green-600 hover:bg-green-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white">📥 INSTALL VERSI INI</button></div>
-            </div>
+ <div id="versions-view" class="hidden w-full max-w-3xl mx-auto">
+ <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in pb-10"><h2 class="text-xl md:text-2xl font-black mb-2 flex items-center gap-2 border-b border-slate-700 pb-3"> Setup & Version Manager</h2><div class="mt-4 mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 flex justify-between items-center shadow-inner gap-4 overflow-x-auto"><div><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">File Server Saat Ini:</span><span id="current-active-jar" class="text-blue-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">Memuat...</span></div><div class="text-right"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Engine:</span><span id="current-active-engine" class="text-green-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">...</span></div></div><div id="java-version-section" class="mb-6 pb-6 border-b border-slate-700"><h3 class="text-base font-black text-white mb-1 flex items-center gap-2"> Versi Java</h3><p class="text-slate-400 text-sm mb-4">Pilih versi Java yang dipakai saat server start. Pilih Manual jika auto-detect salah versi.</p><select id="set-java-version" onchange="saveSettings()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="auto"> Auto (Deteksi otomatis dari versi MC)</option><option value="8"> Java 8 — MC 1.7 hingga 1.16</option><option value="17"> Java 17 — MC 1.17 hingga 1.20.4</option><option value="21"> Java 21 — MC 1.20.5 hingga 1.21.x</option><option value="25"> Java 25 — MC 1.22+ / Build 26.x</option></select></div><p class="text-slate-400 text-sm mb-6">Pilih kategori engine atau jenis server yang ingin digunakan.</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8"><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Kategori Software</label><select id="vm-category" onchange="updateSubCategory()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="mc-java"> Minecraft Java (Server)</option><option value="proxy"> Proxy Server (Bungee/Velocity)</option><option value="bedrock"> Minecraft Bedrock (Geyser)</option><option value="bot"> Bot & Apps (Node.js/Python)</option></select></div><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Software</label><select id="vm-software" onchange="fetchVersions()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"></select></div></div><div id="vm-version-container" class="mb-8 block"><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Versi Build</label><select id="vm-version" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="">Memuat versi...</option></select></div><button id="vm-install-btn" onclick="prepareInstall()" class="w-full bg-green-600 hover:bg-green-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white"> INSTALL VERSI INI</button></div>
+ </div>
 
-            <div id="settings-view" class="hidden w-full max-w-3xl mx-auto">
-                <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in mb-5">
-                    <h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2">🚀 Pengaturan Server</h2>
-                    <p class="text-slate-400 text-sm mb-6 mt-2">Konfigurasi perilaku otomatis server kamu.</p>
-                    <div class="flex items-center justify-between p-4 bg-slate-800 rounded-xl border border-slate-700">
-                        <div>
-                            <p class="font-bold text-white text-base">Auto Start</p>
-                            <p class="text-slate-400 text-sm mt-0.5">Server otomatis nyala saat kamu buka panel.</p>
-                        </div>
-                        <button id="autoStartToggle" onclick="toggleAutoStart()" class="relative inline-flex items-center h-7 w-14 rounded-full transition-colors duration-300 focus:outline-none bg-slate-600" aria-pressed="false">
-                            <span id="autoStartKnob" class="inline-block w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-300 translate-x-1"></span>
-                        </button>
-                    </div>
-                    <button onclick="saveSettings()" class="w-full mt-5 bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white">💾 SIMPAN PENGATURAN</button>
-                </div>
-                <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in"><h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2">🔧 Akun & Pengaturan</h2><p class="text-slate-400 text-sm mb-6 mt-2">Area bahaya (Danger Zone). Harap berhati-hati saat menggunakan fitur di bawah ini.</p><div class="border border-red-900/50 bg-red-900/10 rounded-xl p-5 md:p-6"><h3 class="text-red-500 font-bold text-lg mb-2 flex items-center gap-2">⚠️ Hapus Akun</h3><p class="text-sm text-slate-400 mb-6">Tindakan ini akan <b>menghapus akun kamu secara permanen</b>. Semua server, file panel, pengaturan jaringan, dan data game akan musnah dan tidak bisa dikembalikan.</p><button onclick="deleteAccount()" class="w-full sm:w-auto bg-red-600 hover:bg-red-500 py-3 px-6 rounded-lg font-bold shadow transition active:scale-[0.98] text-white">HAPUS AKUN PERMANEN</button></div></div>
-            </div>
-        <!-- Teks Copyright Dinamis -->
-        <div class="fixed bottom-3 left-4 md:left-[320px] z-10 pointer-events-none">
-            <p class="text-[10px] md:text-xs font-bold text-slate-500/70 tracking-wide">
-                Manz4VPS® © <span id="dynamicYear">2026</span>
-            </p>
-        </div>
+ <div id="settings-view" class="hidden w-full max-w-3xl mx-auto">
+ <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in mb-5">
+ <h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2"> Pengaturan Server</h2>
+ <p class="text-slate-400 text-sm mb-6 mt-2">Konfigurasi perilaku otomatis server kamu.</p>
+ <div class="flex items-center justify-between p-4 bg-slate-800 rounded-xl border border-slate-700">
+ <div>
+ <p class="font-bold text-white text-base">Auto Start</p>
+ <p class="text-slate-400 text-sm mt-0.5">Server otomatis nyala saat kamu buka panel.</p>
+ </div>
+ <button id="autoStartToggle" onclick="toggleAutoStart()" class="relative inline-flex items-center h-7 w-14 rounded-full transition-colors duration-300 focus:outline-none bg-slate-600" aria-pressed="false">
+ <span id="autoStartKnob" class="inline-block w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-300 translate-x-1"></span>
+ </button>
+ </div>
+ <button onclick="saveSettings()" class="w-full mt-5 bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white"> SIMPAN PENGATURAN</button>
+ </div>
+ <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in"><h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2"> Akun & Pengaturan</h2><p class="text-slate-400 text-sm mb-6 mt-2">Area bahaya (Danger Zone). Harap berhati-hati saat menggunakan fitur di bawah ini.</p><div class="border border-red-900/50 bg-red-900/10 rounded-xl p-5 md:p-6"><h3 class="text-red-500 font-bold text-lg mb-2 flex items-center gap-2"> Hapus Akun</h3><p class="text-sm text-slate-400 mb-6">Tindakan ini akan <b>menghapus akun kamu secara permanen</b>. Semua server, file panel, pengaturan jaringan, dan data game akan musnah dan tidak bisa dikembalikan.</p><button onclick="deleteAccount()" class="w-full sm:w-auto bg-red-600 hover:bg-red-500 py-3 px-6 rounded-lg font-bold shadow transition active:scale-[0.98] text-white">HAPUS AKUN PERMANEN</button></div></div>
+ </div>
+ <!-- Teks Copyright Dinamis -->
+ <div class="fixed bottom-3 left-4 md:left-[320px] z-10 pointer-events-none">
+ <p class="text-[10px] md:text-xs font-bold text-slate-500/70 tracking-wide">
+ Manz4VPS® © <span id="dynamicYear">2026</span>
+ </p>
+ </div>
 
-        </div> 
-    </main>
+ </div> 
+ </main>
 
-    <div id="pluginVersionModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
-        <div class="bg-[#1e293b] w-full max-w-2xl flex flex-col max-h-[80vh] rounded-2xl border border-blue-600/50 shadow-[0_0_40px_rgba(37,99,235,0.2)] relative text-white overflow-hidden">
-            <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800 shrink-0">
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <img id="pv-icon" src="" class="w-10 h-10 rounded-lg shrink-0 hidden">
-                    <div>
-                        <h3 id="pv-title" class="text-lg font-black text-white truncate">Memuat Versi...</h3>
-                        <p class="text-xs font-bold text-slate-400">Pilih versi untuk di-install</p>
-                    </div>
-                </div>
-                <button onclick="document.getElementById('pluginVersionModal').classList.add('hidden')" class="text-slate-500 hover:text-white font-black text-xl transition bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center shrink-0">✖</button>
-            </div>
-            <div class="p-4 bg-slate-900 border-b border-slate-700 shrink-0 flex gap-2 overflow-x-auto ptero-scrollbar">
-                <button onclick="filterPluginVersions('all')" id="pv-btn-all" class="pv-filter-btn px-4 py-1.5 bg-blue-600 text-white rounded-full text-xs font-bold whitespace-nowrap transition">Semua Versi</button>
-                <button onclick="filterPluginVersions('release')" id="pv-btn-release" class="pv-filter-btn px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full text-xs font-bold whitespace-nowrap transition">Hanya Release</button>
-                <button onclick="filterPluginVersions('beta')" id="pv-btn-beta" class="pv-filter-btn px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full text-xs font-bold whitespace-nowrap transition">Beta / Snapshot</button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2 ptero-scrollbar bg-[#0f172a]" id="pv-list"></div>
-        </div>
-    </div>
+ <div id="pluginVersionModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
+ <div class="bg-[#1e293b] w-full max-w-2xl flex flex-col max-h-[80vh] rounded-2xl border border-blue-600/50 shadow-[0_0_40px_rgba(37,99,235,0.2)] relative text-white overflow-hidden">
+ <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800 shrink-0">
+ <div class="flex items-center gap-3 overflow-hidden">
+ <img id="pv-icon" src="" class="w-10 h-10 rounded-lg shrink-0 hidden">
+ <div>
+ <h3 id="pv-title" class="text-lg font-black text-white truncate">Memuat Versi...</h3>
+ <p class="text-xs font-bold text-slate-400">Pilih versi untuk di-install</p>
+ </div>
+ </div>
+ <button onclick="document.getElementById('pluginVersionModal').classList.add('hidden')" class="text-slate-500 hover:text-white font-black text-xl transition bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center shrink-0"></button>
+ </div>
+ <div class="p-4 bg-slate-900 border-b border-slate-700 shrink-0 flex gap-2 overflow-x-auto ptero-scrollbar">
+ <button onclick="filterPluginVersions('all')" id="pv-btn-all" class="pv-filter-btn px-4 py-1.5 bg-blue-600 text-white rounded-full text-xs font-bold whitespace-nowrap transition">Semua Versi</button>
+ <button onclick="filterPluginVersions('release')" id="pv-btn-release" class="pv-filter-btn px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full text-xs font-bold whitespace-nowrap transition">Hanya Release</button>
+ <button onclick="filterPluginVersions('beta')" id="pv-btn-beta" class="pv-filter-btn px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full text-xs font-bold whitespace-nowrap transition">Beta / Snapshot</button>
+ </div>
+ <div class="flex-1 overflow-y-auto p-2 ptero-scrollbar bg-[#0f172a]" id="pv-list"></div>
+ </div>
+ </div>
 
-    <div id="remoteDlModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
-        <div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl">
-            <h3 class="text-xl font-black text-white mb-2">☁️ Tarik dari URL / GDrive</h3>
-            <p class="text-xs text-slate-400 mb-5">Paste link Google Drive atau Direct Link. Server akan mendownload otomatis di background.</p>
-            <input type="text" id="rdlUrlInput" placeholder="URL File / Link GDrive..." class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-600 text-white outline-none focus:border-blue-500 mb-3 font-mono text-sm shadow-inner">
-            <input type="text" id="rdlNameInput" placeholder="Simpan nama file (contoh: backup.zip)" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-600 text-white outline-none focus:border-blue-500 mb-6 font-mono text-sm shadow-inner">
-            <div class="flex gap-3">
-                <button onclick="document.getElementById('remoteDlModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3.5 rounded-lg font-bold transition active:scale-95">Batal</button>
-                <button onclick="executeRemoteDownload()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-lg font-bold transition active:scale-95">Download</button>
-            </div>
-        </div>
-    </div>
+ <div id="remoteDlModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
+ <div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl">
+ <h3 class="text-xl font-black text-white mb-2"> Tarik dari URL / GDrive</h3>
+ <p class="text-xs text-slate-400 mb-5">Paste link Google Drive atau Direct Link. Server akan mendownload otomatis di background.</p>
+ <input type="text" id="rdlUrlInput" placeholder="URL File / Link GDrive..." class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-600 text-white outline-none focus:border-blue-500 mb-3 font-mono text-sm shadow-inner">
+ <input type="text" id="rdlNameInput" placeholder="Simpan nama file (contoh: backup.zip)" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-600 text-white outline-none focus:border-blue-500 mb-6 font-mono text-sm shadow-inner">
+ <div class="flex gap-3">
+ <button onclick="document.getElementById('remoteDlModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3.5 rounded-lg font-bold transition active:scale-95">Batal</button>
+ <button onclick="executeRemoteDownload()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-lg font-bold transition active:scale-95">Download</button>
+ </div>
+ </div>
+ </div>
 
-    <div id="moveModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
-        <div class="bg-[#1e293b] w-full max-w-xl min-h-[60vh] flex flex-col max-h-[85vh] rounded-2xl border border-yellow-500/50 shadow-[0_0_40px_rgba(234,179,8,0.2)] overflow-hidden">
-            <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800 shrink-0">
-                <h3 class="text-lg font-black text-white flex items-center gap-2">🚚 Move File/Folder</h3>
-                <button onclick="document.getElementById('moveModal').classList.add('hidden')" class="text-slate-500 hover:text-white font-black text-xl transition bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center shrink-0">✖</button>
-            </div>
-            <div class="p-3 bg-slate-900 border-b border-slate-700 shrink-0">
-                <div class="flex items-center gap-2 px-3 py-2 bg-[#0f172a] rounded-lg border border-slate-700 overflow-hidden">
-                    <span class="text-yellow-400">📁</span>
-                    <span id="moveCurrentPathText" class="font-mono text-sm text-slate-300 font-bold truncate">/home/container/</span>
-                </div>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 ptero-scrollbar bg-[#0f172a] flex flex-col gap-2" id="moveFolderList">
-                <p class="text-center text-slate-500 py-4 text-sm font-bold animate-pulse">Memuat direktori...</p>
-            </div>
-            <div class="p-3 bg-slate-800 border-t border-slate-700 shrink-0">
-                <div class="flex items-center gap-2 relative">
-                    <input type="text" id="moveNewDirInput" placeholder="New Directory" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-yellow-500 font-mono text-sm shadow-inner transition pr-12">
-                    <button onclick="createDirInMove()" class="absolute right-1 top-1 bottom-1 bg-slate-700 hover:bg-yellow-600 text-white px-3 rounded-md font-black transition active:scale-95 text-lg flex items-center justify-center shadow-sm">+</button>
-                </div>
-            </div>
-            <div class="p-4 bg-slate-800 border-t border-slate-700 flex gap-3 shrink-0">
-                <button onclick="document.getElementById('moveModal').classList.add('hidden')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm shadow">Cancel</button>
-                <button onclick="executeInteractiveMove()" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-3 rounded-xl font-black transition active:scale-95 text-sm shadow flex items-center justify-center gap-2">Move Here</button>
-            </div>
-        </div>
-    </div>
+ <div id="moveModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
+ <div class="bg-[#1e293b] w-full max-w-xl min-h-[60vh] flex flex-col max-h-[85vh] rounded-2xl border border-yellow-500/50 shadow-[0_0_40px_rgba(234,179,8,0.2)] overflow-hidden">
+ <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800 shrink-0">
+ <h3 class="text-lg font-black text-white flex items-center gap-2"> Move File/Folder</h3>
+ <button onclick="document.getElementById('moveModal').classList.add('hidden')" class="text-slate-500 hover:text-white font-black text-xl transition bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center shrink-0"></button>
+ </div>
+ <div class="p-3 bg-slate-900 border-b border-slate-700 shrink-0">
+ <div class="flex items-center gap-2 px-3 py-2 bg-[#0f172a] rounded-lg border border-slate-700 overflow-hidden">
+ <span class="text-yellow-400"></span>
+ <span id="moveCurrentPathText" class="font-mono text-sm text-slate-300 font-bold truncate">/home/container/</span>
+ </div>
+ </div>
+ <div class="flex-1 overflow-y-auto p-4 ptero-scrollbar bg-[#0f172a] flex flex-col gap-2" id="moveFolderList">
+ <p class="text-center text-slate-500 py-4 text-sm font-bold animate-pulse">Memuat direktori...</p>
+ </div>
+ <div class="p-3 bg-slate-800 border-t border-slate-700 shrink-0">
+ <div class="flex items-center gap-2 relative">
+ <input type="text" id="moveNewDirInput" placeholder="New Directory" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-yellow-500 font-mono text-sm shadow-inner transition pr-12">
+ <button onclick="createDirInMove()" class="absolute right-1 top-1 bottom-1 bg-slate-700 hover:bg-yellow-600 text-white px-3 rounded-md font-black transition active:scale-95 text-lg flex items-center justify-center shadow-sm">+</button>
+ </div>
+ </div>
+ <div class="p-4 bg-slate-800 border-t border-slate-700 flex gap-3 shrink-0">
+ <button onclick="document.getElementById('moveModal').classList.add('hidden')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm shadow">Cancel</button>
+ <button onclick="executeInteractiveMove()" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-3 rounded-xl font-black transition active:scale-95 text-sm shadow flex items-center justify-center gap-2">Move Here</button>
+ </div>
+ </div>
+ </div>
 
-    <div id="installConfirmModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-[0_0_40px_rgba(220,38,38,0.3)] relative text-white"><button onclick="document.getElementById('installConfirmModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✖</button><div class="text-center mb-6 mt-2"><span class="text-5xl mb-3 block">⚠️</span><h3 class="text-2xl font-black text-white mb-2">Konfirmasi Instalasi</h3><p class="text-slate-300 text-sm leading-relaxed mb-4">Anda akan menginstal <span id="installVersionName" class="text-yellow-400 font-bold"></span>.</p></div><div class="flex flex-col gap-3"><button onclick="executeInstall('clean')" class="w-full bg-red-600 hover:bg-red-500 py-3.5 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">🗑️ SAPU BERSIH & INSTALL BARU</button><button onclick="executeInstall('keep')" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">📥 HANYA TIMPA FILE JAR</button><button onclick="document.getElementById('installConfirmModal').classList.add('hidden')" class="w-full bg-slate-700 hover:bg-slate-600 py-3 rounded-lg font-bold transition mt-2 active:scale-95">Batal</button></div></div></div>
-    <div id="renameModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl"><h3 class="text-xl font-black text-white mb-4">✏️ Ubah Nama</h3><input type="hidden" id="renameOldPath"><input type="text" id="renameInput" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-blue-500 mb-6 font-mono text-sm shadow-inner"><div class="flex gap-3"><button onclick="document.getElementById('renameModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeRename()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Save</button></div></div></div>
-    <div id="createModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-green-600/50 shadow-2xl"><h3 id="createModalTitle" class="text-xl font-black text-white mb-4">✨ Buat Baru</h3><input type="hidden" id="createType"><input type="text" id="createInput" placeholder="Masukkan nama..." class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-green-500 mb-6 font-mono text-sm shadow-inner" onkeydown="if(event.key==='Enter')executeCreate()"><div class="flex gap-3"><button onclick="document.getElementById('createModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeCreate()" class="w-1/2 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Create</button></div></div></div>
-    <div id="saveAsModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
-        <div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
-                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-lg font-black text-white leading-tight">Simpan File Baru</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Masukkan nama untuk file ini</p>
-                </div>
-            </div>
-            <input type="text" id="saveAsInput" placeholder="contoh: config.yml / script.js" class="w-full bg-slate-900 p-3.5 rounded-xl border border-slate-600 text-white outline-none focus:border-blue-500 mb-5 font-mono text-sm shadow-inner transition" onkeydown="if(event.key==='Enter')executeSaveAs()">
-            <div class="flex gap-3">
-                <button onclick="document.getElementById('saveAsModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
-                <button onclick="executeSaveAs()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    Simpan
-                </button>
-            </div>
-        </div>
-    </div>
-    <div id="genericModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-red-600/50 shadow-2xl text-white"><div class="text-center mb-6"><span id="genericModalIcon" class="text-5xl mb-3 block">⚠️</span><h3 id="genericModalTitle" class="text-2xl font-black text-red-500 mb-1">Konfirmasi</h3><p id="genericModalMsg" class="text-slate-300 font-bold">Yakin?</p></div><div class="flex gap-3"><button onclick="document.getElementById('genericModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button id="genericConfirmBtn" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">Yes, Continue</button></div></div></div>
-    <div id="eulaModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl text-white"><div class="text-center mb-6"><span class="text-5xl mb-3 block">📜</span><h3 class="text-2xl font-black text-white mb-2">Persetujuan EULA</h3><p class="text-slate-300 font-medium text-sm leading-relaxed">Anda diwajibkan untuk menyetujui End User License Agreement (EULA) dari Mojang untuk menjalankan server ini.</p></div><div class="flex gap-3"><button onclick="document.getElementById('eulaModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">I Disagree</button><button onclick="acceptEula()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">I Accept</button></div></div></div>
-    <div id="archiveModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-purple-600/50 shadow-2xl"><h3 class="text-xl font-black text-white mb-4">🗜️ Create Archive</h3><input type="text" id="archiveInput" placeholder="Name (e.g. backup.zip)" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-purple-500 mb-6 font-mono text-sm shadow-inner"><div class="flex gap-3"><button onclick="document.getElementById('archiveModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeArchive()" class="w-1/2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Archive</button></div></div></div>
-    
-    <div id="pteroFloatingBar" class="hidden fixed top-20 md:top-24 right-4 md:right-10 z-[100] transition-all duration-300 opacity-0 scale-90 -translate-y-4 w-max max-w-[90%]">
-        <div class="bg-[#111827] border border-slate-700 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-center justify-center p-1.5 gap-1"><button onclick="showMoveModal()" class="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition active:scale-95" title="Move"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg></button><div class="w-px h-6 bg-slate-700 mx-1"></div><button onclick="showArchiveModal()" class="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition active:scale-95" title="Archive"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg></button><div class="w-px h-6 bg-slate-700 mx-1"></div><button onclick="deleteSelectedMulti()" class="w-10 h-10 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition active:scale-95" title="Delete"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>
-    </div>
+ <div id="installConfirmModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-[0_0_40px_rgba(220,38,38,0.3)] relative text-white"><button onclick="document.getElementById('installConfirmModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition"></button><div class="text-center mb-6 mt-2"><span class="text-5xl mb-3 block"></span><h3 class="text-2xl font-black text-white mb-2">Konfirmasi Instalasi</h3><p class="text-slate-300 text-sm leading-relaxed mb-4">Anda akan menginstal <span id="installVersionName" class="text-yellow-400 font-bold"></span>.</p></div><div class="flex flex-col gap-3"><button onclick="executeInstall('clean')" class="w-full bg-red-600 hover:bg-red-500 py-3.5 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95"> SAPU BERSIH & INSTALL BARU</button><button onclick="executeInstall('keep')" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95"> HANYA TIMPA FILE JAR</button><button onclick="document.getElementById('installConfirmModal').classList.add('hidden')" class="w-full bg-slate-700 hover:bg-slate-600 py-3 rounded-lg font-bold transition mt-2 active:scale-95">Batal</button></div></div></div>
+ <div id="renameModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl"><h3 class="text-xl font-black text-white mb-4"> Ubah Nama</h3><input type="hidden" id="renameOldPath"><input type="text" id="renameInput" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-blue-500 mb-6 font-mono text-sm shadow-inner"><div class="flex gap-3"><button onclick="document.getElementById('renameModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeRename()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Save</button></div></div></div>
+ <div id="createModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-green-600/50 shadow-2xl"><h3 id="createModalTitle" class="text-xl font-black text-white mb-4"> Buat Baru</h3><input type="hidden" id="createType"><input type="text" id="createInput" placeholder="Masukkan nama..." class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-green-500 mb-6 font-mono text-sm shadow-inner" onkeydown="if(event.key==='Enter')executeCreate()"><div class="flex gap-3"><button onclick="document.getElementById('createModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeCreate()" class="w-1/2 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Create</button></div></div></div>
+ <div id="saveAsModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
+ <div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl">
+ <div class="flex items-center gap-3 mb-5">
+ <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
+ <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+ </div>
+ <div>
+ <h3 class="text-lg font-black text-white leading-tight">Simpan File Baru</h3>
+ <p class="text-xs text-slate-400 mt-0.5">Masukkan nama untuk file ini</p>
+ </div>
+ </div>
+ <input type="text" id="saveAsInput" placeholder="contoh: config.yml / script.js" class="w-full bg-slate-900 p-3.5 rounded-xl border border-slate-600 text-white outline-none focus:border-blue-500 mb-5 font-mono text-sm shadow-inner transition" onkeydown="if(event.key==='Enter')executeSaveAs()">
+ <div class="flex gap-3">
+ <button onclick="document.getElementById('saveAsModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+ <button onclick="executeSaveAs()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+ Simpan
+ </button>
+ </div>
+ </div>
+ </div>
+ <div id="genericModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-red-600/50 shadow-2xl text-white"><div class="text-center mb-6"><span id="genericModalIcon" class="text-5xl mb-3 block"></span><h3 id="genericModalTitle" class="text-2xl font-black text-red-500 mb-1">Konfirmasi</h3><p id="genericModalMsg" class="text-slate-300 font-bold">Yakin?</p></div><div class="flex gap-3"><button onclick="document.getElementById('genericModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button id="genericConfirmBtn" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">Yes, Continue</button></div></div></div>
+ <div id="eulaModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl text-white"><div class="text-center mb-6"><span class="text-5xl mb-3 block"></span><h3 class="text-2xl font-black text-white mb-2">Persetujuan EULA</h3><p class="text-slate-300 font-medium text-sm leading-relaxed">Anda diwajibkan untuk menyetujui End User License Agreement (EULA) dari Mojang untuk menjalankan server ini.</p></div><div class="flex gap-3"><button onclick="document.getElementById('eulaModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">I Disagree</button><button onclick="acceptEula()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">I Accept</button></div></div></div>
+ <div id="archiveModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-purple-600/50 shadow-2xl"><h3 class="text-xl font-black text-white mb-4"> Create Archive</h3><input type="text" id="archiveInput" placeholder="Name (e.g. backup.zip)" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-purple-500 mb-6 font-mono text-sm shadow-inner"><div class="flex gap-3"><button onclick="document.getElementById('archiveModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeArchive()" class="w-1/2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Archive</button></div></div></div>
+ 
+ <div id="pteroFloatingBar" class="hidden fixed top-20 md:top-24 right-4 md:right-10 z-[100] transition-all duration-300 opacity-0 scale-90 -translate-y-4 w-max max-w-[90%]">
+ <div class="bg-[#111827] border border-slate-700 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-center justify-center p-1.5 gap-1"><button onclick="showMoveModal()" class="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition active:scale-95" title="Move"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg></button><div class="w-px h-6 bg-slate-700 mx-1"></div><button onclick="showArchiveModal()" class="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition active:scale-95" title="Archive"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg></button><div class="w-px h-6 bg-slate-700 mx-1"></div><button onclick="deleteSelectedMulti()" class="w-10 h-10 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition active:scale-95" title="Delete"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>
+ </div>
 
-    <!-- 🔥 FUNGSI ANTI BUG MENU MOBILE 🔥 -->
-    <script>
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('mobile-sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            if(sidebar) {
-                sidebar.classList.remove('-translate-x-full');
-                sidebar.classList.add('translate-x-0');
-            }
-            if(overlay) {
-                overlay.classList.remove('hidden');
-            }
-        }
+ <!-- FUNGSI ANTI BUG MENU MOBILE -->
+ <script>
+ function toggleMobileMenu() {
+ const sidebar = document.getElementById('mobile-sidebar');
+ const overlay = document.getElementById('mobile-overlay');
+ if(sidebar) {
+ sidebar.classList.remove('-translate-x-full');
+ sidebar.classList.add('translate-x-0');
+ }
+ if(overlay) {
+ overlay.classList.remove('hidden');
+ }
+ }
 
-        function closeMobileMenu() {
-            const sidebar = document.getElementById('mobile-sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            if(sidebar) {
-                sidebar.classList.remove('translate-x-0');
-                sidebar.classList.add('-translate-x-full');
-            }
-            if(overlay) {
-                overlay.classList.add('hidden');
-            }
-        }
-    </script>
+ function closeMobileMenu() {
+ const sidebar = document.getElementById('mobile-sidebar');
+ const overlay = document.getElementById('mobile-overlay');
+ if(sidebar) {
+ sidebar.classList.remove('translate-x-0');
+ sidebar.classList.add('-translate-x-full');
+ }
+ if(overlay) {
+ overlay.classList.add('hidden');
+ }
+ }
+ </script>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                .then((reg) => console.log('PWA Service Worker Siap!'))
-                .catch((err) => console.log('PWA Error:', err));
-            });
-        }
-    </script>
+ <script>
+ if ('serviceWorker' in navigator) {
+ window.addEventListener('load', () => {
+ navigator.serviceWorker.register('/sw.js')
+ .then((reg) => console.log('PWA Service Worker Siap!'))
+ .catch((err) => console.log('PWA Error:', err));
+ });
+ }
+ </script>
 
-    <script>
-        const autoVersion = new Date().getTime();
-        const scriptsToLoad = [
-            '/socket.io/socket.io.js',
-            '/panel.js?v=' + autoVersion,
-            '/console.js?v=' + autoVersion,
-            '/filemanager.js?v=' + autoVersion
-        ];
-        
-        scriptsToLoad.forEach(src => {
-            const scriptTag = document.createElement('script');
-            scriptTag.src = src;
-            scriptTag.async = false;
-            document.body.appendChild(scriptTag);
-        });
-     </script>
+ <script>
+ const autoVersion = new Date().getTime();
+ const scriptsToLoad = [
+ '/socket.io/socket.io.js',
+ '/panel.js?v=' + autoVersion,
+ '/console.js?v=' + autoVersion,
+ '/filemanager.js?v=' + autoVersion
+ ];
+ 
+ scriptsToLoad.forEach(src => {
+ const scriptTag = document.createElement('script');
+ scriptTag.src = src;
+ scriptTag.async = false;
+ document.body.appendChild(scriptTag);
+ });
+ </script>
 
-    <!-- 🔥 FIX: PAKSA BUKA CONSOLE JIKA URL ADA #console 🔥 -->
-    <script>
-        window.addEventListener('load', () => {
-            // Kasih delay dikit biar panel.js selesai inisiasi
-            setTimeout(() => {
-                if (window.location.hash === '#console') {
-                    if (typeof showTab === 'function') {
-                        showTab('console');
-                    }
-                }
-            }, 300);
-        });
-    </script>
+ <!-- FIX: PAKSA BUKA CONSOLE JIKA URL ADA #console -->
+ <script>
+ window.addEventListener('load', () => {
+ // Kasih delay dikit biar panel.js selesai inisiasi
+ setTimeout(() => {
+ if (window.location.hash === '#console') {
+ if (typeof showTab === 'function') {
+ showTab('console');
+ }
+ }
+ }, 300);
+ });
+ </script>
 
-    <script>
-        const startYear = 2026;
-        const currentYear = new Date().getFullYear();
-        const yearEl = document.getElementById('dynamicYear');
-        if (yearEl) {
-            yearEl.innerText = currentYear > startYear ? `${startYear} - ${currentYear}` : startYear;
-        }
-    </script>
+ <script>
+ const startYear = 2026;
+ const currentYear = new Date().getFullYear();
+ const yearEl = document.getElementById('dynamicYear');
+ if (yearEl) {
+ yearEl.innerText = currentYear > startYear ? `${startYear} - ${currentYear}` : startYear;
+ }
+ </script>
 </body>
 </html>
