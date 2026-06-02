@@ -515,6 +515,79 @@ window.executeSingleAction = function(filePath, action) {
  if (action === 'archive') showArchiveModal(); 
 }
 
+function getFileIcon(name, isDirectory) {
+ const ic = (bg, textColor, svgPath) =>
+  `<div class="w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0">
+    <svg class="w-4 h-4 ${textColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svgPath}</svg>
+   </div>`;
+
+ if (isDirectory) return ic('bg-amber-500/20', 'text-amber-400',
+  '<path d="M3 7a2 2 0 012-2h4l2 2h7a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>');
+
+ const n = name.toLowerCase();
+ const ext = n.includes('.') ? n.split('.').pop() : '';
+
+ // JAR
+ if (ext === 'jar') return ic('bg-orange-500/20', 'text-orange-400',
+  '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>');
+
+ // Shell scripts
+ if (ext === 'sh' || ext === 'bash' || ext === 'zsh' || ext === 'fish') return ic('bg-green-500/20', 'text-green-400',
+  '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>');
+
+ // Config / properties
+ if (ext === 'properties' || ext === 'cfg' || ext === 'conf' || ext === 'ini' || ext === 'env') return ic('bg-slate-500/30', 'text-slate-300',
+  '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/>');
+
+ // YAML
+ if (ext === 'yml' || ext === 'yaml') return ic('bg-purple-500/20', 'text-purple-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
+
+ // JSON
+ if (ext === 'json' || ext === 'jsonc') return ic('bg-yellow-500/20', 'text-yellow-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/>');
+
+ // XML / HTML
+ if (ext === 'xml' || ext === 'html' || ext === 'htm') return ic('bg-blue-500/20', 'text-blue-400',
+  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
+
+ // TOML
+ if (ext === 'toml') return ic('bg-teal-500/20', 'text-teal-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+
+ // Archives / ZIP
+ if (ext === 'zip' || ext === 'tar' || ext === 'gz' || ext === 'tgz' || ext === 'rar' || ext === '7z' || ext === 'bz2') return ic('bg-violet-500/20', 'text-violet-400',
+  '<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>');
+
+ // Images
+ if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'webp' || ext === 'svg' || ext === 'ico' || ext === 'bmp') return ic('bg-pink-500/20', 'text-pink-400',
+  '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>');
+
+ // Logs
+ if (ext === 'log') return ic('bg-slate-500/20', 'text-slate-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>');
+
+ // Text / Markdown
+ if (ext === 'txt' || ext === 'md') return ic('bg-slate-500/20', 'text-slate-300',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
+
+ // Database
+ if (ext === 'db' || ext === 'sqlite' || ext === 'sqlite3') return ic('bg-cyan-500/20', 'text-cyan-400',
+  '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>');
+
+ // JS / TS
+ if (ext === 'js' || ext === 'ts' || ext === 'jsx' || ext === 'tsx') return ic('bg-yellow-500/20', 'text-yellow-300',
+  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
+
+ // Python
+ if (ext === 'py') return ic('bg-blue-500/20', 'text-blue-300',
+  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
+
+ // Default
+ return ic('bg-sky-500/20', 'text-sky-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+}
+
 function renderFileListHTML(files, dir, listElement) {
  if(!listElement) return;
  let htmlBuffer = ""; 
@@ -529,9 +602,7 @@ function renderFileListHTML(files, dir, listElement) {
  } 
  
  files.forEach((file, index) => { 
- const iconSvg = file.isDirectory 
- ? `<svg class="w-7 h-7 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>` 
- : `<svg class="w-7 h-7 text-sky-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>`;
+ const iconSvg = getFileIcon(file.name, file.isDirectory);
  
  const action = file.isDirectory ? `loadFiles('${file.path}')` : `openFile('${file.path}', '${file.name}')`; 
  const menuId = `menu-${index}`; 
