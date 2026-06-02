@@ -542,6 +542,25 @@ app.post('/api/extract', checkAuth, (req, res) => { const mcDir = getUserDir(get
 app.post('/api/archive', checkAuth, (req, res) => { const mcDir = getUserDir(getServerName(req)); const { items, archiveName, currentPath } = req.body; if (!items || !Array.isArray(items) || !archiveName || archiveName.includes('..')) return res.status(400).send("Data tidak valid"); const targetDir = path.join(mcDir, currentPath || ''); const archivePath = path.join(targetDir, archiveName.endsWith('.zip') ? archiveName : archiveName + '.zip'); const safeItems = items.filter(item => !item.includes('..')).map(item => `"${path.basename(item)}"`).join(' '); if (!safeItems) return res.status(400).send("Tidak ada item yang valid"); const cmd = `cd "${targetDir}" && zip -r "${archivePath}" ${safeItems}`; exec(cmd, (err, stdout, stderr) => { if (err) return res.status(500).send("Gagal membuat arsip: " + stderr); res.send("Berhasil diarsipkan"); }); });
 app.post('/api/move', checkAuth, (req, res) => { const mcDir = getUserDir(getServerName(req)); const { items, destination } = req.body; if (!items || !Array.isArray(items) || destination.includes('..')) return res.status(400).send("Data tidak valid"); const destPath = path.join(mcDir, destination); if (!fs.existsSync(destPath)) fs.mkdirSync(destPath, { recursive: true }); let errors = 0; items.forEach(itemPath => { if (itemPath.includes('..')) return; const fullPath = path.join(mcDir, itemPath); const newFullPath = path.join(destPath, path.basename(itemPath)); if (fs.existsSync(fullPath)) { try { fs.renameSync(fullPath, newFullPath); } catch (err) { errors++; } } }); if (errors > 0) return res.status(500).send(`Selesai tapi ada ${errors} file yang error dipindah`); res.send("Berhasil dipindahkan"); });
 
+app.get('/api/plugin-meta', checkAuth, (req, res) => {
+  const metaPath = path.join(getUserDir(getServerName(req)), 'plugins', '.plugin_meta.json');
+  try { res.json(fs.existsSync(metaPath) ? JSON.parse(fs.readFileSync(metaPath, 'utf8')) : {}); } catch(e) { res.json({}); }
+});
+app.post('/api/plugin-meta', checkAuth, (req, res) => {
+  const pluginsDir = path.join(getUserDir(getServerName(req)), 'plugins');
+  const metaPath = path.join(pluginsDir, '.plugin_meta.json');
+  try {
+    let data = {};
+    if (fs.existsSync(metaPath)) { try { data = JSON.parse(fs.readFileSync(metaPath, 'utf8')); } catch(e) {} }
+    const { filename, meta, rename } = req.body;
+    if (rename && rename.from && rename.to) { if (data[rename.from]) { data[rename.to] = data[rename.from]; delete data[rename.from]; } }
+    else if (filename) { if (meta == null) { delete data[filename]; } else { data[filename] = meta; } }
+    if (!fs.existsSync(pluginsDir)) fs.mkdirSync(pluginsDir, { recursive: true });
+    fs.writeFileSync(metaPath, JSON.stringify(data, null, 2));
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 function readNetStats() {
  try {
  const data = fs.readFileSync('/proc/net/dev', 'utf8');
@@ -831,7 +850,7 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
 
  state.process.stderr.on('data', (data) => userLog(`\x1b[31m${data.toString()}\x1b[0m`));
  state.process.on('close', (code) => {
- userLog(`\x1b[31m Proses berhenti (Kode: ${code})\x1b[0m\n`);
+ userLog(`\x1b[31mProses berhenti (Kode: ${code})\x1b[0m\n`);
  pidusage.clear(); 
  if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
  state.process = null; 
@@ -870,7 +889,7 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  
  ensureJava(reqJavaVer, userLog, (err, javaPath) => {
  if (err) {
- userLog(`\x1b[31mâŒ Gagal menginstal Java ${reqJavaVer}: ${err.message}\x1b[0m\n`);
+ userLog(`\x1b[31mGagal menginstal Java ${reqJavaVer}: ${err.message}\x1b[0m\n`);
  state.isStarting = false;
  return;
  }
@@ -911,7 +930,7 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  if (state.process) { 
  state.isRestarting = false;
  if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
- try { state.process.kill('SIGKILL'); userLog(`\x1b[31m Proses dimatikan paksa (SIGKILL).\x1b[0m\n`); } catch(err) { }
+ try { state.process.kill('SIGKILL'); userLog(`\x1b[31mProses dimatikan paksa (SIGKILL).\x1b[0m\n`); } catch(err) { }
  state.startTime = null;
  state.isStarting = false;
  } 
@@ -921,11 +940,11 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  
  socket.on('download_jar', (url, versionName, isCleanInstall) => {
  if (state.isDownloading) return userLog(`\x1b[33m Proses unduhan lain sedang berjalan.\x1b[0m\n`);
- if (state.process) return userLog(`\x1b[31mâŒ GAGAL: Server masih menyala!\x1b[0m\n`);
+ if (state.process) return userLog(`\x1b[31mGAGAL: Server masih menyala!\x1b[0m\n`);
  state.isDownloading = true; io.to('panel_' + activeServer).emit('download_lock_state', true); 
  
  if (isCleanInstall) {
- userLog(`\x1b[33mðŸ§¹ Melakukan WIPE (Sapu Bersih) seluruh file...\x1b[0m\n`);
+ userLog(`\x1b[33mMelakukan WIPE (Sapu Bersih) seluruh file...\x1b[0m\n`);
  try {
  const files = fs.readdirSync(mcDir);
  files.forEach(file => { if (file !== 'panel_settings.json') { try { fs.rmSync(path.join(mcDir, file), { recursive: true, force: true }); } catch (err) {} } });
@@ -935,14 +954,14 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  if (fs.existsSync(jarPath)) { try { if (fs.existsSync(backupPath)) fs.rmSync(backupPath, { force: true }); fs.renameSync(jarPath, backupPath); } catch(e) {} }
  }
  
- userLog(`\x1b[33mâ³ Memulai pengunduhan ${versionName}...\x1b[0m\n`);
+ userLog(`\x1b[33mMemulai pengunduhan ${versionName}...\x1b[0m\n`);
  const downloader = spawn('curl', ['-L', '-#', '-o', 'server.jar', url], { cwd: mcDir });
  downloader.on('close', (code) => {
  state.isDownloading = false; io.to('panel_' + activeServer).emit('download_lock_state', false); 
  if(code === 0) { 
  userLog(`\x1b[32m SUKSES! ${versionName} siap dimainkan.\x1b[0m\n`); io.to('panel_' + activeServer).emit('download_success_toast'); 
  const settings = getUserSettings(activeServer); settings.installedVersion = versionName; fs.writeFileSync(path.join(mcDir, 'panel_settings.json'), JSON.stringify(settings));
- } else { userLog(`\x1b[31mâŒ Unduhan gagal. (Kode: ${code})\x1b[0m\n`); }
+ } else { userLog(`\x1b[31mUnduhan gagal. (Kode: ${code})\x1b[0m\n`); }
  });
  });
 
@@ -950,12 +969,12 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  if (state.isDownloading) return;
  state.isDownloading = true; io.to('panel_' + activeServer).emit('download_lock_state', true); 
  const pluginsDir = path.join(mcDir, 'plugins'); if (!fs.existsSync(pluginsDir)) fs.mkdirSync(pluginsDir, { recursive: true });
- userLog(`\x1b[33mâ³ Mengunduh plugin: ${filename}...\x1b[0m\n`);
+ userLog(`\x1b[33mMengunduh plugin: ${filename}...\x1b[0m\n`);
  const downloader = spawn('curl', ['-L', '-#', '-o', filename, url], { cwd: pluginsDir });
  downloader.on('close', (code) => {
  state.isDownloading = false; io.to('panel_' + activeServer).emit('download_lock_state', false); 
  if(code === 0) { userLog(`\x1b[32m SUKSES! Plugin ${filename} berhasil dipasang.\x1b[0m\n`); io.to('panel_' + activeServer).emit('plugin_success_toast', filename); } 
- else { userLog(`\x1b[31mâŒ Gagal mengunduh plugin.\x1b[0m\n`); }
+ else { userLog(`\x1b[31mGagal mengunduh plugin.\x1b[0m\n`); }
  });
  });
 });
@@ -978,7 +997,7 @@ function globalSpawn(srvName) {
  state.process.stdout.on('data', d => { const o = d.toString(); uLog(o); if (o.includes('Done (') || /bot is online|ready|listening on port/i.test(o)) state.isStarting = false; });
  state.process.stderr.on('data', d => uLog(`\x1b[31m${d.toString()}\x1b[0m`));
  state.process.on('close', code => {
- uLog(`\x1b[31m Proses berhenti (Kode: ${code})\x1b[0m\n`);
+ uLog(`\x1b[31mProses berhenti (Kode: ${code})\x1b[0m\n`);
  pidusage.clear();
  if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
  state.process = null; state.startTime = null; state.isStarting = false;
