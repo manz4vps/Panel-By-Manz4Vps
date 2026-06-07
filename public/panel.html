@@ -381,38 +381,65 @@
  </div>
 
  <div id="plugins-view" class="hiddew-full">
- <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 shadow-lg mb-6 tab-fade-in">
- <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-700 pb-4">
- <h2 class="text-xl font-black flex items-center gap-2"> Plugin Manager</h2>
- <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700 w-full sm:w-auto">
- <button onclick="switchPluginTab('search')" id="ptab-search" class="flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors bg-blue-600 text-white shadow">Cari Plugin</button>
- <button onclick="switchPluginTab('installed')" id="ptab-installed" class="flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors text-slate-400 hover:text-white hover:bg-slate-800">Terpasang & Update</button>
+ <div class="bg-[#1e293b] p-4 rounded-xl border border-slate-700 shadow-lg mb-4 tab-fade-in">
+ <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+ <div>
+ <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Provider</label>
+ <select id="pm-provider" onchange="pmOnFilterChange()" class="w-full bg-slate-900 py-2 px-3 rounded-lg border border-slate-700 text-white text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
+ <option value="modrinth">Modrinth</option>
+ <option value="curseforge">CurseForge</option>
+ <option value="hangar">Hangar</option>
+ <option value="polymart">Polymart</option>
+ <option value="spigotmc">SpigotMC</option>
+ </select>
+ </div>
+ <div>
+ <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Page Size</label>
+ <select id="pm-pagesize" onchange="pmOnFilterChange()" class="w-full bg-slate-900 py-2 px-3 rounded-lg border border-slate-700 text-white text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
+ <option value="10">10</option>
+ <option value="25">25</option>
+ <option value="50" selected>50</option>
+ </select>
+ </div>
+ <div>
+ <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Plugin Loader</label>
+ <select id="pm-loader" onchange="pmOnFilterChange()" class="w-full bg-slate-900 py-2 px-3 rounded-lg border border-slate-700 text-white text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
+ <option value="">All</option>
+ <option value="bukkit">Bukkit</option>
+ <option value="bungeecord">BungeeCord</option>
+ <option value="folia">Folia</option>
+ <option value="paper">Paper</option>
+ <option value="purpur">Purpur</option>
+ <option value="spigot">Spigot</option>
+ <option value="sponge">Sponge</option>
+ <option value="velocity">Velocity</option>
+ <option value="waterfall">Waterfall</option>
+ </select>
+ </div>
+ <div>
+ <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Minecraft Version</label>
+ <select id="pm-mcversion" onchange="pmOnFilterChange()" class="w-full bg-slate-900 py-2 px-3 rounded-lg border border-slate-700 text-white text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
+ <option value="">All</option>
+ </select>
  </div>
  </div>
- 
- <div id="pcontrol-search" class="block tab-fade-in">
- <div class="flex flex-col sm:flex-row gap-3">
- <input type="text" id="pluginSearchQuery" oninput="if(typeof debouncePluginSearch === 'function') debouncePluginSearch()" onkeydown="if(event.key === 'Enter' && typeof searchPlugins === 'function') searchPlugins()" placeholder="Cari plugin (contoh: SkinRestorer, ViaVersion...)" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono shadow-inner">
- <button id="searchPluginBtn" onclick="searchPlugins()" class="bg-blue-600 hover:bg-blue-500 p-3.5 sm:px-8 rounded-lg font-black transition shadow whitespace-nowrap active:scale-95 text-white"> Cari</button>
+ <div>
+ <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Search Query</label>
+ <input type="text" id="pm-search" oninput="pmDebounceSearch()" onkeydown="if(event.key==='Enter') pmFetchPlugins(1)" placeholder="" class="w-full bg-slate-900 py-2 px-3 rounded-lg border border-slate-700 text-white text-sm outline-none focus:border-blue-500 transition">
  </div>
  </div>
 
- <div id="pcontrol-installed" class="hidden tab-fade-in">
- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
- <p class="text-slate-400 text-sm">Daftar plugin di folder <code class="bg-slate-800 text-blue-400 px-1 py-0.5 rounded">plugins/</code>. <span class="text-yellow-400">Auto-check berjalan setiap 30 menit.</span></p>
- <button onclick="checkInstalledUpdates(true)" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 px-5 py-2.5 rounded-lg font-bold text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> CEK UPDATE
- </button>
+ <div class="mb-3">
+ <button onclick="pmToggleInstalled()" id="pm-installed-btn" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95">Installed Plugins</button>
  </div>
- </div>
- </div>
- 
- <div id="pluginSearchResults" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-10"></div>
- <div id="pluginInstalledResults" class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-10"></div>
+
+ <div id="pm-results" class="space-y-0.5"></div>
+ <div id="pm-pagination" class="flex justify-center gap-1 mt-4 flex-wrap"></div>
+ <div id="pm-installed-results" class="hidden space-y-0.5"></div>
  </div>
 
  <div id="versions-view" class="hidden w-full max-w-3xl mx-auto">
- <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in pb-10"><h2 class="text-xl md:text-2xl font-black mb-2 flex items-center gap-2 border-b border-slate-700 pb-3"> Setup & Version Manager</h2><div class="mt-4 mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 flex justify-between items-center shadow-inner gap-4 overflow-x-auto"><div><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">File Server Saat Ini:</span><span id="current-active-jar" class="text-blue-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">Memuat...</span></div><div class="text-right"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Engine:</span><span id="current-active-engine" class="text-green-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">...</span></div></div><div id="java-version-section" class="mb-6 pb-6 border-b border-slate-700"><h3 class="text-base font-black text-white mb-1 flex items-center gap-2"> Versi Java</h3><p class="text-slate-400 text-sm mb-4">Pilih versi Java yang dipakai saat server start. Pilih Manual jika auto-detect salah versi.</p><select id="set-java-version" onchange="saveSettings()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="auto"> Auto (Deteksi otomatis dari versi MC)</option><option value="8"> Java 8 — MC 1.7 hingga 1.16</option><option value="17"> Java 17 — MC 1.17 hingga 1.20.4</option><option value="21"> Java 21 — MC 1.20.5 hingga 1.21.x</option><option value="25"> Java 25 — MC 1.22+ / Build 26.x</option></select></div><p class="text-slate-400 text-sm mb-6">Pilih kategori engine atau jenis server yang ingin digunakan.</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8"><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Kategori Software</label><select id="vm-category" onchange="updateSubCategory()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="mc-java"> Minecraft Java (Server)</option><option value="proxy"> Proxy Server (Bungee/Velocity)</option><option value="bedrock"> Minecraft Bedrock (Geyser)</option><option value="bot"> Bot & Apps (Node.js/Python)</option></select></div><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Software</label><select id="vm-software" onchange="fetchVersions()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"></select></div></div><div id="vm-version-container" class="mb-8 block"><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Versi Build</label><select id="vm-version" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="">Memuat versi...</option></select></div><button id="vm-install-btn" onclick="prepareInstall()" class="w-full bg-green-600 hover:bg-green-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white"> INSTALL VERSI INI</button></div>
+ <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in pb-10"><h2 class="text-xl md:text-2xl font-black mb-2 flex items-center gap-2 border-b border-slate-700 pb-3"> Setup & Version Manager</h2><div class="mt-4 mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 flex justify-between items-center shadow-inner gap-4 overflow-x-auto"><div><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">File Server Saat Ini:</span><span id="current-active-jar" class="text-blue-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">Memuat...</span></div><div class="text-right"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Engine:</span><span id="current-active-engine" class="text-green-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">...</span></div></div><p class="text-slate-400 text-sm mb-6">Pilih kategori engine atau jenis server yang ingin digunakan.</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8"><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Kategori Software</label><select id="vm-category" onchange="updateSubCategory()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="mc-java"> Minecraft Java (Server)</option><option value="proxy"> Proxy Server (Bungee/Velocity)</option><option value="bedrock"> Minecraft Bedrock (Geyser)</option><option value="bot"> Bot & Apps (Node.js/Python)</option></select></div><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Software</label><select id="vm-software" onchange="fetchVersions()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"></select></div></div><div id="java-version-section" class="mb-6 pb-6 border-b border-slate-700"><h3 class="text-base font-black text-white mb-1 flex items-center gap-2"> Versi Java</h3><p class="text-slate-400 text-sm mb-4">Pilih versi Java yang dipakai saat server start. Pilih Manual jika auto-detect salah versi.</p><select id="set-java-version" onchange="saveSettings()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="auto"> Auto (Deteksi otomatis dari versi MC)</option><option value="8"> Java 8 — MC 1.7 hingga 1.16</option><option value="17"> Java 17 — MC 1.17 hingga 1.20.4</option><option value="21"> Java 21 — MC 1.20.5 hingga 1.21.x</option><option value="25"> Java 25 — MC 1.22+ / Build 26.x</option></select></div><div id="vm-version-container" class="mb-8 block"><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Versi Build</label><select id="vm-version" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="">Memuat versi...</option></select></div><button id="vm-install-btn" onclick="prepareInstall()" class="w-full bg-green-600 hover:bg-green-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white"> INSTALL VERSI INI</button></div>
  </div>
 
  <div id="settings-view" class="hidden w-full max-w-3xl mx-auto">
@@ -442,24 +469,18 @@
  </div> 
  </main>
 
- <div id="pluginVersionModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
- <div class="bg-[#1e293b] w-full max-w-2xl flex flex-col max-h-[80vh] rounded-2xl border border-blue-600/50 shadow-[0_0_40px_rgba(37,99,235,0.2)] relative text-white overflow-hidden">
- <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800 shrink-0">
- <div class="flex items-center gap-3 overflow-hidden">
- <img id="pv-icon" src="" class="w-10 h-10 rounded-lg shrink-0 hidden">
- <div>
- <h3 id="pv-title" class="text-lg font-black text-white truncate">Memuat Versi...</h3>
- <p class="text-xs font-bold text-slate-400">Pilih versi untuk di-install</p>
+ <div id="pluginInstallModal" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/80 tab-fade-in">
+ <div class="bg-[#1e293b] w-full max-w-md rounded-2xl border border-slate-700 shadow-2xl text-white p-6 relative">
+ <button onclick="document.getElementById('pluginInstallModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-black leading-none transition">×</button>
+ <h3 class="text-lg font-black mb-3">Install plugin</h3>
+ <p class="text-sm text-slate-300 mb-5">You requested the installation of the plugin "<span id="pim-name" class="font-bold text-white"></span>" from the <span id="pim-provider" class="font-bold text-white">modrinth</span> provider. Please select the desired plugin version below.</p>
+ <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Plugin Version</label>
+ <div id="pim-loading" class="hidden flex items-center gap-2 py-3 text-sm text-slate-400 animate-pulse"><div class="w-4 h-4 border-2 border-slate-600 border-t-blue-500 rounded-full animate-spin shrink-0"></div>Loading versions...</div>
+ <select id="pim-version-select" class="w-full bg-slate-900 py-2.5 px-3 rounded-lg border border-slate-700 text-white text-sm outline-none focus:border-blue-500 transition mb-6 appearance-none cursor-pointer"></select>
+ <div class="flex gap-3 justify-end">
+ <button onclick="document.getElementById('pluginInstallModal').classList.add('hidden')" class="px-5 py-2.5 rounded-lg font-bold text-sm bg-slate-700 hover:bg-slate-600 text-white transition active:scale-95">Cancel</button>
+ <button onclick="pmInstallSelected()" class="px-5 py-2.5 rounded-lg font-bold text-sm bg-red-600 hover:bg-red-500 text-white shadow transition active:scale-95">Install plugin</button>
  </div>
- </div>
- <button onclick="document.getElementById('pluginVersionModal').classList.add('hidden')" class="text-slate-500 hover:text-white font-black text-xl transition bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center shrink-0">×</button>
- </div>
- <div class="p-4 bg-slate-900 border-b border-slate-700 shrink-0 flex gap-2 overflow-x-auto ptero-scrollbar">
- <button onclick="filterPluginVersions('all')" id="pv-btn-all" class="pv-filter-btn px-4 py-1.5 bg-blue-600 text-white rounded-full text-xs font-bold whitespace-nowrap transition">Semua Versi</button>
- <button onclick="filterPluginVersions('release')" id="pv-btn-release" class="pv-filter-btn px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full text-xs font-bold whitespace-nowrap transition">Hanya Release</button>
- <button onclick="filterPluginVersions('beta')" id="pv-btn-beta" class="pv-filter-btn px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full text-xs font-bold whitespace-nowrap transition">Beta / Snapshot</button>
- </div>
- <div class="flex-1 overflow-y-auto p-2 ptero-scrollbar bg-[#0f172a]" id="pv-list"></div>
  </div>
  </div>
 
