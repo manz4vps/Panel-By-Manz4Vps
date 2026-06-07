@@ -356,7 +356,7 @@ app.post('/api/select-server', checkAuth, (req, res) => { req.session.currentSer
 app.get('/api/whoami', checkAuth, (req, res) => { const users = readUsers(); const u = users[req.session.username]; res.json({ username: req.session.username, isAdmin: !!(u && u.isAdmin) }); });
 
 app.get('/api/settings', checkAuth, (req, res) => { res.json(getUserSettings(getServerName(req))); });
-app.get('/api/activity-log', checkAuth, (req, res) => { const logFile = path.join(getUserDir(getServerName(req)), 'activity_log.json'); if (!fs.existsSync(logFile)) return res.json([]); try { res.json(JSON.parse(fs.readFileSync(logFile, 'utf8'))); } catch(e) { res.json([]); } });
+
 app.post('/api/settings', checkAuth, (req, res) => { const srv = getServerName(req); const settings = getUserSettings(srv); if (req.body.ram) settings.ram = req.body.ram.trim(); if (req.body.jarFile) settings.jarFile = req.body.jarFile.trim(); if (req.body.ip !== undefined) settings.ip = req.body.ip.trim(); if (req.body.port) settings.port = String(req.body.port).trim(); if (req.body.engine) settings.engine = String(req.body.engine).trim(); if (req.body.autoStart !== undefined) settings.autoStart = Boolean(req.body.autoStart); if (req.body.javaVersion !== undefined) settings.javaVersion = String(req.body.javaVersion).trim(); fs.writeFileSync(path.join(getUserDir(srv), 'panel_settings.json'), JSON.stringify(settings)); res.send('Pengaturan disimpan'); });
 app.get('/api/dashboard-stats', checkAuth, (req, res) => { const srv = getServerName(req); const username = req.session.username; const users = readUsers(); const userLimits = users[username]?.limits || { ram: 2048, cpu: 100, disk: 51200 }; const mcDir = getUserDir(srv); const state = getUserState(srv); function getDirSizeSync(dirPath) { let size = 0; try { const files = fs.readdirSync(dirPath); files.forEach(file => { const fullPath = path.join(dirPath, file); const stats = fs.statSync(fullPath); if (stats.isDirectory()) size += getDirSizeSync(fullPath); else size += stats.size; }); } catch (e) {} return size; } let diskBytes = getDirSizeSync(mcDir); if (state.process) { pidusage(state.process.pid, (err, stats) => { if (!err && stats) { res.json({ name: srv, cpu: stats.cpu.toFixed(2), ramUsed: stats.memory, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } else { res.json({ name: srv, cpu: "0.00", ramUsed: 0, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } }); } else { res.json({ name: srv, cpu: "0.00", ramUsed: 0, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } });
 function getRawDate(filePath) { try { if (!fs.existsSync(filePath)) return null; return fs.statSync(filePath).mtime.toISOString(); } catch (e) { return null; } }
@@ -609,14 +609,6 @@ function capRam(ramStr, limitMB) {
  return (mb % 1024 === 0 && mb >= 1024) ? `${mb / 1024}G` : `${mb}M`;
 }
 
-function logActivity(serverDir, username, action, detail) {
- const logFile = path.join(serverDir, 'activity_log.json');
- let logs = [];
- if (fs.existsSync(logFile)) { try { logs = JSON.parse(fs.readFileSync(logFile, 'utf8')); } catch(e) {} }
- logs.unshift({ time: Date.now(), user: username, action, detail: detail || '' });
- if (logs.length > 150) logs = logs.slice(0, 150);
- try { fs.writeFileSync(logFile, JSON.stringify(logs)); } catch(e) {}
-}
 
 function startResourceMonitor(srvName, state, uLog) {
  const ownerName = getOwner(srvName) || srvName;
@@ -917,7 +909,6 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
   `-Dusing.aikars.flags=https://mcflags.emc.gs`, `-Daikars.new.flags=true`,
   `-jar`, settings.jarFile, `--nogui`, `--port`, settings.port
  ];
- logActivity(mcDir, username, 'Server Start', `Java ${reqJavaVer} | RAM ${ramMB}MB`);
  eksekusiProses(javaPath, execArgs, settings);
  });
  }
@@ -928,7 +919,6 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  socket.on('restart', () => {
  if (state.process) {
  state.isRestarting = true;
- logActivity(mcDir, username, 'Server Restart', 'Perintah restart dikirim');
  userLog(`\x1b[1;33m[Manz4VPS Daemon]:\x1b[0m Mengirim perintah restart...\n`);
  const restartSettings = getUserSettings(activeServer);
  if (restartSettings.engine === 'node' || restartSettings.engine === 'python') {
@@ -950,7 +940,6 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  if (state.process) {
  state.isRestarting = false;
  if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
- logActivity(mcDir, username, 'Server Stop', 'Perintah stop dikirim');
  state.process.stdin.write('stop\n');
  }
  });
@@ -959,7 +948,6 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  if (state.process) { 
  state.isRestarting = false;
  if (state._restartKillTimer) { clearTimeout(state._restartKillTimer); state._restartKillTimer = null; }
- logActivity(mcDir, username, 'Server Kill', 'SIGKILL dikirim paksa');
  try { state.process.kill('SIGKILL'); userLog(`\x1b[31mProses dimatikan paksa (SIGKILL).\x1b[0m\n`); } catch(err) { }
  state.startTime = null;
  state.isStarting = false;
@@ -989,7 +977,7 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  downloader.on('close', (code) => {
  state.isDownloading = false; io.to('panel_' + activeServer).emit('download_lock_state', false); 
  if(code === 0) { 
- userLog(`\x1b[32m SUKSES! ${versionName} siap dimainkan.\x1b[0m\n`); io.to('panel_' + activeServer).emit('download_success_toast'); logActivity(mcDir, username, 'Install Version', versionName);
+ userLog(`\x1b[32m SUKSES! ${versionName} siap dimainkan.\x1b[0m\n`); io.to('panel_' + activeServer).emit('download_success_toast');
  const settings = getUserSettings(activeServer); settings.installedVersion = versionName; fs.writeFileSync(path.join(mcDir, 'panel_settings.json'), JSON.stringify(settings));
  } else { userLog(`\x1b[31mUnduhan gagal. (Kode: ${code})\x1b[0m\n`); }
  });
