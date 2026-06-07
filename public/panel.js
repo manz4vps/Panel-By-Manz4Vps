@@ -1,14 +1,46 @@
 /* =========================================
  MODULE: PANEL CORE & SETTINGS (FRONTEND)
  ========================================= */
-const socket = io();
+const socket = io({ reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1500, reconnectionDelayMax: 8000 });
 let globalStartTime = null; 
 let isServerOnline = false;
 let currentDiskUsedMB = 0;
 let isStoppingServer = false; 
 
 let settingsCache = null;
-let currentServerRamMB = 2048; 
+let currentServerRamMB = 2048;
+
+let _reconnectBanner = null;
+let _wasEverConnected = false;
+
+function _getOrCreateReconnectBanner() {
+ if (!_reconnectBanner) {
+ _reconnectBanner = document.createElement('div');
+ _reconnectBanner.id = 'reconnect-banner';
+ _reconnectBanner.className = 'fixed top-0 left-0 right-0 z-[99999] bg-red-600 text-white text-center text-sm font-bold py-2 px-4 flex items-center justify-center gap-2 shadow-lg';
+ _reconnectBanner.innerHTML = '<div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0"></div><span>Koneksi terputus — mencoba menghubungkan kembali...</span>';
+ document.body.appendChild(_reconnectBanner);
+ }
+ return _reconnectBanner;
+}
+
+socket.on('connect', () => {
+ if (_wasEverConnected) {
+ if (_reconnectBanner) { _reconnectBanner.remove(); _reconnectBanner = null; }
+ if (typeof showToast === 'function') showToast('Berhasil terhubung kembali!', 'success');
+ }
+ _wasEverConnected = true;
+});
+
+socket.on('disconnect', (reason) => {
+ if (reason === 'io server disconnect') { socket.connect(); }
+ const banner = _getOrCreateReconnectBanner();
+ banner.style.display = 'flex';
+});
+
+socket.on('connect_error', () => {
+ _getOrCreateReconnectBanner().style.display = 'flex';
+});
 
 function parseRamToMB(ramStr) {
  if (!ramStr) return 2048;
@@ -303,7 +335,7 @@ async function saveSettings() {
 
 function showTab(tab, addToHistory = true, forceRefresh = false) {
  if (window.startProgress) window.startProgress(); 
- if (tab !== 'edit') localStorage.setItem('activeTab', tab); 
+ 
  ['console', 'files', 'versions', 'plugins', 'network', 'startup', 'settings', 'edit'].forEach(t => { 
  const view = document.getElementById(t === 'edit' ? 'fileEditor' : `${t}-view`); const tabBtns = document.querySelectorAll(`.tab-btn-${t}`); 
  if(view) { if (t === tab) { view.style.display = 'block'; } else { view.style.display = 'none'; } } 
@@ -319,9 +351,9 @@ function showTab(tab, addToHistory = true, forceRefresh = false) {
  });
  const isFirstVisit = !tabVisited.has(tab) || forceRefresh;
  if (tab !== 'edit') tabVisited.add(tab);
- if (tab !== 'files' && tab !== 'edit') { const bar = document.getElementById('pteroFloatingBar'); if(bar) { bar.classList.add('translate-y-20', 'opacity-0'); setTimeout(() => { if(bar) bar.classList.add('hidden'); }, 300); } } else if (tab === 'files' && typeof loadFiles === 'function') { if (typeof currentPath !== 'undefined') currentPath = ''; if (typeof folderCache !== 'undefined') { Object.keys(folderCache).forEach(k => delete folderCache[k]); } loadFiles('', true); }
+ if (tab !== 'files' && tab !== 'edit') { const bar = document.getElementById('pteroFloatingBar'); if(bar) { bar.classList.add('translate-y-20', 'opacity-0'); setTimeout(() => { if(bar) bar.classList.add('hidden'); }, 300); } } else if (tab === 'files' && typeof loadFiles === 'function') { if (!window._skipFileReset) { if (typeof currentPath !== 'undefined') currentPath = ''; if (typeof folderCache !== 'undefined') { Object.keys(folderCache).forEach(k => delete folderCache[k]); } loadFiles('', true); } window._skipFileReset = false; }
  if((tab === 'startup' || tab === 'network' || tab === 'settings') && isFirstVisit) loadSettings();
- if(tab === 'plugins' && isFirstVisit) { const sr = document.getElementById('pluginSearchResults'); if(sr) sr.innerHTML = ''; if(typeof loadDefaultPlugins === 'function') switchPluginTab('search'); }
+ if(tab === 'plugins' && isFirstVisit) { pmInitMcVersions(); pmFetchPlugins(1); }
  if(tab === 'versions') { const vmCat = document.getElementById('vm-category'); if(document.getElementById('vm-software') && document.getElementById('vm-software').options.length === 0) updateSubCategory(); }
  if (addToHistory && tab !== 'files' && tab !== 'edit' && window.location.hash !== '#' + tab) history.pushState({ tab: tab }, '', '#' + tab);
  if (tab === 'edit' && typeof editor !== 'undefined' && editor) setTimeout(() => { editor.refresh(); }, 150);
@@ -332,10 +364,13 @@ function showTab(tab, addToHistory = true, forceRefresh = false) {
 window.addEventListener('popstate', (event) => { let hash = window.location.hash.replace('#', ''); if (hash.startsWith('edit/') || hash.startsWith('files')) { return; } else if (['console', 'versions', 'plugins', 'network', 'startup', 'settings'].includes(hash)) { showTab(hash, false); } else if (hash === '') { showTab('console', false); } });
 window.onload = async () => {
  let hashFull = window.location.hash.replace('#', ''); let initialTab = 'console';
- if (hashFull.startsWith('files')) { initialTab = 'files'; let path = hashFull.replace('files', ''); if (path.startsWith('/')) path = path.substring(1); if(typeof currentPath !== 'undefined') currentPath = path; }
- else if (hashFull.startsWith('edit/')) { initialTab = 'edit'; } else if (['versions', 'plugins', 'network', 'startup', 'settings'].includes(hashFull)) { initialTab = hashFull; } else { initialTab = localStorage.getItem('activeTab') || 'console'; }
+ let restoredFilesPath = '';
+ if (hashFull.startsWith('files')) { initialTab = 'files'; let path = hashFull.replace('files', ''); if (path.startsWith('/')) path = path.substring(1); restoredFilesPath = path; if(typeof currentPath !== 'undefined') currentPath = path; }
+ else if (hashFull.startsWith('edit/')) { initialTab = 'edit'; } else if (['versions', 'plugins', 'network', 'startup', 'settings'].includes(hashFull)) { initialTab = hashFull; } else { initialTab = 'console'; }
  history.replaceState(null, '', '#' + (hashFull || initialTab));
+ if (initialTab === 'files') window._skipFileReset = true;
  showTab(initialTab, false);
+ if (initialTab === 'files' && typeof currentPath !== 'undefined') currentPath = restoredFilesPath;
  initTermZoom();
  // Hide loader immediately — don't wait for API calls
  const loader = document.getElementById('page-loader');
@@ -353,158 +388,259 @@ const softwareData = { 'mc-java': [ {id: 'paper', name: 'PaperMC (Ringan)'}, {id
 function updateSubCategory() { if (window.startProgress) window.startProgress(); const cat = document.getElementById('vm-category').value; const softSelect = document.getElementById('vm-software'); if(softSelect) softSelect.innerHTML = softwareData[cat].map(s => `<option value="${s.id}">${s.name}</option>`).join(''); const javaSection = document.getElementById('java-version-section'); if (cat === 'bot') { if(document.getElementById('vm-version-container')) document.getElementById('vm-version-container').classList.add('hidden'); if(document.getElementById('vm-install-btn')) document.getElementById('vm-install-btn').innerText = ' SETUP ENVIRONMENT INI'; if(javaSection) javaSection.classList.add('hidden'); if (window.finishProgress) window.finishProgress(); } else { if(document.getElementById('vm-version-container')) document.getElementById('vm-version-container').classList.remove('hidden'); if(document.getElementById('vm-install-btn')) document.getElementById('vm-install-btn').innerText = ' INSTALL VERSI INI'; if(javaSection) javaSection.classList.remove('hidden'); fetchVersions(); } }
 
 /* =========================================
- ULTIMATE PLUGIN MANAGER PRO 
+ PLUGIN MANAGER (Pterodactyl-style)
  ========================================= */
-let pluginSearchTimeout;
-function debouncePluginSearch() { clearTimeout(pluginSearchTimeout); pluginSearchTimeout = setTimeout(() => { searchPlugins(); }, 500); }
-function switchPluginTab(tab) {
- const searchControl = document.getElementById('pcontrol-search'); const installedControl = document.getElementById('pcontrol-installed'); const searchResults = document.getElementById('pluginSearchResults'); const installedResults = document.getElementById('pluginInstalledResults'); const btnSearch = document.getElementById('ptab-search'); const btnInstalled = document.getElementById('ptab-installed');
- if (!searchControl || !installedControl) return;
- if (tab === 'search') { searchControl.style.display = 'block'; installedControl.style.display = 'none'; searchResults.style.display = 'grid'; installedResults.style.display = 'none'; btnSearch.className = "flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors bg-blue-600 text-white shadow"; btnInstalled.className = "flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors text-slate-400 hover:text-white hover:bg-slate-800"; if(searchResults.innerHTML === '') loadDefaultPlugins(); } else { searchControl.style.display = 'none'; installedControl.style.display = 'block'; searchResults.style.display = 'none'; installedResults.style.display = 'grid'; btnInstalled.className = "flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors bg-blue-600 text-white shadow"; btnSearch.className = "flex-1 sm:flex-none px-4 py-2 rounded-md font-bold text-sm transition-colors text-slate-400 hover:text-white hover:bg-slate-800"; loadInstalledPlugins(); }
-}
-function renderPlugins(hits) { const resultsDiv = document.getElementById('pluginSearchResults'); if (hits.length === 0) { if(resultsDiv) resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10"> Plugin tidak ditemukan. Coba kata kunci lain.</p>'; return; } if(resultsDiv) resultsDiv.innerHTML = hits.map(plugin => `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between hover:border-blue-500 transition shadow-lg relative overflow-hidden group"><div class="flex items-start gap-3 mb-4"><img src="${plugin.icon_url || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover bg-slate-900 border border-slate-600"><div class="overflow-hidden"><h3 class="font-black text-blue-400 text-base truncate" title="${plugin.title}">${plugin.title}</h3><p class="text-xs text-slate-400 truncate mt-0.5">By ${plugin.author || 'Unknown'}</p></div></div><button onclick="openPluginVersionModal('${plugin.project_id}', '${plugin.title.replace(/'/g, "\\'")}', '${plugin.icon_url || ''}')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> PILIH VERSI</button></div>`).join(''); }
-async function loadDefaultPlugins() { if (window.startProgress) window.startProgress(); const resultsDiv = document.getElementById('pluginSearchResults'); if(resultsDiv) resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10 animate-pulse">Memuat plugin populer...</p>'; try { const res = await fetch(`https://api.modrinth.com/v2/search?facets=[["project_type:plugin"]]&index=downloads&limit=12`); const data = await res.json(); renderPlugins(data.hits); } catch(e) { if(resultsDiv) resultsDiv.innerHTML = '<p class="text-red-400 col-span-full text-center py-10">Gagal mengambil data dari Modrinth.</p>'; } finally { if (window.finishProgress) window.finishProgress(); } }
-async function searchPlugins() { const queryEl = document.getElementById('pluginSearchQuery'); if(!queryEl) return; const input = queryEl.value.trim(); if (!input) { loadDefaultPlugins(); return; } if (window.startProgress) window.startProgress(); const resultsDiv = document.getElementById('pluginSearchResults'); if(resultsDiv) resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10 animate-pulse">Mencari plugin...</p>'; try { const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(input)}&facets=[["project_type:plugin"]]&limit=15`); const data = await res.json(); if (input.toLowerCase().includes('vault')) { data.hits.unshift({ project_id: 'vault-original-bypass', title: 'Vault (Original by MilkBowl)', icon_url: 'https://cdn-icons-png.flaticon.com/512/2621/2621062.png', author: 'MilkBowl' }); } renderPlugins(data.hits); } catch(e) { if(resultsDiv) resultsDiv.innerHTML = '<p class="text-red-400 col-span-full text-center py-10">Pencarian gagal.</p>'; } finally { if (window.finishProgress) window.finishProgress(); } }
-async function loadInstalledPlugins() { const resultsDiv = document.getElementById('pluginInstalledResults'); resultsDiv.innerHTML = '<p class="text-slate-400 col-span-full text-center py-10 animate-pulse">Membaca folder plugins/ ...</p>'; await fetch('/api/folder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ path: 'plugins' }) }); try { const res = await fetch('/api/files?path=plugins'); const files = await res.json(); const jars = files.filter(f => !f.isDirectory && f.name.endsWith('.jar')); if (jars.length === 0) { resultsDiv.innerHTML = '<p class="text-slate-500 col-span-full text-center py-10 font-bold"> Belum ada plugin yang terpasang.</p>'; return; } resultsDiv.innerHTML = jars.map(jar => `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between shadow-lg relative overflow-hidden"><div class="flex items-start gap-3 mb-4"><div class="w-10 h-10 rounded-lg bg-slate-900 border border-slate-600 flex items-center justify-center text-xl shrink-0"></div><div class="overflow-hidden w-full"><h3 class="font-black text-slate-200 text-sm truncate" title="${jar.name}">${jar.name}</h3><p class="text-xs text-slate-500 truncate mt-0.5">${jar.size}</p></div></div><div id="update-status-${jar.name.replace(/[^a-zA-Z0-9]/g, '')}"><button onclick="checkSingleUpdate('${jar.name}')" class="w-full bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg font-bold text-xs text-slate-300 shadow transition active:scale-95 flex items-center justify-center gap-2"> CEK UPDATE</button></div></div>`).join(''); checkInstalledUpdates(); } catch (e) { resultsDiv.innerHTML = '<p class="text-red-400 col-span-full text-center py-10 font-bold"> Gagal membaca isi folder plugins.</p>'; } }
-async function checkSingleUpdate(filename) {
- const safeId = filename.replace(/[^a-zA-Z0-9]/g, '');
- const statusDiv = document.getElementById(`update-status-${safeId}`);
- if(!statusDiv) return;
- statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-400 flex items-center justify-center gap-2 cursor-not-allowed animate-pulse border border-slate-700"> MENGECEK...</button>`;
+let _pmSearchTimeout;
+let _pmCurrentPage = 1;
+let _pmInstallMeta = null;
+let _pmInstallVersions = [];
+let _pmShowingInstalled = false;
+
+function pmDebounceSearch() { clearTimeout(_pmSearchTimeout); _pmSearchTimeout = setTimeout(() => pmFetchPlugins(1), 500); }
+function pmOnFilterChange() { pmFetchPlugins(1); }
+
+async function pmInitMcVersions() {
+ const sel = document.getElementById('pm-mcversion');
+ if (!sel || sel.options.length > 1) return;
  try {
-  const metaRes = await fetch('/api/plugin-meta');
-  const allMeta = await metaRes.json();
-  const meta = allMeta[filename];
-  if (!meta || meta.source !== 'modrinth') {
-   statusDiv.innerHTML = `<button disabled class="w-full bg-slate-700/50 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700/50 cursor-not-allowed">UPLOAD MANUAL</button>`;
-   return;
+  const res = await fetch('https://api.modrinth.com/v2/tag/game_version');
+  const tags = await res.json();
+  const releaseVersions = tags.filter(t => t.version_type === 'release' && /^\d+\.\d+/.test(t.version));
+  releaseVersions.forEach(t => {
+   const opt = document.createElement('option');
+   opt.value = t.version; opt.textContent = t.version;
+   sel.appendChild(opt);
+  });
+ } catch(e) {}
+}
+
+async function pmFetchPlugins(page) {
+ const provider = document.getElementById('pm-provider')?.value || 'modrinth';
+ if (provider === 'curseforge' || provider === 'polymart') {
+  const res = document.getElementById('pm-results');
+  const pag = document.getElementById('pm-pagination');
+  if(res) res.innerHTML = `<div class="text-center py-16"><p class="text-slate-300 font-bold text-base mb-2">${provider === 'curseforge' ? 'CurseForge' : 'Polymart'} membutuhkan API Key</p><p class="text-slate-500 text-sm">Provider ini tidak memiliki akses publik gratis.<br>Gunakan <span class="text-green-400 font-bold">Modrinth</span>, <span class="text-blue-400 font-bold">SpigotMC</span>, atau <span class="text-orange-400 font-bold">Hangar</span>.</p></div>`;
+  if(pag) pag.innerHTML = '';
+  return;
+ }
+ _pmCurrentPage = page || 1;
+ const pageSize = parseInt(document.getElementById('pm-pagesize')?.value || '50');
+ const loader = document.getElementById('pm-loader')?.value || '';
+ const mcVersion = document.getElementById('pm-mcversion')?.value || '';
+ const query = document.getElementById('pm-search')?.value.trim() || '';
+ const offset = (_pmCurrentPage - 1) * pageSize;
+ const resultsDiv = document.getElementById('pm-results');
+ const paginationDiv = document.getElementById('pm-pagination');
+ if (resultsDiv) resultsDiv.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm animate-pulse">Memuat plugin...</div>';
+ if (paginationDiv) paginationDiv.innerHTML = '';
+ if (window.startProgress) window.startProgress();
+ try {
+  if (provider === 'modrinth') {
+   let facets = [['project_type:plugin']];
+   if (loader) facets.push([`categories:${loader}`]);
+   if (mcVersion) facets.push([`versions:${mcVersion}`]);
+   const facetsStr = encodeURIComponent(JSON.stringify(facets));
+   const index = query ? 'relevance' : 'downloads';
+   const url = `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facetsStr}&index=${index}&limit=${pageSize}&offset=${offset}`;
+   const res = await fetch(url);
+   const data = await res.json();
+   const normalized = (data.hits || []).map(p => ({ project_id: p.project_id, title: p.title, description: p.description, icon_url: p.icon_url, ext_url: `https://modrinth.com/plugin/${p.slug || p.project_id}`, _provider: 'modrinth' }));
+   pmRenderList(normalized, data.total_hits || 0, _pmCurrentPage, pageSize);
+  } else if (provider === 'spigotmc') {
+   const pageNum = _pmCurrentPage - 1;
+   let url;
+   if (query) {
+    url = `https://api.spiget.org/v2/search/resources/${encodeURIComponent(query)}?size=${pageSize}&page=${pageNum}&sort=-downloads&fields=id,name,tag,author,icon,file,premium`;
+   } else {
+    url = `https://api.spiget.org/v2/resources/free?size=${pageSize}&page=${pageNum}&sort=-downloads&fields=id,name,tag,author,icon,file,premium`;
+   }
+   const res = await fetch(url, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
+   const data = await res.json();
+   const list = Array.isArray(data) ? data : (data.resources || []);
+   const totalRes = await fetch(`https://api.spiget.org/v2/${query ? `search/resources/${encodeURIComponent(query)}/` : 'resources/free/'}count`, { headers: { 'User-Agent': 'Manz4VPS-Panel' } }).then(r => r.json()).catch(() => list.length);
+   const total = typeof totalRes === 'number' ? totalRes : list.length;
+   const normalized = list.map(p => ({ project_id: String(p.id), title: p.name, description: p.tag || '', icon_url: p.icon && p.icon.url ? (p.icon.url.startsWith('http') ? p.icon.url : `https://www.spigotmc.org/${p.icon.url}`) : '', ext_url: `https://www.spigotmc.org/resources/${p.id}`, _provider: 'spigotmc', _premium: p.premium }));
+   pmRenderList(normalized, total, _pmCurrentPage, pageSize);
+  } else if (provider === 'hangar') {
+   const url = `https://hangar.papermc.io/api/v1/projects?q=${encodeURIComponent(query)}&limit=${pageSize}&offset=${offset}`;
+   const res = await fetch(url, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
+   const data = await res.json();
+   const normalized = (data.result || []).map(p => ({ project_id: `${p.namespace.owner}/${p.namespace.slug}`, title: p.name, description: p.description, icon_url: p.iconUrl || '', ext_url: `https://hangar.papermc.io/${p.namespace.owner}/${p.namespace.slug}`, _provider: 'hangar' }));
+   pmRenderList(normalized, data.pagination?.count || normalized.length, _pmCurrentPage, pageSize);
   }
-  const loaders = encodeURIComponent('["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]');
-  const verRes = await fetch(`https://api.modrinth.com/v2/project/${meta.project_id}/version?loaders=${loaders}`);
-  const versions = await verRes.json();
-  if (!versions || versions.length === 0) {
-   statusDiv.innerHTML = `<button disabled class="w-full bg-green-500/10 py-2.5 rounded-lg font-bold text-xs text-green-500 border border-green-500/20 cursor-not-allowed"> UP TO DATE</button>`;
-   return;
+ } catch(e) {
+  if(resultsDiv) resultsDiv.innerHTML = `<div class="text-center py-10 text-red-400 font-bold">Gagal mengambil data. Coba lagi.</div>`;
+ } finally {
+  if (window.finishProgress) window.finishProgress();
+ }
+}
+
+function pmRenderList(hits, total, page, pageSize) {
+ const resultsDiv = document.getElementById('pm-results');
+ const paginationDiv = document.getElementById('pm-pagination');
+ if (!resultsDiv) return;
+ if (hits.length === 0) {
+  resultsDiv.innerHTML = '<div class="text-center py-16 text-slate-500 font-bold">Plugin tidak ditemukan. Coba kata kunci atau filter lain.</div>';
+  if(paginationDiv) paginationDiv.innerHTML = '';
+  return;
+ }
+ resultsDiv.innerHTML = hits.map(p => {
+  const icon = p.icon_url ? `<img src="${p.icon_url}" class="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-700 shrink-0" onerror="this.style.display='none'">` : `<div class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 shrink-0 flex items-center justify-center text-slate-500"></div>`;
+  const safeTitle = p.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  const safeId = p.project_id.replace(/'/g, "\\'");
+  const premium = p._premium ? `<span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 uppercase tracking-widest shrink-0">PREMIUM</span>` : '';
+  return `<div class="flex items-center gap-3 bg-[#1e293b] border border-slate-700/60 hover:border-slate-600 px-4 py-3 rounded-xl transition">
+   ${icon}
+   <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-1.5 flex-wrap">
+     <span class="font-bold text-white text-sm truncate">${p.title}</span>${premium}
+     <a href="${p.ext_url}" target="_blank" class="text-slate-500 hover:text-blue-400 transition shrink-0"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+    </div>
+    <p class="text-xs text-slate-400 truncate mt-0.5">${p.description || ''}</p>
+   </div>
+   <button onclick="pmOpenInstallModal('${safeId}','${safeTitle}')" class="shrink-0 text-slate-400 hover:text-blue-400 transition p-1.5 rounded-lg hover:bg-slate-700/50 active:scale-90" title="Install">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+   </button>
+  </div>`;
+ }).join('');
+ if (paginationDiv) {
+  const totalPages = Math.ceil(total / pageSize);
+  if (totalPages <= 1) { paginationDiv.innerHTML = ''; return; }
+  const maxVisible = 6;
+  const startPage = Math.max(1, page - 2);
+  const endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  let pages = [];
+  for (let i = startPage; i <= endPage; i++) pages.push(i);
+  const btnClass = p => p === page ? 'w-9 h-9 rounded-lg font-black text-sm bg-blue-600 text-white shadow' : 'w-9 h-9 rounded-lg font-bold text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 transition active:scale-95';
+  paginationDiv.innerHTML =
+   (page > 1 ? `<button onclick="pmFetchPlugins(${page-1})" class="w-9 h-9 rounded-lg font-bold text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 transition active:scale-95">&lt;</button>` : '') +
+   pages.map(p => `<button onclick="pmFetchPlugins(${p})" class="${btnClass(p)}">${p}</button>`).join('') +
+   (page < totalPages ? `<button onclick="pmFetchPlugins(${page+1})" class="w-9 h-9 rounded-lg font-bold text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 transition active:scale-95">&gt;</button>` : '');
+ }
+}
+
+async function pmOpenInstallModal(projectId, title) {
+ const provider = document.getElementById('pm-provider')?.value || 'modrinth';
+ _pmInstallMeta = { project_id: projectId, title, provider };
+ _pmInstallVersions = [];
+ const modal = document.getElementById('pluginInstallModal');
+ const nameEl = document.getElementById('pim-name');
+ const sel = document.getElementById('pim-version-select');
+ const loadingEl = document.getElementById('pim-loading');
+ if (!modal || !sel) return;
+ if (nameEl) nameEl.textContent = title;
+ const providerSpan = document.getElementById('pim-provider');
+ if (providerSpan) providerSpan.textContent = provider;
+ sel.innerHTML = '';
+ sel.disabled = true;
+ if (loadingEl) { loadingEl.style.display = 'flex'; sel.style.display = 'none'; }
+ modal.classList.remove('hidden');
+ try {
+  if (provider === 'modrinth') {
+   const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`);
+   const versions = await res.json();
+   const modLoaders = ['fabric','neoforge','forge','quilt'];
+   const filtered = versions.filter(v => { const ls = (v.loaders||[]).map(l=>l.toLowerCase()); return !ls.every(l=>modLoaders.includes(l)); });
+   const list = filtered.length > 0 ? filtered : versions;
+   _pmInstallVersions = list.map(v => { const f = _pmGetBestFile(v.files); return f ? { label: v.version_number, url: f.url, filename: f.filename } : null; }).filter(Boolean);
+  } else if (provider === 'spigotmc') {
+   const res = await fetch(`https://api.spiget.org/v2/resources/${projectId}/versions?size=20&page=0&sort=-name`, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
+   const versions = await res.json();
+   const safeName = title.replace(/[^a-zA-Z0-9\-_.]/g, '_').substring(0, 40);
+   _pmInstallVersions = (Array.isArray(versions) ? versions : []).map(v => ({ label: v.name || String(v.id), url: `https://api.spiget.org/v2/resources/${projectId}/versions/${v.id}/download`, filename: `${safeName}-${(v.name||v.id).replace(/[^a-zA-Z0-9\-_.]/g,'_')}.jar` }));
+   if (_pmInstallVersions.length === 0) {
+    _pmInstallVersions = [{ label: 'Latest', url: `https://api.spiget.org/v2/resources/${projectId}/download`, filename: `${safeName}-latest.jar` }];
+   }
+  } else if (provider === 'hangar') {
+   const [owner, slug] = projectId.split('/');
+   const res = await fetch(`https://hangar.papermc.io/api/v1/projects/${owner}/${slug}/versions?limit=20&offset=0`, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
+   const data = await res.json();
+   const versions = data.result || [];
+   _pmInstallVersions = versions.map(v => {
+    const platform = v.downloads && (v.downloads.PAPER || v.downloads.VELOCITY || v.downloads.WATERFALL);
+    const dlUrl = platform?.downloadUrl || `https://hangar.papermc.io/api/v1/projects/${owner}/${slug}/versions/${encodeURIComponent(v.name)}/PAPER/download`;
+    const filename = (platform?.fileInfo?.name) || `${slug}-${v.name.replace(/[^a-zA-Z0-9\-_.]/g,'_')}.jar`;
+    return { label: v.name, url: dlUrl, filename };
+   });
   }
-  const latestVersion = versions.find(v => v.version_type === 'release') || versions[0];
-  const latestFile = _getBestFile(latestVersion.files);
-  if (!latestFile) { statusDiv.innerHTML = `<button disabled class="w-full bg-slate-800 py-2.5 rounded-lg font-bold text-xs text-slate-500 border border-slate-700 cursor-not-allowed"> FILE TIDAK DITEMUKAN</button>`; return; }
-  if (latestFile.filename === filename) {
-   statusDiv.innerHTML = `<button disabled class="w-full bg-green-500/10 py-2.5 rounded-lg font-bold text-xs text-green-500 border border-green-500/20 cursor-not-allowed"> UP TO DATE</button>`;
+  if (_pmInstallVersions.length === 0) {
+   sel.innerHTML = '<option disabled>Tidak ada versi tersedia</option>';
   } else {
-   statusDiv.innerHTML = `<button onclick="executePluginUpdate('${filename}', '${latestFile.url}', '${latestFile.filename}')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black text-xs text-white shadow transition active:scale-95 flex items-center justify-center gap-2"> PERBARUI ke V.${latestVersion.version_number}</button>`;
+   sel.innerHTML = _pmInstallVersions.map((v, i) => `<option value="${i}">${v.label}</option>`).join('');
   }
- } catch (e) {
-  statusDiv.innerHTML = `<button onclick="checkSingleUpdate('${filename}')" class="w-full bg-red-500/20 hover:bg-red-500/30 py-2.5 rounded-lg font-bold text-xs text-red-400 border border-red-500/30 transition active:scale-95"> GAGAL CEK (COBA LAGI)</button>`;
+ } catch(e) {
+  sel.innerHTML = '<option disabled>Gagal memuat versi</option>';
+ } finally {
+  sel.disabled = false;
+  if (loadingEl) { loadingEl.style.display = 'none'; sel.style.display = ''; }
  }
 }
-async function checkInstalledUpdates(manual = false) { if(manual) showToast('Mengecek update plugin...', 'success'); const resultsDiv = document.getElementById('pluginInstalledResults'); const buttons = resultsDiv.querySelectorAll('button[onclick^="checkSingleUpdate"]'); for (let btn of buttons) { btn.click(); await new Promise(r => setTimeout(r, 500)); } }
-async function executePluginUpdate(oldFilename, newUrl, newFilename) {
- const safeId = oldFilename.replace(/[^a-zA-Z0-9]/g, '');
- const statusDiv = document.getElementById(`update-status-${safeId}`);
- if(statusDiv) statusDiv.innerHTML = `<button disabled class="w-full bg-blue-800 py-2.5 rounded-lg font-bold text-xs text-blue-300 flex items-center justify-center gap-2 cursor-not-allowed animate-pulse"> MENGUNDUH...</button>`;
- try {
-  await fetch('/api/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items: [`plugins/${oldFilename}`] }) });
-  socket.emit('download_plugin', newUrl, newFilename);
-  fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ rename: { from: oldFilename, to: newFilename } }) }).catch(()=>{});
-  setTimeout(() => { loadInstalledPlugins(); }, 2500);
- } catch (e) { showToast('Gagal memperbarui', 'error'); }
-}
-let currentPluginData = [];
-let currentPluginMeta = null;
-let currentPluginPlatform = 'spigot';
 
-function setPluginPlatform(platform) {
- currentPluginPlatform = platform;
- ['spigot','fabric','neoforge','forge'].forEach(p => {
- const btn = document.getElementById(`plt-${p}`);
- if (!btn) return;
- if (p === platform) {
- btn.className = 'px-3 py-1.5 rounded-lg text-xs font-black transition border bg-green-600 text-white border-green-500 shadow';
- } else {
- btn.className = 'px-3 py-1.5 rounded-lg text-xs font-black transition border bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600';
+async function pmInstallSelected() {
+ const sel = document.getElementById('pim-version-select');
+ if (!sel || !_pmInstallVersions.length) return;
+ const idx = parseInt(sel.value) || 0;
+ const version = _pmInstallVersions[idx];
+ if (!version) return;
+ document.getElementById('pluginInstallModal').classList.add('hidden');
+ showToast(`Memproses ${version.filename}...`);
+ socket.emit('download_plugin', version.url, version.filename);
+ if (_pmInstallMeta) {
+  try {
+   await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename: version.filename, meta: { source: _pmInstallMeta.provider, project_id: _pmInstallMeta.project_id, title: _pmInstallMeta.title } }) });
+  } catch(e) {}
+  _pmInstallMeta = null;
  }
- });
- const resultsDiv = document.getElementById('pluginSearchResults');
- if (resultsDiv) resultsDiv.innerHTML = '';
- const query = document.getElementById('pluginSearchQuery');
- if (query && query.value.trim()) { searchPlugins(); } else { loadDefaultPlugins(); }
 }
 
-function _getPlatformConfig() {
- if (currentPluginPlatform === 'fabric') return { type: 'mod', loaders: '["fabric"]', label: 'Fabric' };
- if (currentPluginPlatform === 'neoforge') return { type: 'mod', loaders: '["neoforge"]', label: 'NeoForge' };
- if (currentPluginPlatform === 'forge') return { type: 'mod', loaders: '["forge"]', label: 'Forge' };
- return { type: 'plugin', loaders: '["paper","spigot","purpur","bukkit","folia","velocity","waterfall"]', label: 'Spigot/Paper' };
-}
-
-async function openPluginVersionModal(projectId, title, iconUrl) {
- currentPluginMeta = { project_id: projectId, title, icon_url: iconUrl };
- if (projectId === 'vault-original-bypass') { currentPluginMeta = null; const vaultLink = 'https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar'; socket.emit('download_plugin', vaultLink, 'Vault.jar'); return; } const modal = document.getElementById('pluginVersionModal'); const titleEl = document.getElementById('pv-title'); const iconEl = document.getElementById('pv-icon'); const listEl = document.getElementById('pv-list'); if(!modal || !listEl) return; titleEl.innerText = title; if (iconUrl) { iconEl.src = iconUrl; iconEl.classList.remove('hidden'); } else { iconEl.classList.add('hidden'); } listEl.innerHTML = '<div class="flex flex-col items-center justify-center py-12 gap-3"><div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div><p class="text-slate-400 font-bold text-sm animate-pulse">Memuat versi...</p></div>'; modal.classList.remove('hidden'); filterPluginVersions('all', true); try { const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`); currentPluginData = await res.json(); if (!currentPluginData || currentPluginData.length === 0) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold"> Tidak ada versi tersedia.</p>'; return; } renderVersionList(currentPluginData); } catch(e) { listEl.innerHTML = '<p class="text-center text-red-400 py-10 font-bold"> Gagal mengambil daftar versi.</p>'; } }
-function _getBestFile(files) {
+function _pmGetBestFile(files) {
  if (!files || files.length === 0) return null;
  const n = f => f.filename.toLowerCase();
- // Always pick spigot-compatible file: avoid fabric/neoforge/forge labeled files
- const spigotFile = files.find(f => !n(f).includes('fabric') && !n(f).includes('neoforge') && !n(f).includes('-forge') && f.primary);
- if (spigotFile) return spigotFile;
- const anySpigot = files.find(f => !n(f).includes('fabric') && !n(f).includes('neoforge') && !n(f).includes('-forge'));
- return anySpigot || files.find(f => f.primary) || files[0];
+ const primary = files.find(f => !n(f).includes('fabric') && !n(f).includes('neoforge') && !n(f).includes('-forge') && f.primary);
+ if (primary) return primary;
+ const any = files.find(f => !n(f).includes('fabric') && !n(f).includes('neoforge') && !n(f).includes('-forge'));
+ return any || files.find(f => f.primary) || files[0];
 }
 
-function _getLoaderBadges(loaders) {
- if (!loaders || loaders.length === 0) return '';
- const serverLoaders = ['paper','spigot','purpur','bukkit','folia','waterfall','velocity'];
- const show = loaders.filter(l => serverLoaders.includes(l.toLowerCase()));
- if (show.length === 0) return '';
- const colors = {
-  paper: 'bg-green-500/20 text-green-300 border-green-500/30',
-  spigot: 'bg-green-500/20 text-green-300 border-green-500/30',
-  purpur: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-  bukkit: 'bg-green-500/20 text-green-300 border-green-500/30',
-  folia: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
-  velocity: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  waterfall: 'bg-blue-500/20 text-blue-300 border-blue-500/30'
- };
- return show.map(l => { const c = colors[l.toLowerCase()] || 'bg-slate-600/50 text-slate-300 border-slate-500/30'; return `<span class="text-[9px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${c}">${l}</span>`; }).join(' ');
-}
-
-function renderVersionList(versionsArray) {
- const listEl = document.getElementById('pv-list');
- if(!listEl) return;
- if (versionsArray.length === 0) { listEl.innerHTML = '<p class="text-center text-slate-500 py-10 font-bold">Tidak ada versi yang cocok dengan filter.</p>'; return; }
- // Sort: pure paper/spigot (no fabric/neoforge/forge) first, mixed second, mod-only last
- const modLoaders = ['fabric','neoforge','forge','quilt'];
- const spigotLoaders = ['paper','spigot','purpur','bukkit','folia','waterfall','velocity'];
- function loaderScore(v) {
- const ls = (v.loaders || []).map(l => l.toLowerCase());
- const hasMod = ls.some(l => modLoaders.includes(l));
- const hasSpigot = ls.some(l => spigotLoaders.includes(l));
- if (hasSpigot && !hasMod) return 0; // pure spigot
- if (hasSpigot && hasMod) return 1; // mixed
- return 2; // mod-only
+function pmToggleInstalled() {
+ _pmShowingInstalled = !_pmShowingInstalled;
+ const res = document.getElementById('pm-results');
+ const pag = document.getElementById('pm-pagination');
+ const ins = document.getElementById('pm-installed-results');
+ const btn = document.getElementById('pm-installed-btn');
+ if (_pmShowingInstalled) {
+  if(res) res.classList.add('hidden');
+  if(pag) pag.classList.add('hidden');
+  if(ins) ins.classList.remove('hidden');
+  if(btn) btn.className = 'bg-slate-600 hover:bg-slate-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95';
+  pmLoadInstalled();
+ } else {
+  if(res) res.classList.remove('hidden');
+  if(pag) pag.classList.remove('hidden');
+  if(ins) ins.classList.add('hidden');
+  if(btn) btn.className = 'bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95';
  }
- const sorted = [...versionsArray].sort((a, b) => loaderScore(a) - loaderScore(b));
- listEl.innerHTML = sorted.map(v => {
- const isRelease = v.version_type === 'release';
- const badgeColor = isRelease ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
- const file = _getBestFile(v.files);
- if (!file) return '';
- let gameVersions = 'Unspecified';
- if (v.game_versions && v.game_versions.length > 0) { if (v.game_versions.length > 3) gameVersions = `${v.game_versions[0]} – ${v.game_versions[v.game_versions.length - 1]}`; else gameVersions = v.game_versions.join(', '); }
- const loaderBadges = _getLoaderBadges(v.loaders);
- return `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 hover:border-slate-500 transition"><div class="flex-1 overflow-hidden"><div class="flex flex-wrap items-center gap-1.5 mb-1.5"><span class="font-black text-white text-base">${v.version_number}</span><span class="text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-widest ${badgeColor}">${v.version_type}</span>${loaderBadges}</div><p class="text-xs text-slate-400 mb-1 truncate">${v.name}</p><p class="text-xs text-slate-500 font-mono"><b>MC:</b> ${gameVersions}</p></div><button onclick="downloadSpecificPlugin('${file.url}', '${file.filename}')" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 px-6 py-2.5 rounded-lg font-black text-white text-sm shadow transition active:scale-95 whitespace-nowrap shrink-0 flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> INSTALL</button></div>`;
- }).join('');
 }
-function filterPluginVersions(type, justUpdateUI = false) { document.querySelectorAll('.pv-filter-btn').forEach(btn => { btn.classList.remove('bg-blue-600', 'text-white'); btn.classList.add('bg-slate-700', 'text-slate-300'); }); const activeBtn = document.getElementById(`pv-btn-${type}`); if (activeBtn) { activeBtn.classList.remove('bg-slate-700', 'text-slate-300'); activeBtn.classList.add('bg-blue-600', 'text-white'); } if (justUpdateUI) return; let filtered = []; if (type === 'all') filtered = currentPluginData; else if (type === 'release') filtered = currentPluginData.filter(v => v.version_type === 'release'); else if (type === 'beta') filtered = currentPluginData.filter(v => v.version_type === 'beta' || v.version_type === 'alpha'); renderVersionList(filtered); }
-async function downloadSpecificPlugin(url, filename) {
- document.getElementById('pluginVersionModal').classList.add('hidden');
- showToast(`Memproses ${filename}...`);
- socket.emit('download_plugin', url, filename);
- if (currentPluginMeta) {
-  try {
-   await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ filename, meta: { source: 'modrinth', project_id: currentPluginMeta.project_id, title: currentPluginMeta.title, icon_url: currentPluginMeta.icon_url } }) });
-  } catch(e) {}
-  currentPluginMeta = null;
+
+async function pmLoadInstalled() {
+ const ins = document.getElementById('pm-installed-results');
+ if (!ins) return;
+ ins.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm animate-pulse">Membaca folder plugins/ ...</div>';
+ await fetch('/api/folder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ path: 'plugins' }) }).catch(()=>{});
+ try {
+  const res = await fetch('/api/files?path=plugins');
+  const files = await res.json();
+  const jars = files.filter(f => !f.isDirectory && f.name.endsWith('.jar'));
+  if (jars.length === 0) { ins.innerHTML = '<div class="text-center py-16 text-slate-500 font-bold">Belum ada plugin yang terpasang.</div>'; return; }
+  ins.innerHTML = jars.map(jar => `<div class="flex items-center gap-3 bg-[#1e293b] border border-slate-700/60 px-4 py-3 rounded-xl">
+   <div class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 shrink-0 flex items-center justify-center text-slate-500 text-lg"></div>
+   <div class="flex-1 min-w-0">
+    <p class="font-bold text-white text-sm truncate">${jar.name}</p>
+    <p class="text-xs text-slate-500 mt-0.5">${jar.size}</p>
+   </div>
+  </div>`).join('');
+ } catch(e) {
+  ins.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Gagal membaca folder plugins.</div>';
  }
 }
 socket.on('download_lock_state', (isDownloading) => { const startBtn = document.getElementById('startBtn'); const vmBtn = document.getElementById('vm-install-btn'); if (isDownloading) { if(startBtn) { startBtn.disabled = true; startBtn.innerText = "..."; } if(vmBtn) { vmBtn.disabled = true; vmBtn.innerText = "..."; } } else { if(startBtn) { startBtn.disabled = false; startBtn.innerText = "Start"; } if(vmBtn) { vmBtn.disabled = false; vmBtn.innerText = " INSTALL VERSI INI"; } } });
