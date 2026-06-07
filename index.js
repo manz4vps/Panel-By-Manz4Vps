@@ -121,7 +121,7 @@ function generateRandomPort() {
 
 function getUserSettings(serverName) {
  const file = path.join(getUserDir(serverName), 'panel_settings.json');
- let def = { ram: '2G', jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: false, javaVersion: 'auto' }; 
+ let def = { ram: '2G', jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: 'auto' }; 
  if (fs.existsSync(file)) {
  try { return { ...def, ...JSON.parse(fs.readFileSync(file)) }; } catch(e){ return def; }
  } else {
@@ -361,7 +361,7 @@ app.get('/api/dashboard-stats', checkAuth, (req, res) => { const srv = getServer
 function getRawDate(filePath) { try { if (!fs.existsSync(filePath)) return null; return fs.statSync(filePath).mtime.toISOString(); } catch (e) { return null; } }
 function formatBytes(bytes) { if (!+bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`; }
 
-app.get('/api/files', checkAuth, (req, res) => { try { const mcDir = getUserDir(getServerName(req)); let subPath = req.query.path || ''; if (subPath.includes('..')) return res.status(403).json({ error: 'Akses ditolak!' }); let targetDir = path.join(mcDir, subPath); if (!fs.existsSync(targetDir)) targetDir = mcDir; const files = fs.readdirSync(targetDir, { withFileTypes: true }); let fileList = files.filter(dirent => !(subPath === '' && dirent.name === 'panel_settings.json')).map(dirent => { const currentFilePath = path.join(targetDir, dirent.name); let size = ''; if (!dirent.isDirectory()) { try { size = formatBytes(fs.statSync(currentFilePath).size); } catch(e){} } return { name: dirent.name, isDirectory: dirent.isDirectory(), path: subPath === '' ? dirent.name : `${subPath}/${dirent.name}`, date: getRawDate(currentFilePath), size: size }; }); fileList.sort((a, b) => (a.isDirectory === b.isDirectory) ? a.name.localeCompare(b.name) : (a.isDirectory ? -1 : 1)); res.json(fileList); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.get('/api/files', checkAuth, (req, res) => { try { const mcDir = getUserDir(getServerName(req)); let subPath = req.query.path || ''; if (subPath.includes('..')) return res.status(403).json({ error: 'Akses ditolak!' }); let targetDir = path.join(mcDir, subPath); if (!fs.existsSync(targetDir)) targetDir = mcDir; const files = fs.readdirSync(targetDir, { withFileTypes: true }); let fileList = files.filter(dirent => !(subPath === '' && dirent.name === 'panel_settings.json') && dirent.name !== '.plugin_meta.json').map(dirent => { const currentFilePath = path.join(targetDir, dirent.name); let size = ''; if (!dirent.isDirectory()) { try { size = formatBytes(fs.statSync(currentFilePath).size); } catch(e){} } return { name: dirent.name, isDirectory: dirent.isDirectory(), path: subPath === '' ? dirent.name : `${subPath}/${dirent.name}`, date: getRawDate(currentFilePath), size: size }; }); fileList.sort((a, b) => (a.isDirectory === b.isDirectory) ? a.name.localeCompare(b.name) : (a.isDirectory ? -1 : 1)); res.json(fileList); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.get('/api/file', checkAuth, (req, res) => { let subPath = req.query.path || ''; if (subPath.includes('..')) return res.status(403).send("Akses ditolak!"); fs.readFile(path.join(getUserDir(getServerName(req)), subPath), 'utf8', (err, data) => res.send(err ? "Gagal membaca file" : data)); });
 
 // ðŸ”¥ FITUR DOWNLOAD FILE AMAN (DITAMBAHKAN DI SINI) ðŸ”¥
@@ -907,7 +907,12 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  if (state.process) {
  state.isRestarting = true;
  userLog(`\x1b[1;33m[Manz4VPS Daemon]:\x1b[0m Mengirim perintah restart...\n`);
+ const restartSettings = getUserSettings(activeServer);
+ if (restartSettings.engine === 'node' || restartSettings.engine === 'python') {
+ try { state.process.kill('SIGTERM'); } catch(e) {}
+ } else {
  try { state.process.stdin.write('stop\n'); } catch(e) {}
+ }
  if (state._restartKillTimer) clearTimeout(state._restartKillTimer);
  state._restartKillTimer = setTimeout(() => {
  if (state.process && state.isRestarting) {
