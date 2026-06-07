@@ -162,12 +162,15 @@ window.startProgress = function() {
  bar.style.width = '0%';
  document.body.appendChild(bar);
  }
- 
+
+ if (bar._running) return;
+ bar._running = true;
+
  clearInterval(progressInterval);
  bar.style.transitionDuration = '0ms';
  bar.style.width = '0%';
  bar.style.opacity = '1';
- 
+
  setTimeout(() => {
  bar.style.transitionDuration = '300ms';
  bar.style.width = '30%';
@@ -181,16 +184,17 @@ window.startProgress = function() {
 window.finishProgress = function() {
  let bar = document.getElementById('top-progress-bar');
  if (!bar) return;
+ bar._running = false;
  clearInterval(progressInterval);
- bar.style.width = '100%'; 
- 
+ bar.style.width = '100%';
+
  setTimeout(() => {
  bar.style.opacity = '0';
  setTimeout(() => {
  bar.style.width = '0%';
  bar.style.transitionDuration = '0ms';
  }, 300);
- }, 400); 
+ }, 400);
 };
 
 window.toggleSearchBar = function() {
@@ -788,12 +792,14 @@ async function openFile(filePath, fileName, addToHistory = true) {
 }
 
 function closeEditor() {
+ const savedPath = currentPath;
+ window._skipFileReset = true;
  if(typeof showTab === 'function') showTab('files', false);
- const newHash = currentPath === '' ? '#files' : `#files/${currentPath}`;
- history.pushState({ tab: 'files', path: currentPath }, '', newHash);
- // Auto-refresh file list supaya file baru/yang diedit langsung muncul
- delete folderCache[currentPath];
- loadFiles(currentPath, false);
+ currentPath = savedPath;
+ const newHash = savedPath === '' ? '#files' : `#files/${savedPath}`;
+ history.pushState({ tab: 'files', path: savedPath }, '', newHash);
+ delete folderCache[savedPath];
+ loadFiles(savedPath, false);
 }
 
 async function saveFile() { 
