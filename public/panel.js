@@ -353,7 +353,16 @@ function showTab(tab, addToHistory = true, forceRefresh = false) {
  if (tab !== 'edit') tabVisited.add(tab);
  if (tab !== 'files' && tab !== 'edit') { const bar = document.getElementById('pteroFloatingBar'); if(bar) { bar.classList.add('translate-y-20', 'opacity-0'); setTimeout(() => { if(bar) bar.classList.add('hidden'); }, 300); } } else if (tab === 'files' && typeof loadFiles === 'function') { if (!window._skipFileReset) { if (typeof currentPath !== 'undefined') currentPath = ''; if (typeof folderCache !== 'undefined') { Object.keys(folderCache).forEach(k => delete folderCache[k]); } loadFiles('', true); } window._skipFileReset = false; }
  if((tab === 'startup' || tab === 'network' || tab === 'settings') && isFirstVisit) loadSettings();
- if(tab === 'plugins' && isFirstVisit) { pmInitMcVersions(); pmFetchPlugins(1); }
+ if(tab === 'plugins') {
+ if(isFirstVisit) { pmInitMcVersions(); pmFetchPlugins(1); }
+ if(_pmShowingInstalled) {
+  _pmShowingInstalled = false;
+  document.getElementById('pm-browse-section')?.classList.remove('hidden');
+  document.getElementById('pm-installed-results')?.classList.add('hidden');
+  const _b = document.getElementById('pm-installed-btn');
+  if(_b) { _b.textContent = 'Installed Plugins'; _b.className = 'bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95'; }
+ }
+}
  if(tab === 'versions') { const vmCat = document.getElementById('vm-category'); if(document.getElementById('vm-software') && document.getElementById('vm-software').options.length === 0) updateSubCategory(); }
  if (addToHistory && tab !== 'files' && tab !== 'edit' && window.location.hash !== '#' + tab) history.pushState({ tab: tab }, '', '#' + tab);
  if (tab === 'edit' && typeof editor !== 'undefined' && editor) setTimeout(() => { editor.refresh(); }, 150);
@@ -488,6 +497,7 @@ function pmRenderList(hits, total, page, pageSize) {
   const icon = p.icon_url ? `<img src="${p.icon_url}" class="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-700 shrink-0" onerror="this.style.display='none'">` : `<div class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 shrink-0 flex items-center justify-center text-slate-500"></div>`;
   const safeTitle = p.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   const safeId = p.project_id.replace(/'/g, "\\'");
+  const safeIcon = encodeURIComponent(p.icon_url || '');
   const premium = p._premium ? `<span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 uppercase tracking-widest shrink-0">PREMIUM</span>` : '';
   return `<div class="flex items-center gap-3 bg-[#1e293b] border border-slate-700/60 hover:border-slate-600 px-4 py-3 rounded-xl transition">
    ${icon}
@@ -498,7 +508,7 @@ function pmRenderList(hits, total, page, pageSize) {
     </div>
     <p class="text-xs text-slate-400 truncate mt-0.5">${p.description || ''}</p>
    </div>
-   <button onclick="pmOpenInstallModal('${safeId}','${safeTitle}')" class="shrink-0 text-slate-400 hover:text-blue-400 transition p-1.5 rounded-lg hover:bg-slate-700/50 active:scale-90" title="Install">
+   <button onclick="pmOpenInstallModal('${safeId}','${safeTitle}','${safeIcon}')" class="shrink-0 text-slate-400 hover:text-blue-400 transition p-1.5 rounded-lg hover:bg-slate-700/50 active:scale-90" title="Install">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
    </button>
   </div>`;
@@ -519,9 +529,10 @@ function pmRenderList(hits, total, page, pageSize) {
  }
 }
 
-async function pmOpenInstallModal(projectId, title) {
+async function pmOpenInstallModal(projectId, title, encodedIconUrl) {
  const provider = document.getElementById('pm-provider')?.value || 'modrinth';
- _pmInstallMeta = { project_id: projectId, title, provider };
+ const iconUrl = encodedIconUrl ? decodeURIComponent(encodedIconUrl) : '';
+ _pmInstallMeta = { project_id: projectId, title, provider, icon_url: iconUrl };
  _pmInstallVersions = [];
  const modal = document.getElementById('pluginInstallModal');
  const nameEl = document.getElementById('pim-name');
@@ -541,13 +552,28 @@ async function pmOpenInstallModal(projectId, title) {
    const versions = await res.json();
    const modLoaders = ['fabric','neoforge','forge','quilt'];
    const filtered = versions.filter(v => { const ls = (v.loaders||[]).map(l=>l.toLowerCase()); return !ls.every(l=>modLoaders.includes(l)); });
-   const list = filtered.length > 0 ? filtered : versions;
-   _pmInstallVersions = list.map(v => { const f = _pmGetBestFile(v.files); return f ? { label: v.version_number, url: f.url, filename: f.filename } : null; }).filter(Boolean);
+   const stableOnly = filtered.filter(v => v.version_type === 'release');
+   const list = (stableOnly.length > 0 ? stableOnly : filtered.length > 0 ? filtered : versions);
+   _pmInstallVersions = list.map(v => {
+    const f = _pmGetBestFile(v.files);
+    if (!f) return null;
+    const gameVers = (v.game_versions || []);
+    const minVer = gameVers[gameVers.length - 1];
+    const maxVer = gameVers[0];
+    const verRange = gameVers.length > 1 && minVer !== maxVer ? `${minVer}–${maxVer}` : (maxVer || '');
+    const loaderInfo = (v.loaders || []).filter(l => !['fabric','neoforge','forge','quilt'].includes(l.toLowerCase())).map(l => l.charAt(0).toUpperCase()+l.slice(1)).join('/');
+    const baseLabel = v.name && v.name !== v.version_number ? v.name : `${title} ${v.version_number}`;
+    const suffix = (!baseLabel.toLowerCase().includes(verRange) && verRange) ? ` (${loaderInfo ? loaderInfo + ' ' : ''}${verRange})` : '';
+    return { label: baseLabel + suffix, url: f.url, filename: f.filename, version_number: v.version_number };
+   }).filter(Boolean);
   } else if (provider === 'spigotmc') {
    const res = await fetch(`https://api.spiget.org/v2/resources/${projectId}/versions?size=20&page=0&sort=-name`, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
    const versions = await res.json();
    const safeName = title.replace(/[^a-zA-Z0-9\-_.]/g, '_').substring(0, 40);
-   _pmInstallVersions = (Array.isArray(versions) ? versions : []).map(v => ({ label: v.name || String(v.id), url: `https://api.spiget.org/v2/resources/${projectId}/versions/${v.id}/download`, filename: `${safeName}-${(v.name||v.id).replace(/[^a-zA-Z0-9\-_.]/g,'_')}.jar` }));
+   const snapshotRe = /snapshot|alpha|beta|rc\d|\.dev|pre[-.\d]/i;
+   const allSpigot = (Array.isArray(versions) ? versions : []).map(v => ({ label: v.name || String(v.id), url: `https://api.spiget.org/v2/resources/${projectId}/versions/${v.id}/download`, filename: `${safeName}-${(v.name||v.id).replace(/[^a-zA-Z0-9\-_.]/g,'_')}.jar` }));
+   const stableSpigot = allSpigot.filter(v => !snapshotRe.test(v.label));
+   _pmInstallVersions = stableSpigot.length > 0 ? stableSpigot : allSpigot;
    if (_pmInstallVersions.length === 0) {
     _pmInstallVersions = [{ label: 'Latest', url: `https://api.spiget.org/v2/resources/${projectId}/download`, filename: `${safeName}-latest.jar` }];
    }
@@ -556,12 +582,16 @@ async function pmOpenInstallModal(projectId, title) {
    const res = await fetch(`https://hangar.papermc.io/api/v1/projects/${owner}/${slug}/versions?limit=20&offset=0`, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
    const data = await res.json();
    const versions = data.result || [];
-   _pmInstallVersions = versions.map(v => {
+   const snapshotReH = /snapshot|alpha|beta|rc\d|\.dev|pre[-.\d]/i;
+   const allHangar = versions.map(v => {
     const platform = v.downloads && (v.downloads.PAPER || v.downloads.VELOCITY || v.downloads.WATERFALL);
     const dlUrl = platform?.downloadUrl || `https://hangar.papermc.io/api/v1/projects/${owner}/${slug}/versions/${encodeURIComponent(v.name)}/PAPER/download`;
     const filename = (platform?.fileInfo?.name) || `${slug}-${v.name.replace(/[^a-zA-Z0-9\-_.]/g,'_')}.jar`;
-    return { label: v.name, url: dlUrl, filename };
+    const channel = (v.channel || '').toLowerCase();
+    return { label: v.name, url: dlUrl, filename, _channel: channel };
    });
+   const stableHangar = allHangar.filter(v => v._channel === 'release' || (!snapshotReH.test(v.label) && v._channel !== 'snapshot'));
+   _pmInstallVersions = (stableHangar.length > 0 ? stableHangar : allHangar).map(({label,url,filename}) => ({label,url,filename}));
   }
   if (_pmInstallVersions.length === 0) {
    sel.innerHTML = '<option disabled>Tidak ada versi tersedia</option>';
@@ -587,7 +617,7 @@ async function pmInstallSelected() {
  socket.emit('download_plugin', version.url, version.filename);
  if (_pmInstallMeta) {
   try {
-   await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename: version.filename, meta: { source: _pmInstallMeta.provider, project_id: _pmInstallMeta.project_id, title: _pmInstallMeta.title } }) });
+   await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename: version.filename, meta: { source: _pmInstallMeta.provider, project_id: _pmInstallMeta.project_id, title: _pmInstallMeta.title, icon_url: _pmInstallMeta.icon_url || '', version: version.version_number || version.label } }) });
   } catch(e) {}
   _pmInstallMeta = null;
  }
@@ -604,23 +634,51 @@ function _pmGetBestFile(files) {
 
 function pmToggleInstalled() {
  _pmShowingInstalled = !_pmShowingInstalled;
- const res = document.getElementById('pm-results');
- const pag = document.getElementById('pm-pagination');
+ const browseSection = document.getElementById('pm-browse-section');
  const ins = document.getElementById('pm-installed-results');
  const btn = document.getElementById('pm-installed-btn');
  if (_pmShowingInstalled) {
-  if(res) res.classList.add('hidden');
-  if(pag) pag.classList.add('hidden');
+  if(browseSection) browseSection.classList.add('hidden');
   if(ins) ins.classList.remove('hidden');
-  if(btn) btn.className = 'bg-slate-600 hover:bg-slate-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95';
+  if(btn) { btn.textContent = 'Browse Plugins'; btn.className = 'bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95'; }
   pmLoadInstalled();
  } else {
-  if(res) res.classList.remove('hidden');
-  if(pag) pag.classList.remove('hidden');
+  if(browseSection) browseSection.classList.remove('hidden');
   if(ins) ins.classList.add('hidden');
-  if(btn) btn.className = 'bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95';
+  if(btn) { btn.textContent = 'Installed Plugins'; btn.className = 'bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95'; }
  }
 }
+
+function pmDeletePlugin(filename) {
+ const modal = document.getElementById('genericModal');
+ if (!modal) return;
+ const iconEl = document.getElementById('genericModalIcon');
+ const titleEl = document.getElementById('genericModalTitle');
+ const msgEl = document.getElementById('genericModalMsg');
+ const confirmBtn = document.getElementById('genericConfirmBtn');
+ if (iconEl) iconEl.textContent = '🗑️';
+ if (titleEl) { titleEl.textContent = 'Remove Plugin'; titleEl.className = 'text-2xl font-black text-red-400 mb-1'; }
+ if (msgEl) msgEl.innerHTML = `<code class="bg-slate-900 px-2 py-0.5 rounded text-red-300 text-sm font-mono">plugins/${filename}</code><span class="text-slate-300"> will be deleted.</span>`;
+ if (confirmBtn) { confirmBtn.textContent = 'Remove Plugin'; confirmBtn.className = 'w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95'; }
+ modal.classList.remove('hidden');
+ if (confirmBtn) {
+  confirmBtn.onclick = async () => {
+   modal.classList.add('hidden');
+   try {
+    await fetch('/api/delete', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ items: [`plugins/${filename}`] }) });
+    await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename, meta: null }) });
+    showToast(`Plugin ${filename.replace(/\.jar$/i,'')} dihapus.`);
+    pmLoadInstalled();
+   } catch(e) {
+    showToast('Gagal menghapus plugin.', 'error');
+   }
+  };
+ }
+}
+
+let _pmInstalledMeta = {};
+let _pmInstalledJars = [];
+let _pmUpdateMap = {};
 
 async function pmLoadInstalled() {
  const ins = document.getElementById('pm-installed-results');
@@ -628,20 +686,126 @@ async function pmLoadInstalled() {
  ins.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm animate-pulse">Membaca folder plugins/ ...</div>';
  await fetch('/api/folder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ path: 'plugins' }) }).catch(()=>{});
  try {
-  const res = await fetch('/api/files?path=plugins');
-  const files = await res.json();
-  const jars = files.filter(f => !f.isDirectory && f.name.endsWith('.jar'));
-  if (jars.length === 0) { ins.innerHTML = '<div class="text-center py-16 text-slate-500 font-bold">Belum ada plugin yang terpasang.</div>'; return; }
-  ins.innerHTML = jars.map(jar => `<div class="flex items-center gap-3 bg-[#1e293b] border border-slate-700/60 px-4 py-3 rounded-xl">
-   <div class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 shrink-0 flex items-center justify-center text-slate-500 text-lg"></div>
-   <div class="flex-1 min-w-0">
-    <p class="font-bold text-white text-sm truncate">${jar.name}</p>
-    <p class="text-xs text-slate-500 mt-0.5">${jar.size}</p>
-   </div>
-  </div>`).join('');
+  const [filesRes, metaRes] = await Promise.all([
+   fetch('/api/files?path=plugins'),
+   fetch('/api/plugin-meta')
+  ]);
+  const files = await filesRes.json();
+  _pmInstalledMeta = await metaRes.json().catch(() => ({}));
+  _pmInstalledJars = files.filter(f => !f.isDirectory && f.name.endsWith('.jar'));
+  pmRenderInstalled();
  } catch(e) {
   ins.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Gagal membaca folder plugins.</div>';
  }
+}
+
+function pmRenderInstalled(updateMap) {
+ const ins = document.getElementById('pm-installed-results');
+ if (!ins) return;
+ const jars = _pmInstalledJars;
+ const meta = _pmInstalledMeta;
+ if (jars.length === 0) {
+  ins.innerHTML = '<div class="text-center py-16 text-slate-500 font-bold">Belum ada plugin yang terpasang.</div>';
+  return;
+ }
+ const modrinthCount = jars.filter(j => (meta[j.name]||{}).source === 'modrinth' && (meta[j.name]||{}).project_id).length;
+ const header = `<div class="flex items-center justify-between mb-4">
+  <h3 class="text-lg font-black text-white">Installed Plugins <span class="text-slate-400 font-bold">(${jars.length})</span></h3>
+  ${modrinthCount > 0 ? `<button id="pm-check-updates-btn" onclick="pmCheckUpdates()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition active:scale-95">
+   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+   Cek Update
+  </button>` : ''}
+ </div>`;
+ const pluginIcon = `<svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/></svg>`;
+ const cards = jars.map(jar => {
+  const m = meta[jar.name] || {};
+  const title = m.title || jar.name.replace(/\.jar$/i, '').replace(/[-_]/g, ' ');
+  const safeFile = jar.name.replace(/'/g, "\\'");
+  const iconHtml = m.icon_url
+   ? `<img src="${m.icon_url}" class="w-10 h-10 rounded-lg object-cover bg-slate-900 border border-slate-700 shrink-0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+     + `<div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 shrink-0 items-center justify-center hidden">${pluginIcon}</div>`
+   : `<div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 shrink-0 flex items-center justify-center">${pluginIcon}</div>`;
+  const verBadge = m.version ? `<span class="text-[10px] font-bold text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded shrink-0">v${m.version}</span>` : '';
+  const upd = updateMap && updateMap[jar.name];
+  const updateBtn = upd
+   ? `<button onclick="pmUpdatePlugin('${safeFile}')" class="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-black bg-green-500/15 hover:bg-green-500/25 text-green-400 border border-green-500/30 transition active:scale-90" title="Update ke ${upd.version}">
+       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+       ${upd.version}
+      </button>` : '';
+  const upToDateBadge = updateMap && !upd && m.source === 'modrinth'
+   ? `<span class="shrink-0 text-[10px] font-bold text-green-500/70 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">✓ Up to date</span>` : '';
+  return `<div class="flex items-center gap-3 bg-[#1e293b] border border-slate-700/60 px-4 py-3 rounded-xl hover:border-slate-600 transition" id="pm-jar-${jar.name.replace(/[^a-zA-Z0-9]/g,'_')}">
+   ${iconHtml}
+   <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2 flex-wrap">
+     <p class="font-bold text-white text-sm truncate">${title}</p>
+     ${verBadge}${upToDateBadge}
+    </div>
+    <p class="text-xs text-slate-500 mt-0.5">${jar.size}</p>
+   </div>
+   <div class="flex items-center gap-1 shrink-0">
+    ${updateBtn}
+    <button onclick="pmDeletePlugin('${safeFile}')" class="text-slate-600 hover:text-red-400 transition p-1.5 rounded-lg hover:bg-red-500/10 active:scale-90" title="Hapus plugin">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </button>
+   </div>
+  </div>`;
+ }).join('');
+ ins.innerHTML = header + `<div class="space-y-1.5">${cards}</div>`;
+}
+
+async function pmCheckUpdates() {
+ const btn = document.getElementById('pm-check-updates-btn');
+ if (btn) { btn.disabled = true; btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Mengecek...'; }
+ const meta = _pmInstalledMeta;
+ const jars = _pmInstalledJars;
+ const modrinthPlugins = jars.filter(j => (meta[j.name]||{}).source === 'modrinth' && (meta[j.name]||{}).project_id);
+ const updateMap = {};
+ const modLoaders = ['fabric','neoforge','forge','quilt'];
+ const snapshotRe = /snapshot|alpha|beta|rc\d|\.dev|pre[-.\d]/i;
+ await Promise.all(modrinthPlugins.map(async jar => {
+  const m = meta[jar.name];
+  try {
+   const res = await fetch(`https://api.modrinth.com/v2/project/${m.project_id}/version`);
+   const versions = await res.json();
+   const filtered = versions.filter(v => {
+    if (v.version_type !== 'release') return false;
+    const ls = (v.loaders||[]).map(l=>l.toLowerCase());
+    return !ls.every(l=>modLoaders.includes(l));
+   });
+   const list = filtered.length > 0 ? filtered : versions.filter(v => v.version_type === 'release');
+   if (!list.length) return;
+   const latest = list[0];
+   const latestVer = latest.version_number;
+   const storedVer = m.version || '';
+   if (latestVer && storedVer && latestVer !== storedVer) {
+    const f = _pmGetBestFile(latest.files);
+    if (f) updateMap[jar.name] = { version: latestVer, url: f.url, filename: f.filename, project_id: m.project_id, title: m.title, icon_url: m.icon_url || '' };
+   }
+  } catch(e) {}
+ }));
+ const count = Object.keys(updateMap).length;
+ showToast(count > 0 ? `${count} plugin ada update!` : 'Semua plugin sudah up to date ✓');
+ _pmUpdateMap = updateMap;
+ pmRenderInstalled(updateMap);
+}
+
+async function pmUpdatePlugin(oldFilename) {
+ const meta = _pmInstalledMeta;
+ const m = meta[oldFilename] || {};
+ const upd = _pmUpdateMap[oldFilename];
+ if (!upd) { showToast('Klik "Cek Update" dulu.', 'error'); return; }
+ showToast(`Mengupdate ${m.title || oldFilename}...`);
+ try {
+  socket.emit('download_plugin', upd.url, upd.filename);
+  if (upd.filename !== oldFilename) {
+   await fetch('/api/delete', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ items: [`plugins/${oldFilename}`] }) });
+   await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename: oldFilename, meta: null }) });
+  }
+  await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename: upd.filename, meta: { source: 'modrinth', project_id: upd.project_id, title: upd.title, icon_url: upd.icon_url, version: upd.version } }) });
+  delete _pmUpdateMap[oldFilename];
+  await pmLoadInstalled();
+ } catch(e) { showToast('Gagal update plugin.', 'error'); }
 }
 socket.on('download_lock_state', (isDownloading) => { const startBtn = document.getElementById('startBtn'); const vmBtn = document.getElementById('vm-install-btn'); if (isDownloading) { if(startBtn) { startBtn.disabled = true; startBtn.innerText = "..."; } if(vmBtn) { vmBtn.disabled = true; vmBtn.innerText = "..."; } } else { if(startBtn) { startBtn.disabled = false; startBtn.innerText = "Start"; } if(vmBtn) { vmBtn.disabled = false; vmBtn.innerText = " INSTALL VERSI INI"; } } });
 socket.on('download_success_toast', () => { showToast('Berhasil Mengunduh!'); }); 
