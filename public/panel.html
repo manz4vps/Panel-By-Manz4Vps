@@ -181,6 +181,9 @@
  <button onclick="showTab('versions')" class="tab-btn-versions w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
  <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg> Version
  </button>
+ <button onclick="showTab('activity')" class="tab-btn-activity w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
+ <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg> Activity
+ </button>
  <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
  <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg mb-1">
  <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Settings
@@ -208,6 +211,7 @@
  <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Startup</button>
  <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>Plugin</button>
  <button onclick="showTab('versions')" class="tab-btn-versions w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>Version</button>
+ <button onclick="showTab('activity')" class="tab-btn-activity w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>Activity</button>
  <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
  <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg mb-1"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Settings</button>
  <button onclick="window.location.href='/logout'" class="w-full text-left px-5 py-4 mb-4 rounded-xl text-slate-400 font-bold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>Logout</button>
@@ -439,10 +443,22 @@
  </div>
 
  <div id="versions-view" class="hidden w-full max-w-3xl mx-auto">
- <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in pb-10"><h2 class="text-xl md:text-2xl font-black mb-2 flex items-center gap-2 border-b border-slate-700 pb-3"> Setup & Version Manager</h2><div class="mt-4 mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 flex justify-between items-center shadow-inner gap-4 overflow-x-auto"><div><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">File Server Saat Ini:</span><span id="current-active-jar" class="text-blue-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">Memuat...</span></div><div class="text-right"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Engine:</span><span id="current-active-engine" class="text-green-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">...</span></div></div><p class="text-slate-400 text-sm mb-6">Pilih kategori engine atau jenis server yang ingin digunakan.</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8"><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Kategori Software</label><select id="vm-category" onchange="updateSubCategory()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="mc-java"> Minecraft Java (Server)</option><option value="proxy"> Proxy Server (Bungee/Velocity)</option><option value="bedrock"> Minecraft Bedrock (Geyser)</option><option value="bot"> Bot & Apps (Node.js/Python)</option></select></div><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Software</label><select id="vm-software" onchange="fetchVersions()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"></select></div></div><div id="java-version-section" class="mb-6 pb-6 border-b border-slate-700"><h3 class="text-base font-black text-white mb-1 flex items-center gap-2"> Versi Java</h3><p class="text-slate-400 text-sm mb-4">Pilih versi Java yang dipakai saat server start. Pilih Manual jika auto-detect salah versi.</p><select id="set-java-version" onchange="saveSettings()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="auto"> Auto (Deteksi otomatis dari versi MC)</option><option value="8"> Java 8 — MC 1.7 hingga 1.16</option><option value="17"> Java 17 — MC 1.17 hingga 1.20.4</option><option value="21"> Java 21 — MC 1.20.5 hingga 1.21.x</option><option value="25"> Java 25 — MC 1.22+ / Build 26.x</option></select></div><div id="vm-version-container" class="mb-8 block"><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Versi Build</label><select id="vm-version" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="">Memuat versi...</option></select></div><button id="vm-install-btn" onclick="prepareInstall()" class="w-full bg-green-600 hover:bg-green-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white"> INSTALL VERSI INI</button></div>
+ <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in pb-10"><h2 class="text-xl md:text-2xl font-black mb-2 flex items-center gap-2 border-b border-slate-700 pb-3"> Setup & Version Manager</h2><div class="mt-4 mb-6 p-4 bg-[#0d1117] rounded-lg border border-slate-700 flex justify-between items-center shadow-inner gap-4 overflow-x-auto"><div><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">File Server Saat Ini:</span><span id="current-active-jar" class="text-blue-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">Memuat...</span></div><div class="text-right"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Engine:</span><span id="current-active-engine" class="text-green-400 font-mono font-bold text-sm md:text-base whitespace-nowrap">...</span></div></div><p class="text-slate-400 text-sm mb-6">Pilih kategori engine atau jenis server yang ingin digunakan.</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 pb-5 border-b border-slate-700"><div><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Kategori Software</label><select id="vm-category" onchange="updateSubCategory()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="mc-java"> Minecraft Java (Server)</option><option value="proxy"> Proxy Server (Bungee/Velocity)</option><option value="bedrock"> Minecraft Bedrock (Geyser)</option><option value="bot"> Bot & Apps (Node.js/Python)</option></select></div><div id="java-version-section"><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Versi Java</label><select id="set-java-version" onchange="saveSettings()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="auto"> Auto (Deteksi otomatis dari versi MC)</option><option value="8"> Java 8 — MC 1.7 hingga 1.16</option><option value="17"> Java 17 — MC 1.17 hingga 1.20.4</option><option value="21"> Java 21 — MC 1.20.5 hingga 1.21.x</option><option value="25"> Java 25 — MC 1.22+ / Build 26.x</option></select></div></div><div class="mb-6"><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Software</label><select id="vm-software" onchange="fetchVersions()" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"></select></div><div id="vm-version-container" class="mb-8 block"><label class="block text-sm font-black text-slate-400 mb-2 uppercase tracking-wider">Pilih Versi Build</label><select id="vm-version" class="w-full bg-slate-900 p-3.5 rounded-lg border border-slate-700 text-white outline-none focus:border-blue-500 transition cursor-pointer font-bold shadow-inner appearance-none"><option value="">Memuat versi...</option></select></div><button id="vm-install-btn" onclick="prepareInstall()" class="w-full bg-green-600 hover:bg-green-500 py-3.5 rounded-lg font-black text-base shadow transition active:scale-[0.98] text-white"> INSTALL VERSI INI</button></div>
  </div>
 
- <div id="settings-view" class="hidden w-full max-w-3xl mx-auto">
+ <div id="activity-view" class="hidden w-full max-w-3xl mx-auto">
+<div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in">
+<div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-6">
+<h2 class="text-xl md:text-2xl font-black flex items-center gap-2">Activity Log</h2>
+<button onclick="loadActivityLog()" class="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition">Refresh</button>
+</div>
+<div id="activity-list" class="space-y-2 text-sm">
+<p class="text-slate-500 text-center py-8">Memuat activity log...</p>
+</div>
+</div>
+</div>
+
+<div id="settings-view" class="hidden w-full max-w-3xl mx-auto">
  <div class="bg-[#1e293b] p-6 md:p-8 rounded-xl border border-slate-700 shadow-lg tab-fade-in mb-5">
  <h2 class="text-xl font-black mb-2 border-b border-slate-700 pb-3 flex items-center gap-2"> Pengaturan Server</h2>
  <p class="text-slate-400 text-sm mb-6 mt-2">Konfigurasi perilaku otomatis server kamu.</p>
@@ -583,6 +599,47 @@
  }
  }
  </script>
+
+<script>
+function loadActivityLog() {
+ fetch('/api/activity-log').then(r => r.json()).then(logs => {
+  const el = document.getElementById('activity-list');
+  if (!logs || logs.length === 0) {
+   el.innerHTML = '<p class="text-slate-500 text-center py-8">Belum ada aktivitas tercatat.</p>';
+   return;
+  }
+  const meta = {
+   'Server Start':    { color: 'text-green-400',  bg: 'bg-green-500/10 border-green-500/20',   icon: '▶' },
+   'Server Stop':     { color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20', icon: '■' },
+   'Server Restart':  { color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20',     icon: '↺' },
+   'Server Kill':     { color: 'text-red-400',    bg: 'bg-red-500/10 border-red-500/20',       icon: '✕' },
+   'Install Version': { color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', icon: '⬇' },
+  };
+  el.innerHTML = logs.map(log => {
+   const d = new Date(log.time);
+   const dateStr = d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+   const timeStr = d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+   const m = meta[log.action] || { color: 'text-slate-300', bg: 'bg-slate-800 border-slate-700', icon: '•' };
+   return `<div class="flex items-center gap-3 p-3 rounded-lg border ${m.bg}">
+    <span class="text-base w-6 text-center ${m.color} font-bold flex-shrink-0">${m.icon}</span>
+    <div class="flex-1 min-w-0">
+     <div class="flex items-center gap-2 flex-wrap">
+      <span class="font-black ${m.color}">${log.action}</span>
+      ${log.detail ? `<span class="text-slate-400 text-xs">${log.detail}</span>` : ''}
+     </div>
+     <div class="text-slate-500 text-xs mt-0.5">oleh <span class="text-slate-400 font-bold">${log.user}</span> — ${dateStr} ${timeStr}</div>
+    </div>
+   </div>`;
+  }).join('');
+ }).catch(() => {
+  document.getElementById('activity-list').innerHTML = '<p class="text-red-400 text-center py-8">Gagal memuat activity log.</p>';
+ });
+}
+window.addEventListener('load', () => {
+ const orig = window.showTab;
+ if (orig) window.showTab = function(tab, ...args) { orig(tab, ...args); if (tab === 'activity') loadActivityLog(); };
+});
+</script>
 
  <script>
  if ('serviceWorker' in navigator) {
