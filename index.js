@@ -121,7 +121,7 @@ function generateRandomPort() {
 
 function getUserSettings(serverName) {
  const file = path.join(getUserDir(serverName), 'panel_settings.json');
- let def = { ram: '2G', jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: 'auto' }; 
+ let def = { ram: '2G', jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: '25' }; 
  if (fs.existsSync(file)) {
  try { return { ...def, ...JSON.parse(fs.readFileSync(file)) }; } catch(e){ return def; }
  } else {
@@ -156,7 +156,7 @@ app.post('/register', (req, res) => {
  for (let u in users) { if (typeof users[u] === 'object' && users[u].email === email) return res.status(400).json({ error: "Email sudah digunakan!" }); }
 
  const isFirst = Object.keys(users).length === 0;
- users[username] = { password: hashPassword(password), email: email, limits: { ram: 2048, cpu: 100, disk: 5120 }, servers: [], isAdmin: isFirst };
+ users[username] = { password: hashPassword(password), email: email, limits: { ram: 6144, cpu: 1000, disk: 32768 }, servers: [], isAdmin: isFirst };
  fs.writeFileSync(usersFile, JSON.stringify(users));
  res.json({ success: true, message: "Akun berhasil dibuat! Silakan Login." });
 });
@@ -212,7 +212,7 @@ app.get('/api/admin/users', checkAdmin, (req, res) => {
  const state = activeServers[srvName];
  return { name: srvName, isOnline: !!(state && state.startTime) };
  });
- result.push({ username, email: u.email || '', limits: u.limits || { ram: 2048, cpu: 100, disk: 5120 }, servers, balance: u.balance || 0, freePackageUsed: u.freePackageUsed || false });
+ result.push({ username, email: u.email || '', limits: u.limits || { ram: 6144, cpu: 1000, disk: 32768 }, servers, balance: u.balance || 0, freePackageUsed: u.freePackageUsed || false });
  }
  res.json(result);
 });
@@ -613,7 +613,7 @@ function capRam(ramStr, limitMB) {
 function startResourceMonitor(srvName, state, uLog) {
  const ownerName = getOwner(srvName) || srvName;
  const u = readUsers()[ownerName];
- const limits = (u && u.limits) ? u.limits : { ram: 2048, cpu: 100, disk: 5120 };
+ const limits = (u && u.limits) ? u.limits : { ram: 6144, cpu: 1000, disk: 32768 };
 
  const CPU_LIMIT = limits.cpu || 100;
  const RAM_LIMIT_BYTES = (limits.ram || 2048) * 1024 * 1024;
