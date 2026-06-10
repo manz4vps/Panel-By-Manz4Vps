@@ -208,11 +208,15 @@
  <span class="text-sm font-mono font-bold text-slate-200">${srv.name}</span>
  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${srv.isOnline ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-500'}">${srv.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
  </div>
- ${srv.isOnline ? `
  <div class="flex gap-1.5">
+ ${srv.isOnline ? `
+ <button onclick="restartServer('${srv.name}')" class="text-[11px] font-bold bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Restart</button>
  <button onclick="stopServer('${srv.name}', false)" class="text-[11px] font-bold bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Stop</button>
  <button onclick="stopServer('${srv.name}', true)" class="text-[11px] font-bold bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Kill</button>
- </div>` : ''}
+ ` : `
+ <button onclick="startServer('${srv.name}')" class="text-[11px] font-bold bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Start</button>
+ `}
+ </div>
  </div>`).join('');
 
  const ramGB = (user.limits.ram / 1024).toFixed(1);
@@ -258,6 +262,32 @@
  document.getElementById('stat-online').textContent = totalOnline;
  document.getElementById('stat-offline').textContent = totalServers - totalOnline;
  }
+ }
+
+ async function startServer(serverName) {
+ try {
+ const res = await fetch('/api/admin/start-server', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ serverName })
+ });
+ const data = await res.json();
+ if (res.ok) { showToast(`Server "${serverName}" sedang distart!`, 'success'); setTimeout(loadData, 3000); }
+ else showToast(data.error || 'Gagal start server', 'error');
+ } catch(e) { showToast('Error jaringan', 'error'); }
+ }
+
+ async function restartServer(serverName) {
+ try {
+ const res = await fetch('/api/admin/restart-server', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ serverName })
+ });
+ const data = await res.json();
+ if (res.ok) { showToast(`Server "${serverName}" sedang direstart!`, 'success'); setTimeout(loadData, 4000); }
+ else showToast(data.error || 'Gagal restart server', 'error');
+ } catch(e) { showToast('Error jaringan', 'error'); }
  }
 
  async function stopServer(serverName, force) {
