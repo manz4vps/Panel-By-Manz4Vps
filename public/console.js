@@ -109,11 +109,22 @@ function confirmKill() {
 
 function acceptEula() { const eModal = document.getElementById('eulaModal'); if(eModal) eModal.classList.add('hidden'); socket.emit('accept_eula'); if(typeof showToast === 'function') showToast('Menyetujui EULA...', 'success'); }
 
+const cmdHistory = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
+let cmdHistoryIndex = -1;
+let cmdDraftValue = '';
+
 function sendCommand() { 
  const cmdInput = document.getElementById('cmdInput'); 
  if(!cmdInput) return; 
  let rawCmd = cmdInput.value.trim(); 
- if (rawCmd !== "") { 
+ if (rawCmd !== "") {
+ if (cmdHistory[0] !== rawCmd) {
+ cmdHistory.unshift(rawCmd);
+ if (cmdHistory.length > 100) cmdHistory.pop();
+ localStorage.setItem('cmdHistory', JSON.stringify(cmdHistory));
+ }
+ cmdHistoryIndex = -1;
+ cmdDraftValue = '';
  socket.emit('command', rawCmd); 
  cmdInput.value = ""; 
  
@@ -124,4 +135,26 @@ function sendCommand() {
  } 
 }
 
-if(document.getElementById('cmdInput')) { document.getElementById('cmdInput').addEventListener("keypress", (e) => { if (e.key === "Enter") sendCommand(); }); }
+window.cmdHistoryNav = function(direction) {
+ const cmdInput = document.getElementById('cmdInput');
+ if (!cmdInput || cmdHistory.length === 0) return;
+ if (direction === 1) {
+ if (cmdHistoryIndex === -1) cmdDraftValue = cmdInput.value;
+ cmdHistoryIndex = Math.min(cmdHistoryIndex + 1, cmdHistory.length - 1);
+ } else {
+ if (cmdHistoryIndex === -1) return;
+ cmdHistoryIndex--;
+ }
+ cmdInput.value = cmdHistoryIndex === -1 ? cmdDraftValue : cmdHistory[cmdHistoryIndex];
+ cmdInput.focus();
+ setTimeout(() => cmdInput.setSelectionRange(cmdInput.value.length, cmdInput.value.length), 0);
+};
+
+if(document.getElementById('cmdInput')) {
+ const cmdInput = document.getElementById('cmdInput');
+ cmdInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendCommand(); });
+ cmdInput.addEventListener("keydown", (e) => {
+ if (e.key === "ArrowUp") { e.preventDefault(); window.cmdHistoryNav(1); }
+ else if (e.key === "ArrowDown") { e.preventDefault(); window.cmdHistoryNav(-1); }
+ });
+}
