@@ -121,7 +121,10 @@ function generateRandomPort() {
 
 function getUserSettings(serverName) {
  const file = path.join(getUserDir(serverName), 'panel_settings.json');
- let def = { ram: '2G', jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: '25' }; 
+ const owner = getOwner(serverName);
+ const ownerLimits = owner ? (readUsers()[owner]?.limits || { ram: 2048 }) : { ram: 2048 };
+ const defaultRam = ownerLimits.ram % 1024 === 0 ? `${ownerLimits.ram / 1024}G` : `${ownerLimits.ram}M`;
+ let def = { ram: defaultRam, jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: '25' }; 
  if (fs.existsSync(file)) {
  try { return { ...def, ...JSON.parse(fs.readFileSync(file)) }; } catch(e){ return def; }
  } else {
@@ -931,14 +934,17 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  const userLimits = readUsers()[username]?.limits || { ram: 2048 };
  const ramMB = Math.min(parseRamMB(settings.ram), userLimits.ram);
  const execArgs = [
-  `-Xms125M`, `-Xmx${ramMB}M`,
+  `-Xms128M`, `-Xmx${ramMB}M`,
   `-XX:+UseG1GC`, `-XX:+ParallelRefProcEnabled`, `-XX:MaxGCPauseMillis=200`,
-  `-XX:+UnlockExperimentalVMOptions`, `-XX:+DisableExplicitGC`, `-XX:+AlwaysPreTouch`,
+  `-XX:+UnlockExperimentalVMOptions`, `-XX:+ExplicitGCInvokesConcurrent`,
   `-XX:G1NewSizePercent=30`, `-XX:G1MaxNewSizePercent=40`, `-XX:G1HeapRegionSize=8M`,
   `-XX:G1ReservePercent=20`, `-XX:G1HeapWastePercent=5`, `-XX:G1MixedGCCountTarget=4`,
   `-XX:InitiatingHeapOccupancyPercent=15`, `-XX:G1MixedGCLiveThresholdPercent=90`,
   `-XX:G1RSetUpdatingPauseTimePercent=5`, `-XX:SurvivorRatio=32`,
   `-XX:+PerfDisableSharedMem`, `-XX:MaxTenuringThreshold=1`,
+  `-XX:MinHeapFreeRatio=5`, `-XX:MaxHeapFreeRatio=10`,
+  `-XX:G1PeriodicGCInterval=10000`, `-XX:+G1PeriodicGCInvokesConcurrent`,
+  `-XX:-ShrinkHeapInSteps`,
   `-Dusing.aikars.flags=https://mcflags.emc.gs`, `-Daikars.new.flags=true`,
   `-jar`, settings.jarFile, `--nogui`, `--port`, settings.port
  ];
@@ -1076,14 +1082,17 @@ function globalSpawn(srvName) {
  const ownerLimits = readUsers()[ownerForCap]?.limits || { ram: 2048 };
  const ramMBg = Math.min(parseRamMB(settings.ram), ownerLimits.ram);
  doSpawn(javaPath, [
-  `-Xms125M`, `-Xmx${ramMBg}M`,
+  `-Xms128M`, `-Xmx${ramMBg}M`,
   `-XX:+UseG1GC`, `-XX:+ParallelRefProcEnabled`, `-XX:MaxGCPauseMillis=200`,
-  `-XX:+UnlockExperimentalVMOptions`, `-XX:+DisableExplicitGC`, `-XX:+AlwaysPreTouch`,
+  `-XX:+UnlockExperimentalVMOptions`, `-XX:+ExplicitGCInvokesConcurrent`,
   `-XX:G1NewSizePercent=30`, `-XX:G1MaxNewSizePercent=40`, `-XX:G1HeapRegionSize=8M`,
   `-XX:G1ReservePercent=20`, `-XX:G1HeapWastePercent=5`, `-XX:G1MixedGCCountTarget=4`,
   `-XX:InitiatingHeapOccupancyPercent=15`, `-XX:G1MixedGCLiveThresholdPercent=90`,
   `-XX:G1RSetUpdatingPauseTimePercent=5`, `-XX:SurvivorRatio=32`,
   `-XX:+PerfDisableSharedMem`, `-XX:MaxTenuringThreshold=1`,
+  `-XX:MinHeapFreeRatio=5`, `-XX:MaxHeapFreeRatio=10`,
+  `-XX:G1PeriodicGCInterval=10000`, `-XX:+G1PeriodicGCInvokesConcurrent`,
+  `-XX:-ShrinkHeapInSteps`,
   `-Dusing.aikars.flags=https://mcflags.emc.gs`, `-Daikars.new.flags=true`,
   `-jar`, settings.jarFile, `--nogui`, `--port`, settings.port
  ]);
