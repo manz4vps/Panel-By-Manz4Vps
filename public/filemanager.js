@@ -736,11 +736,23 @@ async function loadFiles(dir = '', addToHistory = true) {
  } catch(e) {} finally { finishProgress(); }
 }
 
+const BINARY_EXTENSIONS = new Set(['jar','zip','tar','gz','tgz','war','ear','rar','7z','bz2','xz','zst','whl','egg','apk','ipa','exe','dll','so','dylib','bin','dat','db','sqlite','sqlite3','class','pyc','pyd','pyo','pdf','png','jpg','jpeg','gif','webp','bmp','ico','tiff','svg','mp3','mp4','wav','ogg','webm','mov','avi','mkv','flac','aac','woff','woff2','ttf','eot','otf']);
+
 async function openFile(filePath, fileName, addToHistory = true) {
  isNewFile = false;
- startProgress(); 
- currentEditFile = filePath; 
  if(!fileName) fileName = filePath.split('/').pop();
+
+ const ext = fileName.includes('.') ? fileName.split('.').pop().toLowerCase() : '';
+ const base = fileName.toLowerCase();
+ const isBinary = BINARY_EXTENSIONS.has(ext) || base.endsWith('.tar.gz') || base.endsWith('.tar.bz2') || base.endsWith('.tar.xz');
+
+ if (isBinary) {
+ if(typeof showToast === 'function') showToast(`File "${fileName}" adalah file binary dan tidak bisa dibuka sebagai teks. Gunakan menu ⋮ untuk Extract atau Download.`, 'error');
+ return;
+ }
+
+ startProgress(); 
+ currentEditFile = filePath;
  const editNameEl = document.getElementById('editingFileName');
  if(editNameEl) editNameEl.innerText = "Edit: " + fileName; 
 
@@ -885,7 +897,7 @@ async function uploadFile() {
  fileItem.innerHTML = `
  <div class="flex justify-between items-center">
  <span class="text-xs text-white font-bold truncate w-4/5" title="${file.name}"> ${file.name}</span>
- <button id="cancel_${uploadId}" class="text-slate-500 hover:text-red-400 font-black text-sm transition active:scale-95" title="Batal"></button>
+ <button id="cancel_${uploadId}" class="text-slate-500 hover:text-red-400 transition active:scale-95 flex items-center justify-center w-6 h-6 rounded-full hover:bg-red-400/10" title="Batal"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
  </div>
  <div class="w-full bg-slate-900 rounded-full h-2 shadow-inner overflow-hidden border border-slate-700">
  <div id="bar_${uploadId}" class="bg-gradient-to-r from-blue-600 to-blue-400 h-2 rounded-full transition-all duration-100 ease-linear" style="width: 0%"></div>
@@ -1048,9 +1060,12 @@ window.executeRemoteDownload = async function() {
  fileItem.id = dlId; 
  fileItem.className = 'flex flex-col gap-1.5 transition-all duration-300 opacity-100 border-b border-slate-700/50 pb-3 last:border-0 last:pb-0'; 
 
+ let isCancelledDl = false;
+
  fileItem.innerHTML = `
  <div class="flex justify-between items-center">
- <span class="text-xs text-white font-bold truncate w-full pr-2" title="${filename}"> Menarik: ${filename}</span>
+ <span class="text-xs text-white font-bold truncate w-4/5 pr-2" title="${filename}"> Menarik: ${filename}</span>
+ <button id="cancel_${dlId}" class="text-slate-500 hover:text-red-400 transition active:scale-95 flex items-center justify-center w-6 h-6 rounded-full hover:bg-red-400/10" title="Batal"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
  </div>
  <div class="w-full bg-slate-900 rounded-full h-2 shadow-inner overflow-hidden border border-slate-700">
  <div id="bar_${dlId}" class="bg-gradient-to-r from-purple-600 to-blue-500 h-2 rounded-full w-full animate-pulse"></div>
@@ -1061,7 +1076,16 @@ window.executeRemoteDownload = async function() {
  <span id="speed_${dlId}" class="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded animate-pulse">Menghitung...</span>
  </div>
  </div>
- `; 
+ `;
+
+ document.getElementById(`cancel_${dlId}`).onclick = function() {
+ isCancelledDl = true;
+ cleanup();
+ fileItem.style.opacity = '0';
+ setTimeout(() => fileItem.remove(), 300);
+ if(typeof showToast === 'function') showToast(' Dibatalkan: ' + filename, 'error');
+ activeUploadsCount--; updateUploadState();
+ }; 
  list.appendChild(fileItem);
 
  let lastLoaded = 0;
