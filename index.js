@@ -217,6 +217,39 @@ app.get('/api/admin/users', checkAdmin, (req, res) => {
  res.json(result);
 });
 
+app.post('/api/admin/start-server', checkAdmin, (req, res) => {
+ const { serverName } = req.body;
+ if (!serverName) return res.status(400).json({ error: 'Nama server tidak valid.' });
+ const state = getUserState(serverName);
+ if (state.process || state.isStarting) return res.status(400).json({ error: 'Server sudah berjalan.' });
+ globalSpawn(serverName);
+ res.json({ success: true });
+});
+
+app.post('/api/admin/restart-server', checkAdmin, (req, res) => {
+ const { serverName } = req.body;
+ if (!serverName) return res.status(400).json({ error: 'Nama server tidak valid.' });
+ const state = activeServers[serverName];
+ if (!state || !state.process) return res.status(400).json({ error: 'Server tidak berjalan.' });
+ try {
+ state.isRestarting = true;
+ const settings = getUserSettings(serverName);
+ if (settings.engine === 'node' || settings.engine === 'python') {
+ try { state.process.kill('SIGTERM'); } catch(e) {}
+ } else {
+ try { state.process.stdin.write('stop\n'); } catch(e) {}
+ }
+ if (state._restartKillTimer) clearTimeout(state._restartKillTimer);
+ state._restartKillTimer = setTimeout(() => {
+ if (state.process && state.isRestarting) {
+ try { state.process.kill('SIGTERM'); } catch(e) {}
+ setTimeout(() => { if (state.process && state.isRestarting) { try { state.process.kill('SIGKILL'); } catch(e) {} } }, 5000);
+ }
+ }, 45000);
+ res.json({ success: true });
+ } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post('/api/admin/stop-server', checkAdmin, (req, res) => {
  const { serverName, force } = req.body;
  const state = activeServers[serverName];
