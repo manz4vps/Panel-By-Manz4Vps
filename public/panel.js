@@ -1,814 +1,1331 @@
 /* =========================================
- MODULE: PANEL CORE & SETTINGS (FRONTEND)
+ MODULE: FILE MANAGER (FRONTEND)
  ========================================= */
-const socket = io({ reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1500, reconnectionDelayMax: 8000 });
-let globalStartTime = null; 
-let isServerOnline = false;
-let currentDiskUsedMB = 0;
-let isStoppingServer = false; 
 
-let settingsCache = null;
-let currentServerRamMB = 2048;
+let currentPath = ''; 
+let currentEditFile = '';
+let isNewFile = false;
+let selectedFiles = new Set();
+let activeUploadsCount = 0; 
+let editor = null;
+let progressInterval = null;
+let folderCache = {}; 
+let searchCursor = null;
+let lastQuery = '';
+let currentSearchMark = null;
 
-let _reconnectBanner = null;
-let _wasEverConnected = false;
+let moveTargetPath = '';
+let currentLangLabel = 'Plain Text';
 
-function _getOrCreateReconnectBanner() {
- if (!_reconnectBanner) {
- _reconnectBanner = document.createElement('div');
- _reconnectBanner.id = 'reconnect-banner';
- _reconnectBanner.className = 'fixed top-0 left-0 right-0 z-[99999] bg-red-600 text-white text-center text-sm font-bold py-2 px-4 flex items-center justify-center gap-2 shadow-lg';
- _reconnectBanner.innerHTML = '<div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0"></div><span>Koneksi terputus — mencoba menghubungkan kembali...</span>';
- document.body.appendChild(_reconnectBanner);
- }
- return _reconnectBanner;
+// 
+// LANGUAGE LIST (matches Pterodactyl's list)
+// 
+const LANGUAGES = [
+ { label: 'Plain Text', mode: null },
+ { label: 'C', mode: 'text/x-csrc' },
+ { label: 'C++', mode: 'text/x-c++src' },
+ { label: 'C#', mode: 'text/x-csharp' },
+ { label: 'CSS', mode: 'css' },
+ { label: 'Diff', mode: 'text/x-diff' },
+ { label: 'Dockerfile', mode: 'text/x-dockerfile' },
+ { label: 'Golang', mode: 'text/x-go' },
+ { label: 'HTML', mode: 'text/html' },
+ { label: 'HTTP', mode: 'message/http' },
+ { label: 'Java', mode: 'text/x-java' },
+ { label: 'JavaScript', mode: 'javascript' },
+ { label: 'JSON', mode: 'application/json' },
+ { label: 'Lua', mode: 'text/x-lua' },
+ { label: 'Markdown', mode: 'text/x-markdown' },
+ { label: 'MySQL', mode: 'text/x-mysql' },
+ { label: 'Nginx', mode: 'text/x-nginx-conf' },
+ { label: 'PHP', mode: 'application/x-httpd-php' },
+ { label: 'PostgreSQL', mode: 'text/x-pgsql' },
+ { label: 'Properties', mode: 'text/x-properties' },
+ { label: 'Python', mode: 'python' },
+ { label: 'Ruby', mode: 'text/x-ruby' },
+ { label: 'Rust', mode: 'text/x-rustsrc' },
+ { label: 'SCSS', mode: 'text/x-scss' },
+ { label: 'Shell', mode: 'text/x-sh' },
+ { label: 'SQL', mode: 'text/x-sql' },
+ { label: 'TOML', mode: 'text/x-toml' },
+ { label: 'TypeScript', mode: 'text/typescript' },
+ { label: 'XML', mode: 'application/xml' },
+ { label: 'YAML', mode: 'text/x-yaml' },
+];
+
+// Global language detector 
+function detectLanguage(fileName) {
+ const base = (fileName || '').split('/').pop().toLowerCase();
+ const ext = base.includes('.') ? base.split('.').pop() : '';
+ const map = {
+ 'js':['javascript','JavaScript'],'mjs':['javascript','JavaScript'],'cjs':['javascript','JavaScript'],
+ 'ts':['text/typescript','TypeScript'],
+ 'json':['application/json','JSON'],
+ 'html':['text/html','HTML'],'htm':['text/html','HTML'],
+ 'css':['css','CSS'],'scss':['text/x-scss','SCSS'],
+ 'yml':['text/x-yaml','YAML'],'yaml':['text/x-yaml','YAML'],
+ 'toml':['text/x-toml','TOML'],
+ 'properties':['text/x-properties','Properties'],'ini':['text/x-properties','Properties'],
+ 'conf':['text/x-nginx-conf','Nginx'],'nginx':['text/x-nginx-conf','Nginx'],
+ 'xml':['application/xml','XML'],'svg':['application/xml','XML'],
+ 'py':['python','Python'],'pyw':['python','Python'],
+ 'sh':['text/x-sh','Shell'],'bash':['text/x-sh','Shell'],'zsh':['text/x-sh','Shell'],
+ 'java':['text/x-java','Java'],
+ 'c':['text/x-csrc','C'],'h':['text/x-csrc','C'],
+ 'cpp':['text/x-c++src','C++'],'cc':['text/x-c++src','C++'],'hpp':['text/x-c++src','C++'],
+ 'cs':['text/x-csharp','C#'],
+ 'go':['text/x-go','Golang'],
+ 'rb':['text/x-ruby','Ruby'],
+ 'rs':['text/x-rustsrc','Rust'],
+ 'php':['application/x-httpd-php','PHP'],
+ 'lua':['text/x-lua','Lua'],
+ 'sql':['text/x-sql','SQL'],
+ 'md':['text/x-markdown','Markdown'],'markdown':['text/x-markdown','Markdown'],
+ 'txt':[null,'Plain Text'],
+ 'diff':['text/x-diff','Diff'],'patch':['text/x-diff','Diff'],
+ };
+ if (base === 'dockerfile') return ['text/x-dockerfile','Dockerfile'];
+ return map[ext] || [null,'Plain Text'];
 }
 
-socket.on('connect', () => {
- if (_wasEverConnected) {
- if (_reconnectBanner) { _reconnectBanner.remove(); _reconnectBanner = null; }
- if (typeof showToast === 'function') showToast('Berhasil terhubung kembali!', 'success');
- }
- _wasEverConnected = true;
-});
-
-socket.on('disconnect', (reason) => {
- if (reason === 'io server disconnect') { socket.connect(); }
- const banner = _getOrCreateReconnectBanner();
- banner.style.display = 'flex';
-});
-
-socket.on('connect_error', () => {
- _getOrCreateReconnectBanner().style.display = 'flex';
-});
-
-function parseRamToMB(ramStr) {
- if (!ramStr) return 2048;
- let val = parseFloat(ramStr.replace(/[^0-9.]/g, ''));
- let str = ramStr.toUpperCase();
- if (str.includes('G')) return Math.round(val * 1024);
- if (str.includes('M')) return Math.round(val);
- return Math.round(val);
+function setEditorLanguage(mode, label) {
+ currentLangLabel = label || 'Plain Text';
+ const langLabelEl = document.getElementById('langLabel');
+ if (langLabelEl) langLabelEl.textContent = currentLangLabel;
+ if (editor) editor.setOption('mode', mode || null);
 }
 
-function showToast(message, type = 'success') {
- const container = document.getElementById('toast-container');
- if (!container) return;
- if (container.children.length >= 3) container.removeChild(container.lastChild);
- let cleanMsg = message.replace(/^[^\x20-\x7E\xA0-\uD7FF\uE000-\uFFFD]+\s*/u, '').trim();
- const isSuccess = type === 'success';
- const isWarning = type === 'warning';
- const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
- const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
- const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
- const icon = isSuccess ? '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : isWarning ? '!' : '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>';
- const toast = document.createElement('div');
- toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-3 py-2.5 rounded-xl flex items-center gap-2.5 shadow-2xl shadow-black/40 backdrop-blur-sm overflow-hidden`;
- toast.style.cssText = 'animation:toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);';
- toast.innerHTML = `<div class="w-6 h-6 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[12px] font-semibold leading-snug flex-1">${cleanMsg}</span><button onclick="this.closest('.toast-item') ? this.closest('.toast-item').remove() : this.parentElement.remove()" class="text-slate-500 hover:text-white transition text-base leading-none flex-shrink-0 ml-0.5">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
- container.insertBefore(toast, container.firstChild);
- requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
- const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
- toast.querySelector('button').addEventListener('click', () => { clearTimeout(autoRemove); toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); });
-}
-function copyIp() { const ipEl = document.getElementById('stat-ip-text'); if(!ipEl) return; const ipText = ipEl.innerText; if (!ipText || ipText === 'Memuat...' || ipText === 'Offline') return; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(ipText).then(() => showToast(' IP disalin', 'success')).catch(err => {}); } else { let textArea = document.createElement("textarea"); textArea.value = ipText; textArea.style.position = "fixed"; textArea.style.opacity = "0"; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try { if (document.execCommand('copy')) showToast(' IP disalin', 'success'); } catch (err) {} document.body.removeChild(textArea); } }
-function toggleMenu(event, menuId) { event.stopPropagation(); closeAllDropdowns(); const menu = document.getElementById(menuId); if (menu) menu.classList.remove('hidden'); } 
-function closeAllDropdowns() { document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden')); }
-
-const _defaultTermVh = () => (window.innerWidth >= 768) ? 38 : 42;
-let termZoomLevel = parseInt(localStorage.getItem('termZoomVh')) || _defaultTermVh();
-function termZoom(delta) {
- termZoomLevel = Math.min(90, Math.max(15, termZoomLevel + delta));
- const wrapper = document.getElementById('terminal-wrapper');
- const label = document.getElementById('termZoomLabel');
- if (wrapper) wrapper.style.height = termZoomLevel + 'vh';
- if (label) label.textContent = termZoomLevel + 'vh';
- localStorage.setItem('termZoomVh', termZoomLevel);
-}
-function initTermZoom() {
- const wrapper = document.getElementById('terminal-wrapper');
- const label = document.getElementById('termZoomLabel');
- if (wrapper) wrapper.style.height = termZoomLevel + 'vh';
- if (label) label.textContent = termZoomLevel + 'vh';
-}
-function resetStopButton() { isStoppingServer = false; const stopBtn = document.getElementById('stopBtn'); if(stopBtn) { stopBtn.innerText = "Stop"; stopBtn.classList.remove('bg-red-800', 'hover:bg-red-700'); stopBtn.classList.add('bg-red-600', 'hover:bg-red-500'); } }
-
-const formatMB = (mb) => { if (!mb || mb === 0) return '0 Bytes'; if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GiB'; return mb.toFixed(2) + ' MiB'; };
-window.ramLimitMB = 2048; 
-
-Chart.defaults.color = '#9ca3af'; Chart.defaults.font.family = 'Inter, sans-serif';
-const MAX_DATA_POINTS = 32; 
-let chartLabels = Array(MAX_DATA_POINTS).fill(''); let cpuData = Array(MAX_DATA_POINTS).fill(0); let ramData = Array(MAX_DATA_POINTS).fill(0); let diskData = Array(MAX_DATA_POINTS).fill(0);
-
-// CONFIG GRAFIK: 120FPS + TEMBUS DINDING + ANGKA KIRI 
-const commonChartOptions = { 
- responsive: true, 
- maintainAspectRatio: false, 
- animation: { duration: 1000, easing: 'linear' }, 
- events: [], 
- layout: { padding: { left: 0, right: 0, top: 10, bottom: 0 } }, 
- elements: { 
- point: { radius: 0, hitRadius: 0, hoverRadius: 0 }, 
- line: { tension: 0.4, borderWidth: 2 } 
- }, 
- scales: { 
- x: { display: false, min: 1, max: MAX_DATA_POINTS - 2 }, 
- y: { 
- beginAtZero: true, min: 0, border: { display: false }, 
- grid: { color: 'rgba(255, 255, 255, 0.05)', drawTicks: false }, 
- ticks: { count: 3, color: '#9ca3af', mirror: false, z: 10, padding: 10, font: { size: 11, weight: 'bold' } } 
- } 
- }, 
- plugins: { legend: { display: false }, tooltip: { enabled: false } }, 
- interaction: { mode: 'none' } 
-};
-
-let cpuChart, ramChart, diskChart;
-const ctxCpu = document.getElementById('cpuChart'); if(ctxCpu) { cpuChart = new Chart(ctxCpu.getContext('2d'), { type: 'line', data: { labels: chartLabels, datasets: [{ data: cpuData, borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.15)', fill: true }] }, options: JSON.parse(JSON.stringify(commonChartOptions)) }); cpuChart.options.scales.y.max = 100; cpuChart.options.scales.y.ticks.callback = function(value) { return parseFloat(value).toFixed(2) + '%'; }; }
-const ctxRam = document.getElementById('ramChart'); if(ctxRam) { ramChart = new Chart(ctxRam.getContext('2d'), { type: 'line', data: { labels: chartLabels, datasets: [{ data: ramData, borderColor: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.2)', fill: true }] }, options: JSON.parse(JSON.stringify(commonChartOptions)) }); ramChart.options.scales.y.max = currentServerRamMB; ramChart.options.scales.y.ticks.callback = function(value) { return value + 'MiB'; }; }
-const ctxDisk = document.getElementById('diskChart'); if(ctxDisk) { diskChart = new Chart(ctxDisk.getContext('2d'), { type: 'line', data: { labels: chartLabels, datasets: [{ data: diskData, borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.15)', fill: true }] }, options: JSON.parse(JSON.stringify(commonChartOptions)) }); diskChart.options.scales.y.max = 500; diskChart.options.scales.y.ticks.callback = function(value) { return value + 'MiB'; }; }
-
-function getCleanMax(dataArray, minDefault, step) { let maxVal = Math.max(...dataArray); if (maxVal <= minDefault) return minDefault; return Math.ceil(maxVal / step) * step; }
-async function syncDiskAndLimits() { try { const res = await fetch('/api/dashboard-stats?t=' + Date.now()); if (res.ok) { const data = await res.json(); window.ramLimitMB = data.ramTotal / (1024 * 1024); currentDiskUsedMB = data.diskUsed / (1024 * 1024); const diskText = document.getElementById('stat-disk-text'); if(diskText) diskText.innerHTML = `${formatMB(currentDiskUsedMB)}`; if (!isServerOnline && diskChart) { diskChart.options.scales.y.max = getCleanMax(diskData, 500, 500); diskChart.update(); } updateCommandPreview(); } } catch(e) {} }
-syncDiskAndLimits(); setInterval(syncDiskAndLimits, 10000); 
-
-setInterval(() => { const uptimeEl = document.getElementById('stat-uptime-text'); if(!uptimeEl) return; if (globalStartTime) { const diffMs = Date.now() - globalStartTime; if (diffMs < 5000) { uptimeEl.innerText = 'Starting'; return; } let totalSeconds = Math.floor(diffMs / 1000); let totalDays = Math.floor(totalSeconds / (3600 * 24)); let hours = Math.floor((totalSeconds % (3600 * 24)) / 3600); let minutes = Math.floor((totalSeconds % 3600) / 60); let seconds = totalSeconds % 60; if (totalDays > 0) uptimeEl.innerText = `${totalDays}d ${hours}h ${minutes}m`; else uptimeEl.innerText = `${hours}h ${minutes}m ${seconds}s`; } else { uptimeEl.innerText = 'Offline'; } }, 1000);
-
-let lastStatsTick = Date.now();
-let latestStats = { cpu: 0, ram: 0, netIn: 0, netOut: 0 };
-let isTabActive = true;
-
-document.addEventListener("visibilitychange", () => { isTabActive = !document.hidden; });
-
-function formatNetBytes(bytes) {
- if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
- if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
- if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
- return bytes + ' B';
-}
-
-socket.on('stats', (data) => {
- lastStatsTick = Date.now(); 
- const ipText = document.getElementById('stat-ip-text'); if(ipText) { ipText.innerText = data.address; ipText.title = data.address; }
- globalStartTime = data.startTime; 
- const currentlyOnline = data.startTime !== null;
-
- if (currentlyOnline) {
- latestStats.cpu = parseFloat(data.cpu) || 0; latestStats.ram = parseFloat(data.ramMB) || 0;
- latestStats.netIn = parseFloat(data.netIn) || 0; latestStats.netOut = parseFloat(data.netOut) || 0;
- isServerOnline = true;
- } else {
- latestStats.cpu = 0; latestStats.ram = 0; latestStats.netIn = 0; latestStats.netOut = 0;
- resetStopButton();
- if (isServerOnline) {
- const terminal = document.getElementById('terminal');
- if (terminal) {
- const offlineWrapper = document.createElement('span');
- offlineWrapper.className = 'animate-log';
- offlineWrapper.innerHTML = `<span style="color: #eab308; font-weight: 900;">container@manz4vps~</span> <span style="color: #cbd5e1;">Server marked as offline...</span><br>`;
- terminal.appendChild(offlineWrapper);
- if (typeof smoothScrollToBottom === 'function') smoothScrollToBottom(true);
- }
- }
- isServerOnline = false;
- }
-});
-
-// ENGINE PENGGERAK UTAMA (BIAR TETEP MULUS & SINKRON) 
-setInterval(() => {
- if (!isTabActive) return;
-
- const cpuText = document.getElementById('stat-cpu-text'); 
- const ramText = document.getElementById('stat-ram-text');
- const netInText = document.getElementById('stat-netin-text');
- const netOutText = document.getElementById('stat-netout-text');
-
- if (Date.now() - lastStatsTick > 10000 || !isServerOnline) {
- latestStats.cpu = 0; latestStats.ram = 0; latestStats.netIn = 0; latestStats.netOut = 0;
- if(cpuText) cpuText.innerHTML = `<span class="text-slate-400">Offline</span>`; 
- if(ramText) ramText.innerHTML = `<span class="text-slate-400">Offline</span>`;
- if(netInText) netInText.innerHTML = `<span class="text-slate-400">Offline</span>`;
- if(netOutText) netOutText.innerHTML = `<span class="text-slate-400">Offline</span>`;
- } else {
- if(cpuText) cpuText.innerHTML = `${latestStats.cpu.toFixed(2)}%`; 
- if(ramText) ramText.innerHTML = `${formatMB(latestStats.ram)}`;
- if(netInText) netInText.innerHTML = formatNetBytes(latestStats.netIn);
- if(netOutText) netOutText.innerHTML = formatNetBytes(latestStats.netOut);
- }
-
- cpuData.shift(); cpuData.push(latestStats.cpu); 
- ramData.shift(); ramData.push(latestStats.ram); 
- diskData.shift(); diskData.push(currentDiskUsedMB); 
- 
- // FIX FINAL: Paksa durasi 1000ms biar jalannya ngalir mulus tanpa henti 
- if(cpuChart) { cpuChart.options.scales.y.max = getCleanMax(cpuData, 100, 50); cpuChart.update({duration: 1000, easing: 'linear'}); }
- if(ramChart) {
- let maxRamInChart = Math.max(...ramData);
- if (maxRamInChart > currentServerRamMB) { ramChart.options.scales.y.max = Math.ceil(maxRamInChart + 100); } 
- else { ramChart.options.scales.y.max = currentServerRamMB; }
- ramChart.update({duration: 1000, easing: 'linear'});
- }
- if(diskChart) { diskChart.options.scales.y.max = getCleanMax(diskData, 500, 500); diskChart.update({duration: 1000, easing: 'linear'}); }
-}, 1000);
-
-async function fetchVersions() { 
- if (window.startProgress) window.startProgress();
- const softEl = document.getElementById('vm-software'); if(!softEl) return; 
- const software = softEl.value; const versionSelect = document.getElementById('vm-version'); 
- if(versionSelect) versionSelect.innerHTML = '<option value=""> Memuat...</option>'; 
- try { 
- if (software === 'paper' || software === 'velocity' || software === 'waterfall') { 
- const res = await fetch(`https://fill.papermc.io/v3/projects/${software}?t=${Date.now()}`); 
- const data = await res.json(); 
- let versions = [];
- if (Array.isArray(data.versions)) { versions = data.versions; } else if (typeof data.versions === 'object' && data.versions !== null) { versions = Object.values(data.versions).flat(); }
- if (software === 'velocity') { versions = versions.filter(v => !v.toLowerCase().includes('snapshot') && !v.toLowerCase().includes('beta')); }
- versions.sort((a, b) => {
- const pa = a.replace(/[^0-9.]/g, '').split('.').map(Number); const pb = b.replace(/[^0-9.]/g, '').split('.').map(Number);
- for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const na = pa[i] || 0; const nb = pb[i] || 0; if (na !== nb) return nb - na; }
- return a.length - b.length;
- });
- if(versionSelect) versionSelect.innerHTML = versions.map(v => `<option value="${v}">${v}</option>`).join(''); 
- } 
- else if (software === 'purpur') { 
- const res = await fetch(`https://api.purpurmc.org/v2/purpur?t=${Date.now()}`); 
- const data = await res.json(); 
- let versions = data.versions || [];
- versions.sort((a, b) => {
- const pa = a.replace(/[^0-9.]/g, '').split('.').map(Number); const pb = b.replace(/[^0-9.]/g, '').split('.').map(Number);
- for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const na = pa[i] || 0; const nb = pb[i] || 0; if (na !== nb) return nb - na; }
- return a.length - b.length;
- });
- if(versionSelect) versionSelect.innerHTML = versions.map(v => `<option value="${v}">${v}</option>`).join(''); 
- } 
- else if (software === 'geyser') { if(versionSelect) versionSelect.innerHTML = '<option value="latest">Latest Release (Geyser)</option>'; } 
- } catch(e) { if(versionSelect) versionSelect.innerHTML = '<option value=""> Gagal memuat API.</option>'; } finally { if (window.finishProgress) window.finishProgress(); }
-}
-
-const tabVisited = new Set();
-
-
-let pendingInstallConfig = null;
-async function prepareInstall() { const cat = document.getElementById('vm-category').value; const software = document.getElementById('vm-software').value; if (cat === 'bot') { document.getElementById('set-engine').value = software; document.getElementById('set-jar').value = software === 'node' ? 'index.js' : 'main.py'; await saveSettings(); showToast(`Environment diubah!`); showTab('startup'); return; } const version = document.getElementById('vm-version').value; if (!version) return showToast('Pilih versi dulu!', 'error'); pendingInstallConfig = { software, version }; if(document.getElementById('installVersionName')) document.getElementById('installVersionName').innerText = `${software.toUpperCase()} ${version}`; document.getElementById('installConfirmModal').classList.remove('hidden'); }
-
-async function executeInstall(type) { 
- document.getElementById('installConfirmModal').classList.add('hidden'); if (!pendingInstallConfig) return; 
- const { software, version } = pendingInstallConfig; const btn = document.getElementById('vm-install-btn'); if(btn) btn.disabled = true; const startBtn = document.getElementById('startBtn'); if(startBtn) startBtn.disabled = true; let downloadUrl = ''; let versionName = `${software.toUpperCase()} ${version}`; showToast(`Mencari link build terbaru...`); 
- if (window.startProgress) window.startProgress();
- try { 
- if (software === 'paper' || software === 'velocity' || software === 'waterfall') { 
- const res = await fetch(`https://fill.papermc.io/v3/projects/${software}/versions/${version}/builds?t=${Date.now()}`); 
- const buildsData = await res.json(); 
- const builds = Array.isArray(buildsData) ? buildsData : buildsData.builds;
- const latestBuild = builds.reduce((prev, curr) => (curr.build > prev.build) ? curr : prev, builds[0]);
- let dlKey = latestBuild.downloads['server:default'] ? 'server:default' : Object.keys(latestBuild.downloads)[0];
- downloadUrl = latestBuild.downloads[dlKey].url; 
- } 
- else if (software === 'purpur') { downloadUrl = `https://api.purpurmc.org/v2/purpur/${version}/latest/download`; } 
- else if (software === 'geyser') { downloadUrl = `https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/standalone`; } 
- socket.emit('download_jar', downloadUrl, versionName, type === 'clean'); 
- if(document.getElementById('set-jar')) document.getElementById('set-jar').value = 'server.jar'; 
- if(document.getElementById('set-engine')) document.getElementById('set-engine').value = 'java'; 
- await saveSettings(); 
- } catch(e) { showToast('Gagal memproses URL.', 'error'); if(btn) btn.disabled = false; if(startBtn) startBtn.disabled = false; } finally { if (window.finishProgress) window.finishProgress(); }
-}
-
-async function loadSettings(forceRefresh = false) { 
- if (window.startProgress) window.startProgress();
- try { 
- if (!settingsCache || forceRefresh) { const res = await fetch('/api/settings'); if (res.status === 401) return window.location.href = "/"; settingsCache = await res.json(); }
- const data = settingsCache;
- if(data.ram && document.getElementById('set-ram')) {
- document.getElementById('set-ram').value = data.ram; currentServerRamMB = parseRamToMB(data.ram);
- if (ramChart) { let maxRamInChart = Math.max(...ramData); if (maxRamInChart > currentServerRamMB) { ramChart.options.scales.y.max = Math.ceil(maxRamInChart + 100); } else { ramChart.options.scales.y.max = currentServerRamMB; } ramChart.update({duration: 1000, easing: 'linear'}); }
- }
- if(data.jarFile && document.getElementById('set-jar')) document.getElementById('set-jar').value = data.jarFile; 
- const activeJarEl = document.getElementById('current-active-jar'); if(activeJarEl) { activeJarEl.innerText = data.installedVersion || data.jarFile || 'Unknown'; } 
- if(data.ip && document.getElementById('set-ip')) document.getElementById('set-ip').value = data.ip; 
- if(data.port && document.getElementById('set-port')) document.getElementById('set-port').value = data.port; 
- if(data.engine) { 
- if(document.getElementById('set-engine')) document.getElementById('set-engine').value = data.engine; 
- const activeEngEl = document.getElementById('current-active-engine'); if(activeEngEl) activeEngEl.innerText = data.engine.toUpperCase(); 
- const catEl = document.getElementById('vm-category'); const softEl = document.getElementById('vm-software'); 
- if(catEl && softEl) { if(data.engine === 'node' || data.engine === 'python') { catEl.value = 'bot'; updateSubCategory(); softEl.value = data.engine; } else { catEl.value = 'mc-java'; updateSubCategory(); } } 
- }
- if(document.getElementById('set-java-version')) {
- const jv = data.javaVersion || 'auto';
- document.getElementById('set-java-version').value = jv;
- }
- setAutoStartUI(data.autoStart === true);
- updateCommandPreview(); 
- } catch(e) {} finally { if (window.finishProgress) window.finishProgress(); }
-}
-
-let _autoStartValue = false;
-function setAutoStartUI(enabled) {
- _autoStartValue = enabled;
- const btn = document.getElementById('autoStartToggle');
- const knob = document.getElementById('autoStartKnob');
- if (!btn || !knob) return;
- if (enabled) {
- btn.classList.replace('bg-slate-600', 'bg-blue-600');
- knob.classList.replace('translate-x-1', 'translate-x-8');
- btn.setAttribute('aria-pressed', 'true');
- } else {
- btn.classList.replace('bg-blue-600', 'bg-slate-600');
- knob.classList.replace('translate-x-8', 'translate-x-1');
- btn.setAttribute('aria-pressed', 'false');
- }
-}
-function toggleAutoStart() {
- setAutoStartUI(!_autoStartValue);
-}
-
-async function saveSettings() { 
- if (window.startProgress) window.startProgress();
- try { 
- const ramInput = document.getElementById('set-ram') ? document.getElementById('set-ram').value : (settingsCache ? settingsCache.ram : '2G'); const newEngine = document.getElementById('set-engine') ? document.getElementById('set-engine').value : (settingsCache ? settingsCache.engine : 'java'); const newJar = document.getElementById('set-jar') ? document.getElementById('set-jar').value : (settingsCache ? settingsCache.jarFile : 'server.jar'); const newIp = document.getElementById('set-ip') ? document.getElementById('set-ip').value : (settingsCache ? settingsCache.ip : ''); const newPort = document.getElementById('set-port') ? document.getElementById('set-port').value : (settingsCache ? settingsCache.port : '25565'); const newJavaVer = document.getElementById('set-java-version') ? document.getElementById('set-java-version').value : (settingsCache ? (settingsCache.javaVersion || '25') : '25');
- await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, autoStart: _autoStartValue, javaVersion: newJavaVer }) }); 
- settingsCache = { engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, autoStart: _autoStartValue, javaVersion: newJavaVer, installedVersion: settingsCache ? settingsCache.installedVersion : '' };
- currentServerRamMB = parseRamToMB(ramInput);
- if (ramChart) { let maxRamInChart = Math.max(...ramData); if (maxRamInChart > currentServerRamMB) { ramChart.options.scales.y.max = Math.ceil(maxRamInChart + 100); } else { ramChart.options.scales.y.max = currentServerRamMB; } ramChart.update({duration: 1000, easing: 'linear'}); }
- showToast('Tersimpan!'); updateCommandPreview(); 
- } catch(e) {} finally { if (window.finishProgress) window.finishProgress(); }
-}
-
-function showTab(tab, addToHistory = true, forceRefresh = false) {
- if (window.startProgress) window.startProgress(); 
- 
- ['console', 'files', 'versions', 'plugins', 'network', 'startup', 'settings', 'edit'].forEach(t => { 
- const view = document.getElementById(t === 'edit' ? 'fileEditor' : `${t}-view`); const tabBtns = document.querySelectorAll(`.tab-btn-${t}`); 
- if(view) { if (t === tab) { view.style.display = 'block'; } else { view.style.display = 'none'; } } 
- tabBtns.forEach(btn => {
- if (t === tab || (tab === 'edit' && t === 'files')) {
- btn.className = `tab-btn-${t} w-full text-left px-5 py-4 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-4 transition-colors duration-200 shadow-lg shadow-blue-500/20 text-lg`;
- const svg = btn.querySelector('svg'); if (svg) svg.classList.replace('opacity-70', 'opacity-100');
- } else {
- btn.className = `tab-btn-${t} w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg`;
- const svg = btn.querySelector('svg'); if (svg) svg.classList.replace('opacity-100', 'opacity-70');
- }
- });
- });
- const isFirstVisit = !tabVisited.has(tab) || forceRefresh;
- if (tab !== 'edit') tabVisited.add(tab);
- if (tab !== 'files' && tab !== 'edit') { const bar = document.getElementById('pteroFloatingBar'); if(bar) { bar.classList.add('translate-y-20', 'opacity-0'); setTimeout(() => { if(bar) bar.classList.add('hidden'); }, 300); } } else if (tab === 'files' && typeof loadFiles === 'function') { if (!window._skipFileReset) { if (typeof currentPath !== 'undefined') currentPath = ''; if (typeof folderCache !== 'undefined') { Object.keys(folderCache).forEach(k => delete folderCache[k]); } loadFiles('', true); } window._skipFileReset = false; }
- if((tab === 'startup' || tab === 'network' || tab === 'settings') && isFirstVisit) loadSettings();
- if(tab === 'plugins') {
- if(isFirstVisit) { pmInitMcVersions(); pmFetchPlugins(1); }
- if(_pmShowingInstalled) {
-  _pmShowingInstalled = false;
-  document.getElementById('pm-browse-section')?.classList.remove('hidden');
-  document.getElementById('pm-installed-results')?.classList.add('hidden');
-  const _b = document.getElementById('pm-installed-btn');
-  if(_b) { _b.textContent = 'Installed Plugins'; _b.className = 'bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95'; }
- }
-}
- if(tab === 'versions') { const vmCat = document.getElementById('vm-category'); if(document.getElementById('vm-software') && document.getElementById('vm-software').options.length === 0) updateSubCategory(); }
- if (addToHistory && tab !== 'files' && tab !== 'edit' && window.location.hash !== '#' + tab) history.pushState({ tab: tab }, '', '#' + tab);
- if (tab === 'edit' && typeof editor !== 'undefined' && editor) setTimeout(() => { editor.refresh(); }, 150);
- if (tab === 'console' && typeof smoothScrollToBottom === 'function') setTimeout(() => smoothScrollToBottom(true), 80);
- setTimeout(() => { if (window.finishProgress) window.finishProgress(); }, 150);
-}
-
-window.addEventListener('popstate', (event) => { let hash = window.location.hash.replace('#', ''); if (hash.startsWith('edit/') || hash.startsWith('files')) { return; } else if (['console', 'versions', 'plugins', 'network', 'startup', 'settings'].includes(hash)) { showTab(hash, false); } else if (hash === '') { showTab('console', false); } });
-window.onload = async () => {
- let hashFull = window.location.hash.replace('#', ''); let initialTab = 'console';
- let restoredFilesPath = '';
- if (hashFull.startsWith('files')) { initialTab = 'files'; let path = hashFull.replace('files', ''); if (path.startsWith('/')) path = path.substring(1); restoredFilesPath = path; if(typeof currentPath !== 'undefined') currentPath = path; }
- else if (hashFull.startsWith('edit/')) { initialTab = 'edit'; } else if (['versions', 'plugins', 'network', 'startup', 'settings'].includes(hashFull)) { initialTab = hashFull; } else { initialTab = 'console'; }
- history.replaceState(null, '', '#' + (hashFull || initialTab));
- if (initialTab === 'files') window._skipFileReset = true;
- showTab(initialTab, false);
- if (initialTab === 'files' && typeof currentPath !== 'undefined') currentPath = restoredFilesPath;
- initTermZoom();
- // Hide loader immediately — don't wait for API calls
- const loader = document.getElementById('page-loader');
- if (loader) { loader.style.transition = 'opacity 0.15s'; loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 150); }
- // Load settings in background after UI is visible
- try {
- await loadSettings();
- if (initialTab === 'files' && typeof loadFiles === 'function') loadFiles(typeof currentPath !== 'undefined' ? currentPath : '', false);
- if (initialTab === 'edit' && typeof openFile === 'function') { let filePath = hashFull.replace('edit/', ''); if(typeof currentPath !== 'undefined') currentPath = filePath.substring(0, filePath.lastIndexOf('/')) || ''; openFile(filePath, filePath.split('/').pop(), false); }
- } catch(e) {}
-};
-
-function updateCommandPreview() { const engineEl = document.getElementById('set-engine'); const jarEl = document.getElementById('set-jar'); const previewEl = document.getElementById('cmd-preview'); if(!engineEl || !previewEl) return; const engine = engineEl.value || 'java'; const jar = jarEl ? (jarEl.value || 'server.jar') : 'server.jar'; const ramEl = document.getElementById("set-ram"); const ramRaw = ramEl ? ramEl.value : ""; const ramLimit = window.ramLimitMB && window.ramLimitMB > 0 ? Math.round(window.ramLimitMB) : 2048; const ramFromServer = ramRaw ? parseRamToMB(ramRaw) : ramLimit; const ramMB = Math.min(ramFromServer, ramLimit); const ramStr = ramMB % 1024 === 0 ? `${ramMB / 1024}G` : `${ramMB}M`; let cmd = ''; if (engine === 'node') { cmd = `node ${jar}`; } else if (engine === 'python') { cmd = `python3 ${jar}`; } else { const flags = [ 'java', `-Xms128M`, `-Xmx${ramStr}`, `-XX:+UseG1GC`, `-XX:+ParallelRefProcEnabled`, `-XX:MaxGCPauseMillis=200`, `-XX:+UnlockExperimentalVMOptions`, `-XX:+ExplicitGCInvokesConcurrent`, `-XX:G1NewSizePercent=30`, `-XX:G1MaxNewSizePercent=40`, `-XX:G1HeapRegionSize=8M`, `-XX:G1ReservePercent=20`, `-XX:G1HeapWastePercent=5`, `-XX:G1MixedGCCountTarget=4`, `-XX:InitiatingHeapOccupancyPercent=15`, `-XX:G1MixedGCLiveThresholdPercent=90`, `-XX:G1RSetUpdatingPauseTimePercent=5`, `-XX:SurvivorRatio=32`, `-XX:+PerfDisableSharedMem`, `-XX:MaxTenuringThreshold=1`, `-XX:MinHeapFreeRatio=5`, `-XX:MaxHeapFreeRatio=10`, `-XX:G1PeriodicGCInterval=10000`, `-XX:+G1PeriodicGCInvokesConcurrent`, `-XX:-ShrinkHeapInSteps`, `-Dusing.aikars.flags=https://mcflags.emc.gs`, `-Daikars.new.flags=true`, `-jar ${jar}`, `--nogui` ]; cmd = flags.join(' '); } previewEl.innerText = cmd; }
-const softwareData = { 'mc-java': [ {id: 'paper', name: 'PaperMC (Ringan)'}, {id: 'purpur', name: 'Purpur'} ], 'proxy': [ {id: 'velocity', name: 'Velocity'}, {id: 'waterfall', name: 'Waterfall'} ], 'bedrock': [ {id: 'geyser', name: 'GeyserMC'} ], 'bot': [ {id: 'node', name: 'Node.js'}, {id: 'python', name: 'Python 3'} ] };
-function updateSubCategory() { if (window.startProgress) window.startProgress(); const cat = document.getElementById('vm-category').value; const softSelect = document.getElementById('vm-software'); if(softSelect) softSelect.innerHTML = softwareData[cat].map(s => `<option value="${s.id}">${s.name}</option>`).join(''); const javaSection = document.getElementById('java-version-section'); if (cat === 'bot') { if(document.getElementById('vm-version-container')) document.getElementById('vm-version-container').classList.add('hidden'); if(document.getElementById('vm-install-btn')) document.getElementById('vm-install-btn').innerText = ' SETUP ENVIRONMENT INI'; if(javaSection) javaSection.classList.add('hidden'); if (window.finishProgress) window.finishProgress(); } else { if(document.getElementById('vm-version-container')) document.getElementById('vm-version-container').classList.remove('hidden'); if(document.getElementById('vm-install-btn')) document.getElementById('vm-install-btn').innerText = ' INSTALL VERSI INI'; if(javaSection) javaSection.classList.remove('hidden'); fetchVersions(); } }
-
-/* =========================================
- PLUGIN MANAGER (Pterodactyl-style)
- ========================================= */
-let _pmSearchTimeout;
-let _pmCurrentPage = 1;
-let _pmInstallMeta = null;
-let _pmInstallVersions = [];
-let _pmShowingInstalled = false;
-
-function pmDebounceSearch() { clearTimeout(_pmSearchTimeout); _pmSearchTimeout = setTimeout(() => pmFetchPlugins(1), 500); }
-function pmOnFilterChange() { pmFetchPlugins(1); }
-
-async function pmInitMcVersions() {
- const sel = document.getElementById('pm-mcversion');
- if (!sel || sel.options.length > 1) return;
- try {
-  const res = await fetch('https://api.modrinth.com/v2/tag/game_version');
-  const tags = await res.json();
-  const releaseVersions = tags.filter(t => t.version_type === 'release' && /^\d+\.\d+/.test(t.version));
-  releaseVersions.forEach(t => {
-   const opt = document.createElement('option');
-   opt.value = t.version; opt.textContent = t.version;
-   sel.appendChild(opt);
-  });
- } catch(e) {}
-}
-
-async function pmFetchPlugins(page) {
- const provider = document.getElementById('pm-provider')?.value || 'modrinth';
- if (provider === 'curseforge' || provider === 'polymart') {
-  const res = document.getElementById('pm-results');
-  const pag = document.getElementById('pm-pagination');
-  if(res) res.innerHTML = `<div class="text-center py-16"><p class="text-slate-300 font-bold text-base mb-2">${provider === 'curseforge' ? 'CurseForge' : 'Polymart'} membutuhkan API Key</p><p class="text-slate-500 text-sm">Provider ini tidak memiliki akses publik gratis.<br>Gunakan <span class="text-green-400 font-bold">Modrinth</span>, <span class="text-blue-400 font-bold">SpigotMC</span>, atau <span class="text-orange-400 font-bold">Hangar</span>.</p></div>`;
-  if(pag) pag.innerHTML = '';
-  return;
- }
- _pmCurrentPage = page || 1;
- const pageSize = parseInt(document.getElementById('pm-pagesize')?.value || '50');
- const loader = document.getElementById('pm-loader')?.value || '';
- const mcVersion = document.getElementById('pm-mcversion')?.value || '';
- const query = document.getElementById('pm-search')?.value.trim() || '';
- const offset = (_pmCurrentPage - 1) * pageSize;
- const resultsDiv = document.getElementById('pm-results');
- const paginationDiv = document.getElementById('pm-pagination');
- if (resultsDiv) resultsDiv.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm animate-pulse">Memuat plugin...</div>';
- if (paginationDiv) paginationDiv.innerHTML = '';
- if (window.startProgress) window.startProgress();
- try {
-  if (provider === 'modrinth') {
-   let facets = [['project_type:plugin']];
-   if (loader) facets.push([`categories:${loader}`]);
-   if (mcVersion) facets.push([`versions:${mcVersion}`]);
-   const facetsStr = encodeURIComponent(JSON.stringify(facets));
-   const index = query ? 'relevance' : 'downloads';
-   const url = `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facetsStr}&index=${index}&limit=${pageSize}&offset=${offset}`;
-   const res = await fetch(url);
-   const data = await res.json();
-   const normalized = (data.hits || []).map(p => ({ project_id: p.project_id, title: p.title, description: p.description, icon_url: p.icon_url, ext_url: `https://modrinth.com/plugin/${p.slug || p.project_id}`, _provider: 'modrinth' }));
-   pmRenderList(normalized, data.total_hits || 0, _pmCurrentPage, pageSize);
-  } else if (provider === 'spigotmc') {
-   const pageNum = _pmCurrentPage - 1;
-   let url;
-   if (query) {
-    url = `https://api.spiget.org/v2/search/resources/${encodeURIComponent(query)}?size=${pageSize}&page=${pageNum}&sort=-downloads&fields=id,name,tag,author,icon,file,premium`;
-   } else {
-    url = `https://api.spiget.org/v2/resources/free?size=${pageSize}&page=${pageNum}&sort=-downloads&fields=id,name,tag,author,icon,file,premium`;
-   }
-   const res = await fetch(url, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
-   const data = await res.json();
-   const list = Array.isArray(data) ? data : (data.resources || []);
-   const totalRes = await fetch(`https://api.spiget.org/v2/${query ? `search/resources/${encodeURIComponent(query)}/` : 'resources/free/'}count`, { headers: { 'User-Agent': 'Manz4VPS-Panel' } }).then(r => r.json()).catch(() => list.length);
-   const total = typeof totalRes === 'number' ? totalRes : list.length;
-   const normalized = list.map(p => ({ project_id: String(p.id), title: p.name, description: p.tag || '', icon_url: p.icon && p.icon.url ? (p.icon.url.startsWith('http') ? p.icon.url : `https://www.spigotmc.org/${p.icon.url}`) : '', ext_url: `https://www.spigotmc.org/resources/${p.id}`, _provider: 'spigotmc', _premium: p.premium }));
-   pmRenderList(normalized, total, _pmCurrentPage, pageSize);
-  } else if (provider === 'hangar') {
-   const url = `https://hangar.papermc.io/api/v1/projects?q=${encodeURIComponent(query)}&limit=${pageSize}&offset=${offset}`;
-   const res = await fetch(url, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
-   const data = await res.json();
-   const normalized = (data.result || []).map(p => ({ project_id: `${p.namespace.owner}/${p.namespace.slug}`, title: p.name, description: p.description, icon_url: p.iconUrl || '', ext_url: `https://hangar.papermc.io/${p.namespace.owner}/${p.namespace.slug}`, _provider: 'hangar' }));
-   pmRenderList(normalized, data.pagination?.count || normalized.length, _pmCurrentPage, pageSize);
-  }
- } catch(e) {
-  if(resultsDiv) resultsDiv.innerHTML = `<div class="text-center py-10 text-red-400 font-bold">Gagal mengambil data. Coba lagi.</div>`;
- } finally {
-  if (window.finishProgress) window.finishProgress();
- }
-}
-
-function pmRenderList(hits, total, page, pageSize) {
- const resultsDiv = document.getElementById('pm-results');
- const paginationDiv = document.getElementById('pm-pagination');
- if (!resultsDiv) return;
- if (hits.length === 0) {
-  resultsDiv.innerHTML = '<div class="text-center py-16 text-slate-500 font-bold">Plugin tidak ditemukan. Coba kata kunci atau filter lain.</div>';
-  if(paginationDiv) paginationDiv.innerHTML = '';
-  return;
- }
- resultsDiv.innerHTML = hits.map(p => {
-  const icon = p.icon_url ? `<img src="${p.icon_url}" class="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-700 shrink-0" onerror="this.style.display='none'">` : `<div class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 shrink-0 flex items-center justify-center text-slate-500"></div>`;
-  const safeTitle = p.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-  const safeId = p.project_id.replace(/'/g, "\\'");
-  const safeIcon = encodeURIComponent(p.icon_url || '');
-  const premium = p._premium ? `<span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 uppercase tracking-widest shrink-0">PREMIUM</span>` : '';
-  return `<div class="flex items-center gap-3 bg-[#1e293b] border border-slate-700/60 hover:border-slate-600 px-4 py-3 rounded-xl transition">
-   ${icon}
-   <div class="flex-1 min-w-0">
-    <div class="flex items-center gap-1.5 flex-wrap">
-     <span class="font-bold text-white text-sm truncate">${p.title}</span>${premium}
-     <a href="${p.ext_url}" target="_blank" class="text-slate-500 hover:text-blue-400 transition shrink-0"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
-    </div>
-    <p class="text-xs text-slate-400 truncate mt-0.5">${p.description || ''}</p>
-   </div>
-   <button onclick="pmOpenInstallModal('${safeId}','${safeTitle}','${safeIcon}')" class="shrink-0 text-slate-400 hover:text-blue-400 transition p-1.5 rounded-lg hover:bg-slate-700/50 active:scale-90" title="Install">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-   </button>
-  </div>`;
+function openLangSelector() {
+ const modal = document.getElementById('langSelectorModal');
+ const list = document.getElementById('langList');
+ if (!modal || !list) return;
+ list.innerHTML = LANGUAGES.map(lang => {
+ const isActive = lang.label === currentLangLabel;
+ return `<button onclick="selectLanguage(${JSON.stringify(lang.label)},${JSON.stringify(lang.mode)})"
+ class="w-full flex items-center justify-between px-5 py-3 text-sm transition hover:bg-slate-700/60 active:bg-slate-700 ${isActive ? 'text-blue-400 font-bold' : 'text-[#abb2bf]'}">
+ <span>${lang.label}</span>
+ ${isActive ? '<svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' : ''}
+ </button>`;
  }).join('');
- if (paginationDiv) {
-  const totalPages = Math.ceil(total / pageSize);
-  if (totalPages <= 1) { paginationDiv.innerHTML = ''; return; }
-  const maxVisible = 6;
-  const startPage = Math.max(1, page - 2);
-  const endPage = Math.min(totalPages, startPage + maxVisible - 1);
-  let pages = [];
-  for (let i = startPage; i <= endPage; i++) pages.push(i);
-  const btnClass = p => p === page ? 'w-9 h-9 rounded-lg font-black text-sm bg-blue-600 text-white shadow' : 'w-9 h-9 rounded-lg font-bold text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 transition active:scale-95';
-  paginationDiv.innerHTML =
-   (page > 1 ? `<button onclick="pmFetchPlugins(${page-1})" class="w-9 h-9 rounded-lg font-bold text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 transition active:scale-95">&lt;</button>` : '') +
-   pages.map(p => `<button onclick="pmFetchPlugins(${p})" class="${btnClass(p)}">${p}</button>`).join('') +
-   (page < totalPages ? `<button onclick="pmFetchPlugins(${page+1})" class="w-9 h-9 rounded-lg font-bold text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 transition active:scale-95">&gt;</button>` : '');
- }
-}
-
-async function pmOpenInstallModal(projectId, title, encodedIconUrl) {
- const provider = document.getElementById('pm-provider')?.value || 'modrinth';
- const iconUrl = encodedIconUrl ? decodeURIComponent(encodedIconUrl) : '';
- _pmInstallMeta = { project_id: projectId, title, provider, icon_url: iconUrl };
- _pmInstallVersions = [];
- const modal = document.getElementById('pluginInstallModal');
- const nameEl = document.getElementById('pim-name');
- const sel = document.getElementById('pim-version-select');
- const loadingEl = document.getElementById('pim-loading');
- if (!modal || !sel) return;
- if (nameEl) nameEl.textContent = title;
- const providerSpan = document.getElementById('pim-provider');
- if (providerSpan) providerSpan.textContent = provider;
- sel.innerHTML = '';
- sel.disabled = true;
- if (loadingEl) { loadingEl.style.display = 'flex'; sel.style.display = 'none'; }
  modal.classList.remove('hidden');
- try {
-  if (provider === 'modrinth') {
-   const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`);
-   const versions = await res.json();
-   const modLoaders = ['fabric','neoforge','forge','quilt'];
-   const filtered = versions.filter(v => { const ls = (v.loaders||[]).map(l=>l.toLowerCase()); return !ls.every(l=>modLoaders.includes(l)); });
-   const stableOnly = filtered.filter(v => v.version_type === 'release');
-   const list = (stableOnly.length > 0 ? stableOnly : filtered.length > 0 ? filtered : versions);
-   _pmInstallVersions = list.map(v => {
-    const f = _pmGetBestFile(v.files);
-    if (!f) return null;
-    const gameVers = (v.game_versions || []);
-    const minVer = gameVers[gameVers.length - 1];
-    const maxVer = gameVers[0];
-    const verRange = gameVers.length > 1 && minVer !== maxVer ? `${minVer}–${maxVer}` : (maxVer || '');
-    const loaderInfo = (v.loaders || []).filter(l => !['fabric','neoforge','forge','quilt'].includes(l.toLowerCase())).map(l => l.charAt(0).toUpperCase()+l.slice(1)).join('/');
-    const baseLabel = v.name && v.name !== v.version_number ? v.name : `${title} ${v.version_number}`;
-    const suffix = (!baseLabel.toLowerCase().includes(verRange) && verRange) ? ` (${loaderInfo ? loaderInfo + ' ' : ''}${verRange})` : '';
-    return { label: baseLabel + suffix, url: f.url, filename: f.filename, version_number: v.version_number };
-   }).filter(Boolean);
-  } else if (provider === 'spigotmc') {
-   const res = await fetch(`https://api.spiget.org/v2/resources/${projectId}/versions?size=20&page=0&sort=-name`, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
-   const versions = await res.json();
-   const safeName = title.replace(/[^a-zA-Z0-9\-_.]/g, '_').substring(0, 40);
-   const snapshotRe = /snapshot|alpha|beta|rc\d|\.dev|pre[-.\d]/i;
-   const allSpigot = (Array.isArray(versions) ? versions : []).map(v => ({ label: v.name || String(v.id), url: `https://api.spiget.org/v2/resources/${projectId}/versions/${v.id}/download`, filename: `${safeName}-${(v.name||v.id).replace(/[^a-zA-Z0-9\-_.]/g,'_')}.jar` }));
-   const stableSpigot = allSpigot.filter(v => !snapshotRe.test(v.label));
-   _pmInstallVersions = stableSpigot.length > 0 ? stableSpigot : allSpigot;
-   if (_pmInstallVersions.length === 0) {
-    _pmInstallVersions = [{ label: 'Latest', url: `https://api.spiget.org/v2/resources/${projectId}/download`, filename: `${safeName}-latest.jar` }];
-   }
-  } else if (provider === 'hangar') {
-   const [owner, slug] = projectId.split('/');
-   const res = await fetch(`https://hangar.papermc.io/api/v1/projects/${owner}/${slug}/versions?limit=20&offset=0`, { headers: { 'User-Agent': 'Manz4VPS-Panel' } });
-   const data = await res.json();
-   const versions = data.result || [];
-   const snapshotReH = /snapshot|alpha|beta|rc\d|\.dev|pre[-.\d]/i;
-   const allHangar = versions.map(v => {
-    const platform = v.downloads && (v.downloads.PAPER || v.downloads.VELOCITY || v.downloads.WATERFALL);
-    const dlUrl = platform?.downloadUrl || `https://hangar.papermc.io/api/v1/projects/${owner}/${slug}/versions/${encodeURIComponent(v.name)}/PAPER/download`;
-    const filename = (platform?.fileInfo?.name) || `${slug}-${v.name.replace(/[^a-zA-Z0-9\-_.]/g,'_')}.jar`;
-    const channel = (v.channel || '').toLowerCase();
-    return { label: v.name, url: dlUrl, filename, _channel: channel };
-   });
-   const stableHangar = allHangar.filter(v => v._channel === 'release' || (!snapshotReH.test(v.label) && v._channel !== 'snapshot'));
-   _pmInstallVersions = (stableHangar.length > 0 ? stableHangar : allHangar).map(({label,url,filename}) => ({label,url,filename}));
-  }
-  if (_pmInstallVersions.length === 0) {
-   sel.innerHTML = '<option disabled>Tidak ada versi tersedia</option>';
-  } else {
-   sel.innerHTML = _pmInstallVersions.map((v, i) => `<option value="${i}">${v.label}</option>`).join('');
-  }
- } catch(e) {
-  sel.innerHTML = '<option disabled>Gagal memuat versi</option>';
- } finally {
-  sel.disabled = false;
-  if (loadingEl) { loadingEl.style.display = 'none'; sel.style.display = ''; }
- }
+ modal.style.animation = 'none';
+ requestAnimationFrame(() => {
+ const sheet = modal.querySelector('div');
+ if (sheet) { sheet.style.transform = 'translateY(100%)'; requestAnimationFrame(() => { sheet.style.transition = 'transform 0.25s cubic-bezier(0.32,0.72,0,1)'; sheet.style.transform = 'translateY(0)'; }); }
+ });
 }
 
-async function pmInstallSelected() {
- const sel = document.getElementById('pim-version-select');
- if (!sel || !_pmInstallVersions.length) return;
- const idx = parseInt(sel.value) || 0;
- const version = _pmInstallVersions[idx];
- if (!version) return;
- document.getElementById('pluginInstallModal').classList.add('hidden');
- showToast(`Memproses ${version.filename}...`);
- socket.emit('download_plugin', version.url, version.filename);
- if (_pmInstallMeta) {
-  try {
-   await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename: version.filename, meta: { source: _pmInstallMeta.provider, project_id: _pmInstallMeta.project_id, title: _pmInstallMeta.title, icon_url: _pmInstallMeta.icon_url || '', version: version.version_number || version.label } }) });
-  } catch(e) {}
-  _pmInstallMeta = null;
- }
-}
-
-function _pmGetBestFile(files) {
- if (!files || files.length === 0) return null;
- const n = f => f.filename.toLowerCase();
- const primary = files.find(f => !n(f).includes('fabric') && !n(f).includes('neoforge') && !n(f).includes('-forge') && f.primary);
- if (primary) return primary;
- const any = files.find(f => !n(f).includes('fabric') && !n(f).includes('neoforge') && !n(f).includes('-forge'));
- return any || files.find(f => f.primary) || files[0];
-}
-
-function pmToggleInstalled() {
- _pmShowingInstalled = !_pmShowingInstalled;
- const browseSection = document.getElementById('pm-browse-section');
- const ins = document.getElementById('pm-installed-results');
- const btn = document.getElementById('pm-installed-btn');
- if (_pmShowingInstalled) {
-  if(browseSection) browseSection.classList.add('hidden');
-  if(ins) ins.classList.remove('hidden');
-  if(btn) { btn.textContent = 'Browse Plugins'; btn.className = 'bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95'; }
-  pmLoadInstalled();
- } else {
-  if(browseSection) browseSection.classList.remove('hidden');
-  if(ins) ins.classList.add('hidden');
-  if(btn) { btn.textContent = 'Installed Plugins'; btn.className = 'bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-lg font-black text-sm text-white shadow transition active:scale-95'; }
- }
-}
-
-function pmDeletePlugin(filename) {
- const modal = document.getElementById('genericModal');
+function closeLangSelector() {
+ const modal = document.getElementById('langSelectorModal');
  if (!modal) return;
- const iconEl = document.getElementById('genericModalIcon');
- const titleEl = document.getElementById('genericModalTitle');
- const msgEl = document.getElementById('genericModalMsg');
+ const sheet = modal.querySelector('div');
+ if (sheet) {
+ sheet.style.transform = 'translateY(100%)';
+ setTimeout(() => modal.classList.add('hidden'), 250);
+ } else { modal.classList.add('hidden'); }
+}
+
+function selectLanguage(label, mode) {
+ setEditorLanguage(mode, label);
+ closeLangSelector();
+}
+
+const editorEl = document.getElementById('fileContent');
+if(editorEl) {
+ editor = CodeMirror(editorEl, {
+ value: "",
+ theme: "default",
+ lineNumbers: true,
+ lineWrapping: true,
+ mode: null,
+ indentUnit: 4,
+ styleActiveLine: true,
+ matchBrackets: true
+ });
+
+ // CUSTOM CSS: Warna Select All ala Pterodactyl (Biru Keputihan) 
+ const style = document.createElement('style');
+ style.innerHTML = `
+ .CodeMirror-selected { background-color: rgba(59, 130, 246, 0.35) !important; }
+ .CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background-color: rgba(59, 130, 246, 0.35) !important; }
+ .CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background-color: rgba(59, 130, 246, 0.35) !important; }
+ `;
+ document.head.appendChild(style);
+}
+
+window.startProgress = function() {
+ let bar = document.getElementById('top-progress-bar');
+ if (!bar) {
+ bar = document.createElement('div');
+ bar.id = 'top-progress-bar';
+ bar.className = 'fixed top-0 left-0 h-1 bg-blue-500 z-[9999] shadow-[0_0_10px_rgba(59,130,246,0.8)] transition-all ease-out';
+ bar.style.width = '0%';
+ document.body.appendChild(bar);
+ }
+
+ if (bar._running) return;
+ bar._running = true;
+
+ clearInterval(progressInterval);
+ bar.style.transitionDuration = '0ms';
+ bar.style.width = '0%';
+ bar.style.opacity = '1';
+
+ setTimeout(() => {
+ bar.style.transitionDuration = '300ms';
+ bar.style.width = '30%';
+ progressInterval = setInterval(() => {
+ let w = parseFloat(bar.style.width);
+ if (w < 85) bar.style.width = (w + Math.random() * 10) + '%';
+ }, 300);
+ }, 10);
+};
+
+window.finishProgress = function() {
+ let bar = document.getElementById('top-progress-bar');
+ if (!bar) return;
+ bar._running = false;
+ clearInterval(progressInterval);
+ bar.style.width = '100%';
+
+ setTimeout(() => {
+ bar.style.opacity = '0';
+ setTimeout(() => {
+ bar.style.width = '0%';
+ bar.style.transitionDuration = '0ms';
+ }, 300);
+ }, 400);
+};
+
+window.toggleSearchBar = function() {
+ const bar = document.getElementById('customSearchBar');
+ if (!bar) return;
+ if (bar.classList.contains('hidden')) {
+ bar.classList.remove('hidden');
+ document.getElementById('editorSearchInput').focus();
+ } else {
+ bar.classList.add('hidden');
+ clearAllSearchMarks(); 
+ document.getElementById('editorSearchInput').value = '';
+ lastQuery = '';
+ editor.focus();
+ }
+};
+
+let allSearchMarks = [];
+function clearAllSearchMarks() {
+ allSearchMarks.forEach(m => m.clear());
+ allSearchMarks = [];
+ if (currentSearchMark) currentSearchMark.clear();
+ currentSearchMark = null;
+}
+
+function highlightAllMatches(query) {
+ clearAllSearchMarks();
+ if (!query) return;
+ let cursor = editor.getSearchCursor(query, CodeMirror.Pos(0, 0), true);
+ while (cursor.findNext()) {
+ let mark = editor.markText(cursor.from(), cursor.to(), {className: "cm-search-match"});
+ allSearchMarks.push(mark);
+ }
+}
+
+window.performEditorSearch = function(reverse, isTyping = false) {
+ if (!editor) return;
+ const searchInput = document.getElementById('editorSearchInput');
+ if (!searchInput) return;
+ 
+ const query = searchInput.value;
+ 
+ if (query !== lastQuery) {
+ lastQuery = query;
+ highlightAllMatches(query);
+ searchCursor = editor.getSearchCursor(query, CodeMirror.Pos(0, 0), true);
+ }
+
+ if (!query) {
+ clearAllSearchMarks();
+ return;
+ }
+ if (!searchCursor) return;
+
+ let found = reverse ? searchCursor.findPrevious() : searchCursor.findNext();
+ if (!found) {
+ searchCursor = editor.getSearchCursor(query, reverse ? CodeMirror.Pos(editor.lastLine(), 99999) : CodeMirror.Pos(0, 0), true);
+ found = reverse ? searchCursor.findPrevious() : searchCursor.findNext();
+ }
+
+ if (found) {
+ if (currentSearchMark) currentSearchMark.clear();
+ currentSearchMark = editor.markText(searchCursor.from(), searchCursor.to(), {className: "cm-search-active"});
+ 
+ if (!isTyping) editor.setSelection(searchCursor.from(), searchCursor.to());
+ editor.scrollIntoView({from: searchCursor.from(), to: searchCursor.to()}, 150);
+ } else if (!isTyping) {
+ if(typeof showToast === 'function') showToast('Teks tidak ditemukan', 'error');
+ }
+};
+
+window.editorSearchNext = () => performEditorSearch(false);
+window.editorSearchPrev = () => performEditorSearch(true);
+
+document.addEventListener('DOMContentLoaded', () => {
+ const searchInput = document.getElementById('editorSearchInput');
+ if (searchInput) {
+ searchInput.addEventListener('input', function() { performEditorSearch(false, true); });
+ searchInput.addEventListener('keydown', function(e) {
+ if (e.key === 'Enter') { e.preventDefault(); performEditorSearch(false); }
+ });
+ }
+});
+
+const fallbackCopyTextToClipboard = (text) => {
+ const textArea = document.createElement("textarea");
+ textArea.value = text;
+ textArea.style.top = "0";
+ textArea.style.left = "0";
+ textArea.style.position = "fixed";
+ document.body.appendChild(textArea);
+ textArea.focus();
+ textArea.select();
+ try {
+ const successful = document.execCommand('copy');
+ document.body.removeChild(textArea);
+ return successful;
+ } catch (err) {
+ document.body.removeChild(textArea);
+ return false;
+ }
+};
+
+// FUNGSI BARU UNTUK MANGGIL POP-UP PANEL CUSTOM 
+function showCustomConfirm(icon, title, msg, onConfirm) {
+ if(document.getElementById('genericModalIcon')) document.getElementById('genericModalIcon').innerText = icon;
+ if(document.getElementById('genericModalTitle')) document.getElementById('genericModalTitle').innerText = title;
+ if(document.getElementById('genericModalMsg')) document.getElementById('genericModalMsg').innerHTML = msg; 
+ const gModal = document.getElementById('genericModal');
+ if(gModal) gModal.classList.remove('hidden');
+ 
  const confirmBtn = document.getElementById('genericConfirmBtn');
- if (iconEl) iconEl.textContent = '🗑️';
- if (titleEl) { titleEl.textContent = 'Remove Plugin'; titleEl.className = 'text-2xl font-black text-red-400 mb-1'; }
- if (msgEl) msgEl.innerHTML = `<code class="bg-slate-900 px-2 py-0.5 rounded text-red-300 text-sm font-mono">plugins/${filename}</code><span class="text-slate-300"> will be deleted.</span>`;
- if (confirmBtn) { confirmBtn.textContent = 'Remove Plugin'; confirmBtn.className = 'w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95'; }
- modal.classList.remove('hidden');
- if (confirmBtn) {
-  confirmBtn.onclick = async () => {
-   modal.classList.add('hidden');
-   try {
-    await fetch('/api/delete', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ items: [`plugins/${filename}`] }) });
-    await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename, meta: null }) });
-    showToast(`Plugin ${filename.replace(/\.jar$/i,'')} dihapus.`);
-    pmLoadInstalled();
-   } catch(e) {
-    showToast('Gagal menghapus plugin.', 'error');
-   }
-  };
+ if(confirmBtn) {
+ // Clone button biar event listener sebelumnya ilang
+ const newBtn = confirmBtn.cloneNode(true);
+ confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+ newBtn.onclick = () => {
+ document.getElementById('genericModal').classList.add('hidden');
+ if (onConfirm) onConfirm();
+ };
  }
 }
 
-let _pmInstalledMeta = {};
-let _pmInstalledJars = [];
-let _pmUpdateMap = {};
+window.editorAction = async function(action) {
+ if (!editor) return;
+ 
+ const isSecure = window.isSecureContext && navigator.clipboard;
 
-async function pmLoadInstalled() {
- const ins = document.getElementById('pm-installed-results');
- if (!ins) return;
- ins.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm animate-pulse">Membaca folder plugins/ ...</div>';
- await fetch('/api/folder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ path: 'plugins' }) }).catch(()=>{});
- try {
-  const [filesRes, metaRes] = await Promise.all([
-   fetch('/api/files?path=plugins'),
-   fetch('/api/plugin-meta')
-  ]);
-  const files = await filesRes.json();
-  _pmInstalledMeta = await metaRes.json().catch(() => ({}));
-  _pmInstalledJars = files.filter(f => !f.isDirectory && f.name.endsWith('.jar'));
-  pmRenderInstalled();
- } catch(e) {
-  ins.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Gagal membaca folder plugins.</div>';
+ switch(action) {
+ case 'search': toggleSearchBar(); break;
+ case 'selectAll': editor.execCommand('selectAll'); editor.focus(); break;
+ 
+ // FITUR KOSONGKAN FILE PAKE MODAL ELEGAN 
+ case 'clear':
+ showCustomConfirm(
+ '', 
+ 'Kosongkan File', 
+ 'Yakin mau menghapus <b>SEMUA</b> isi file ini?<br><br><span class="text-red-400 text-xs font-medium">(Teks akan kosong, pastikan kamu belum menekan tombol Simpan jika ini tidak disengaja!)</span>',
+ () => {
+ editor.setValue("");
+ if(typeof showToast === 'function') showToast(' Isi file dikosongkan!');
  }
+ );
+ break;
+ 
+ case 'copy':
+ const copyText = editor.getSelection();
+ if (copyText) {
+ if (isSecure) {
+ try { await navigator.clipboard.writeText(copyText); if(typeof showToast === 'function') showToast(' Teks disalin!'); } 
+ catch(err) { if(typeof showToast === 'function') showToast('Gagal menyalin teks', 'error'); }
+ } else {
+ if(fallbackCopyTextToClipboard(copyText)) {
+ if(typeof showToast === 'function') showToast(' Teks disalin (Mode HTTP)!');
+ } else {
+ if(typeof showToast === 'function') showToast('Gagal menyalin. Gunakan HTTPS.', 'error');
+ }
+ }
+ } else { if(typeof showToast === 'function') showToast('Pilih teks dulu!', 'error'); }
+ break;
+ 
+ case 'cut':
+ const cutText = editor.getSelection();
+ if (cutText) {
+ if (isSecure) {
+ try { await navigator.clipboard.writeText(cutText); editor.replaceSelection(''); if(typeof showToast === 'function') showToast(' Teks dipotong!'); } 
+ catch(err) { if(typeof showToast === 'function') showToast('Gagal memotong teks', 'error'); }
+ } else {
+ if(fallbackCopyTextToClipboard(cutText)) {
+ editor.replaceSelection('');
+ if(typeof showToast === 'function') showToast(' Teks dipotong (Mode HTTP)!');
+ } else {
+ if(typeof showToast === 'function') showToast('Gagal memotong. Gunakan HTTPS.', 'error');
+ }
+ }
+ } else { if(typeof showToast === 'function') showToast('Pilih teks dulu!', 'error'); }
+ break;
+ 
+ case 'paste':
+ if (isSecure && navigator.clipboard.readText) {
+ try { const pasteText = await navigator.clipboard.readText(); editor.replaceSelection(pasteText); if(typeof showToast === 'function') showToast(' Teks ditempel!'); } 
+ catch(err) { if(typeof showToast === 'function') showToast('Gagal menempel (Cek izin clipboard browser)', 'error'); }
+ } else {
+ if(typeof showToast === 'function') showToast(' Tombol Paste butuh HTTPS! Gunakan tahan-layar lalu "Tempel"', 'error');
+ }
+ break;
+ }
+};
+
+function toggleSelect(filePath) { if (selectedFiles.has(filePath)) selectedFiles.delete(filePath); else selectedFiles.add(filePath); updateDeleteButton(); }
+function toggleSelectAll() { const checkboxes = document.querySelectorAll('.file-checkbox'); const selectAll = document.getElementById('selectAll'); if(!selectAll) return; const isChecked = selectAll.checked; selectedFiles.clear(); checkboxes.forEach(cb => { cb.checked = isChecked; if (isChecked) selectedFiles.add(cb.value); }); updateDeleteButton(); }
+
+function updateDeleteButton() { 
+ const bar = document.getElementById('pteroFloatingBar'); if(!bar) return; 
+ const count = selectedFiles.size; 
+ if (count > 0) { 
+ bar.classList.remove('hidden'); 
+ setTimeout(() => { bar.classList.remove('opacity-0', 'scale-90', '-translate-y-4'); bar.classList.add('opacity-100', 'scale-100', 'translate-y-0'); }, 10); 
+ } else { 
+ bar.classList.remove('opacity-100', 'scale-100', 'translate-y-0'); bar.classList.add('opacity-0', 'scale-90', '-translate-y-4'); 
+ setTimeout(() => { bar.classList.add('hidden'); }, 300); 
+ const selectAll = document.getElementById('selectAll'); if(selectAll) selectAll.checked = false; 
+ } 
 }
 
-function pmRenderInstalled(updateMap) {
- const ins = document.getElementById('pm-installed-results');
- if (!ins) return;
- const jars = _pmInstalledJars;
- const meta = _pmInstalledMeta;
- if (jars.length === 0) {
-  ins.innerHTML = '<div class="text-center py-16 text-slate-500 font-bold">Belum ada plugin yang terpasang.</div>';
-  return;
+function showDeleteModal(itemsArray, msg) { 
+ if(document.getElementById('genericModalIcon')) document.getElementById('genericModalIcon').innerText = ''; 
+ if(document.getElementById('genericModalTitle')) document.getElementById('genericModalTitle').innerText = 'Delete Files'; 
+ if(document.getElementById('genericModalMsg')) document.getElementById('genericModalMsg').innerText = msg; 
+ const gModal = document.getElementById('genericModal'); if(gModal) gModal.classList.remove('hidden'); 
+ const confirmBtn = document.getElementById('genericConfirmBtn'); 
+ if(confirmBtn) { 
+ const newBtn = confirmBtn.cloneNode(true); confirmBtn.parentNode.replaceChild(newBtn, confirmBtn); 
+ newBtn.onclick = async () => { 
+ document.getElementById('genericModal').classList.add('hidden'); 
+ startProgress();
+ try { 
+ const res = await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: itemsArray }) }); 
+ if (res.ok) { 
+ delete folderCache[currentPath]; 
+ selectedFiles.clear(); updateDeleteButton(); await loadFiles(currentPath); 
+ if(typeof showToast === 'function') showToast('File berhasil dihapus!');
+ } 
+ } catch(e) { } finally { finishProgress(); }
+ }; 
+ } 
+}
+function deleteSelectedMulti() { showDeleteModal(Array.from(selectedFiles), `Are you sure you want to delete ${selectedFiles.size} items?`); } 
+function deleteSingle(filePath, fileName) { showDeleteModal([filePath], `Delete ${fileName}?`); }
+function openRenameModal(filePath, currentName) { if(document.getElementById('renameOldPath')) document.getElementById('renameOldPath').value = filePath; if(document.getElementById('renameInput')) document.getElementById('renameInput').value = currentName; const rModal = document.getElementById('renameModal'); if(rModal) rModal.classList.remove('hidden'); const rInput = document.getElementById('renameInput'); if(rInput) rInput.focus(); }
+
+async function executeRename() { 
+ const oldPath = document.getElementById('renameOldPath').value; const newName = document.getElementById('renameInput').value; if(!newName) return; 
+ document.getElementById('renameModal').classList.add('hidden'); 
+ startProgress();
+ try { 
+ const res = await fetch('/api/rename', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oldPath, newName }) }); 
+ if (res.ok) { 
+ delete folderCache[currentPath]; 
+ await loadFiles(currentPath); 
+ if(typeof showToast === 'function') showToast('Nama file diubah!');
+ } 
+ } catch(e) {} finally { finishProgress(); }
+}
+
+function showCreateModal(type) {
+ if (type === 'file') {
+ isNewFile = true;
+ currentEditFile = '';
+ const editNameEl = document.getElementById('editingFileName');
+ if (editNameEl) editNameEl.innerText = 'File Baru (belum disimpan)';
+
+ if (typeof showTab === 'function') showTab('edit', false);
+ history.pushState({ tab: 'edit', file: 'new' }, '', '#edit/new');
+
+ // Tampilkan spinner sebentar saat persiapan editor
+ const fileContentParent = document.getElementById('fileContent') && document.getElementById('fileContent').parentElement;
+ let editorSpinner = document.getElementById('editor-spinner');
+ if (fileContentParent && !editorSpinner) {
+ editorSpinner = document.createElement('div');
+ editorSpinner.id = 'editor-spinner';
+ editorSpinner.className = 'absolute inset-0 bg-[#1a1d23] z-[60] flex flex-col items-center justify-center gap-3';
+ editorSpinner.innerHTML = `
+ <div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+ <span class="text-slate-400 font-bold text-sm tracking-wide">Menyiapkan editor...</span>
+ `;
+ fileContentParent.appendChild(editorSpinner);
  }
- const modrinthCount = jars.filter(j => (meta[j.name]||{}).source === 'modrinth' && (meta[j.name]||{}).project_id).length;
- const header = `<div class="flex items-center justify-between mb-4">
-  <h3 class="text-lg font-black text-white">Installed Plugins <span class="text-slate-400 font-bold">(${jars.length})</span></h3>
-  ${modrinthCount > 0 ? `<button id="pm-check-updates-btn" onclick="pmCheckUpdates()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition active:scale-95">
-   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-   Cek Update
-  </button>` : ''}
+ if (editorSpinner) editorSpinner.classList.remove('hidden');
+
+ setTimeout(() => {
+ if (editor) { editor.setValue(""); editor.clearHistory(); }
+ setEditorLanguage(null, 'Plain Text');
+ if (editorSpinner) editorSpinner.classList.add('hidden');
+ if (editor) editor.focus();
+ }, 350);
+ return;
+ }
+ if(document.getElementById('createType')) document.getElementById('createType').value = type; 
+ if(document.getElementById('createModalTitle')) document.getElementById('createModalTitle').innerText = 'Create Directory'; 
+ const cInput = document.getElementById('createInput'); if(cInput) cInput.value = ''; 
+ const cModal = document.getElementById('createModal'); if(cModal) cModal.classList.remove('hidden'); 
+ if(cInput) cInput.focus(); 
+}
+
+async function executeCreate() { 
+ const type = document.getElementById('createType').value; const name = document.getElementById('createInput').value.trim(); if (!name) return; 
+ const targetPath = currentPath === '' ? name : `${currentPath}/${name}`; document.getElementById('createModal').classList.add('hidden'); 
+ startProgress();
+ try { 
+ let res;
+ if (type === 'file') { res = await fetch('/api/file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: targetPath, content: '' }) }); } 
+ else { res = await fetch('/api/folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: targetPath }) }); } 
+ if (res && res.ok) {
+ delete folderCache[currentPath]; 
+ await loadFiles(currentPath);
+ if(typeof showToast === 'function') showToast(`${type === 'file' ? 'File' : 'Folder'} berhasil dibuat!`);
+ }
+ } catch (e) {} finally { finishProgress(); }
+}
+
+function formatLocalTime(isoString) { if (!isoString || isoString === '-') return '-'; const date = new Date(isoString); return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`; }
+
+window.downloadFile = function(filePath, fileName) {
+ if(typeof closeAllDropdowns === 'function') closeAllDropdowns();
+ if(typeof showToast === 'function') showToast('Mendownload: ' + fileName);
+ 
+ const link = document.createElement('a');
+ link.href = `/api/download?path=${encodeURIComponent(filePath)}`;
+ link.download = fileName;
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
+}
+
+window.executeSingleAction = function(filePath, action) { 
+ if(typeof closeAllDropdowns === 'function') closeAllDropdowns(); 
+ selectedFiles.clear(); selectedFiles.add(filePath); 
+ const checkboxes = document.querySelectorAll('.file-checkbox'); checkboxes.forEach(cb => cb.checked = false); 
+ const cb = document.querySelector(`input[value="${filePath}"]`); if (cb) cb.checked = true; updateDeleteButton(); 
+ if (action === 'move') showMoveModal(); 
+ if (action === 'archive') showArchiveModal(); 
+}
+
+function getFileIcon(name, isDirectory) {
+ const ic = (bg, textColor, svgPath) =>
+  `<div class="w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0">
+    <svg class="w-4 h-4 ${textColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svgPath}</svg>
+   </div>`;
+
+ if (isDirectory) return ic('bg-amber-500/20', 'text-amber-400',
+  '<path d="M3 7a2 2 0 012-2h4l2 2h7a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>');
+
+ const n = name.toLowerCase();
+ const ext = n.includes('.') ? n.split('.').pop() : '';
+
+ // JAR
+ if (ext === 'jar') return ic('bg-orange-500/20', 'text-orange-400',
+  '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>');
+
+ // Shell scripts
+ if (ext === 'sh' || ext === 'bash' || ext === 'zsh' || ext === 'fish') return ic('bg-green-500/20', 'text-green-400',
+  '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>');
+
+ // Config / properties
+ if (ext === 'properties' || ext === 'cfg' || ext === 'conf' || ext === 'ini' || ext === 'env') return ic('bg-slate-500/30', 'text-slate-300',
+  '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/>');
+
+ // YAML
+ if (ext === 'yml' || ext === 'yaml') return ic('bg-purple-500/20', 'text-purple-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
+
+ // JSON
+ if (ext === 'json' || ext === 'jsonc') return ic('bg-yellow-500/20', 'text-yellow-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/>');
+
+ // XML / HTML
+ if (ext === 'xml' || ext === 'html' || ext === 'htm') return ic('bg-blue-500/20', 'text-blue-400',
+  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
+
+ // TOML
+ if (ext === 'toml') return ic('bg-teal-500/20', 'text-teal-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+
+ // Archives / ZIP
+ if (ext === 'zip' || ext === 'tar' || ext === 'gz' || ext === 'tgz' || ext === 'rar' || ext === '7z' || ext === 'bz2') return ic('bg-violet-500/20', 'text-violet-400',
+  '<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>');
+
+ // Images
+ if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'webp' || ext === 'svg' || ext === 'ico' || ext === 'bmp') return ic('bg-pink-500/20', 'text-pink-400',
+  '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>');
+
+ // Logs
+ if (ext === 'log') return ic('bg-slate-500/20', 'text-slate-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>');
+
+ // Text / Markdown
+ if (ext === 'txt' || ext === 'md') return ic('bg-slate-500/20', 'text-slate-300',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
+
+ // Database
+ if (ext === 'db' || ext === 'sqlite' || ext === 'sqlite3') return ic('bg-cyan-500/20', 'text-cyan-400',
+  '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>');
+
+ // JS / TS
+ if (ext === 'js' || ext === 'ts' || ext === 'jsx' || ext === 'tsx') return ic('bg-yellow-500/20', 'text-yellow-300',
+  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
+
+ // Python
+ if (ext === 'py') return ic('bg-blue-500/20', 'text-blue-300',
+  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
+
+ // Default
+ return ic('bg-sky-500/20', 'text-sky-400',
+  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+}
+
+function renderFileListHTML(files, dir, listElement) {
+ if(!listElement) return;
+ let htmlBuffer = ""; 
+ 
+ if (dir !== '') { 
+ const parentPath = dir.split('/').slice(0, -1).join('/'); 
+ htmlBuffer += `
+ <li onclick="loadFiles('${parentPath}')" class="bg-[#1e293b] hover:bg-slate-800 rounded-xl p-4 md:p-5 cursor-pointer flex items-center gap-4 transition shadow-sm border border-slate-700/50 group">
+ <svg class="w-6 h-6 md:w-7 md:h-7 text-blue-400 group-hover:-translate-x-1 transition-transform shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+ <span class="font-bold text-slate-300 text-base md:text-lg">Go Back</span>
+ </li>`; 
+ } 
+ 
+ files.forEach((file, index) => { 
+ const iconSvg = getFileIcon(file.name, file.isDirectory);
+ 
+ const action = file.isDirectory ? `loadFiles('${file.path}')` : `openFile('${file.path}', '${file.name}')`; 
+ const menuId = `menu-${index}`; 
+ const displayDate = formatLocalTime(file.date); 
+ 
+ let unarchiveBtn = ''; 
+ const lname = file.name.toLowerCase(); 
+ if (!file.isDirectory && (lname.endsWith('.zip') || lname.endsWith('.tar.gz') || lname.endsWith('.tgz'))) { 
+ unarchiveBtn = `
+ <div onclick="event.stopPropagation(); executeExtract('${file.path}')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
+ <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+ Extract / Unarchive
+ </div>`; 
+ } 
+ 
+ let downloadBtn = '';
+ if (!file.isDirectory) {
+ downloadBtn = `
+ <div onclick="event.stopPropagation(); downloadFile('${file.path}', '${file.name}')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
+ <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+ Download
  </div>`;
- const pluginIcon = `<svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/></svg>`;
- const cards = jars.map(jar => {
-  const m = meta[jar.name] || {};
-  const title = m.title || jar.name.replace(/\.jar$/i, '').replace(/[-_]/g, ' ');
-  const safeFile = jar.name.replace(/'/g, "\\'");
-  const iconHtml = m.icon_url
-   ? `<img src="${m.icon_url}" class="w-10 h-10 rounded-lg object-cover bg-slate-900 border border-slate-700 shrink-0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-     + `<div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 shrink-0 items-center justify-center hidden">${pluginIcon}</div>`
-   : `<div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 shrink-0 flex items-center justify-center">${pluginIcon}</div>`;
-  const verBadge = m.version ? `<span class="text-[10px] font-bold text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded shrink-0">v${m.version}</span>` : '';
-  const upd = updateMap && updateMap[jar.name];
-  const updateBtn = upd
-   ? `<button onclick="pmUpdatePlugin('${safeFile}')" class="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-black bg-green-500/15 hover:bg-green-500/25 text-green-400 border border-green-500/30 transition active:scale-90" title="Update ke ${upd.version}">
-       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-       ${upd.version}
-      </button>` : '';
-  const upToDateBadge = updateMap && !upd && m.source === 'modrinth'
-   ? `<span class="shrink-0 text-[10px] font-bold text-green-500/70 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">✓ Up to date</span>` : '';
-  return `<div class="flex items-center gap-3 bg-[#1e293b] border border-slate-700/60 px-4 py-3 rounded-xl hover:border-slate-600 transition" id="pm-jar-${jar.name.replace(/[^a-zA-Z0-9]/g,'_')}">
-   ${iconHtml}
-   <div class="flex-1 min-w-0">
-    <div class="flex items-center gap-2 flex-wrap">
-     <p class="font-bold text-white text-sm truncate">${title}</p>
-     ${verBadge}${upToDateBadge}
-    </div>
-    <p class="text-xs text-slate-500 mt-0.5">${jar.size}</p>
-   </div>
-   <div class="flex items-center gap-1 shrink-0">
-    ${updateBtn}
-    <button onclick="pmDeletePlugin('${safeFile}')" class="text-slate-600 hover:text-red-400 transition p-1.5 rounded-lg hover:bg-red-500/10 active:scale-90" title="Hapus plugin">
-     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-    </button>
-   </div>
-  </div>`;
- }).join('');
- ins.innerHTML = header + `<div class="space-y-1.5">${cards}</div>`;
+ }
+
+ htmlBuffer += `
+ <li onclick="${action}" class="bg-[#1e293b] hover:bg-slate-800 rounded-xl p-4 md:p-5 flex items-center gap-2 md:gap-4 transition shadow-sm border border-slate-700/50 cursor-pointer text-base group relative">
+ <input type="checkbox" value="${file.path}" class="file-checkbox w-5 h-5 md:w-6 md:h-6 rounded cursor-pointer accent-blue-500 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" onclick="event.stopPropagation(); toggleSelect(this.value)">
+ 
+ <div class="flex-grow flex items-center gap-3 md:gap-4 overflow-hidden">
+ ${iconSvg}
+ <span class="font-bold text-slate-200 truncate text-base md:text-lg">${file.name}</span>
+ </div>
+ 
+ <div class="flex flex-col items-end justify-center shrink-0 ml-1">
+ <span class="text-slate-400 font-mono text-[10px] md:text-sm">${displayDate}</span>
+ <span class="text-slate-500 font-mono text-[10px] md:text-sm">${file.size || ''}</span>
+ </div>
+
+ <div class="relative shrink-0">
+ <button onclick="toggleMenu(event, '${menuId}')" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition">
+ <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg>
+ </button>
+ <div id="${menuId}" class="dropdown-menu hidden absolute right-0 top-full mt-1 w-48 bg-[#1e293b] border border-slate-600 rounded-lg shadow-2xl z-50 py-1.5 origin-top-right">
+ ${unarchiveBtn}
+ ${downloadBtn}
+ <div onclick="event.stopPropagation(); openRenameModal('${file.path}', '${file.name}')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
+ <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+ Rename
+ </div>
+ <div onclick="event.stopPropagation(); executeSingleAction('${file.path}', 'move')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
+ <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+ Move
+ </div>
+ <div onclick="event.stopPropagation(); executeSingleAction('${file.path}', 'archive')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
+ <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+ Archive
+ </div>
+ <div class="h-px bg-slate-600/50 my-1.5"></div>
+ <div onclick="event.stopPropagation(); deleteSingle('${file.path}', '${file.name}')" class="px-4 py-2.5 hover:bg-red-900/30 text-red-400 font-bold text-sm cursor-pointer flex items-center gap-3 transition">
+ <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+ Delete
+ </div>
+ </div>
+ </div>
+ </li>`; 
+ });
+ 
+ listElement.innerHTML = htmlBuffer;
 }
 
-async function pmCheckUpdates() {
- const btn = document.getElementById('pm-check-updates-btn');
- if (btn) { btn.disabled = true; btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Mengecek...'; }
- const meta = _pmInstalledMeta;
- const jars = _pmInstalledJars;
- const modrinthPlugins = jars.filter(j => (meta[j.name]||{}).source === 'modrinth' && (meta[j.name]||{}).project_id);
- const updateMap = {};
- const modLoaders = ['fabric','neoforge','forge','quilt'];
- const snapshotRe = /snapshot|alpha|beta|rc\d|\.dev|pre[-.\d]/i;
- await Promise.all(modrinthPlugins.map(async jar => {
-  const m = meta[jar.name];
-  try {
-   const res = await fetch(`https://api.modrinth.com/v2/project/${m.project_id}/version`);
-   const versions = await res.json();
-   const filtered = versions.filter(v => {
-    if (v.version_type !== 'release') return false;
-    const ls = (v.loaders||[]).map(l=>l.toLowerCase());
-    return !ls.every(l=>modLoaders.includes(l));
-   });
-   const list = filtered.length > 0 ? filtered : versions.filter(v => v.version_type === 'release');
-   if (!list.length) return;
-   const latest = list[0];
-   const latestVer = latest.version_number;
-   const storedVer = m.version || '';
-   if (latestVer && storedVer && latestVer !== storedVer) {
-    const f = _pmGetBestFile(latest.files);
-    if (f) updateMap[jar.name] = { version: latestVer, url: f.url, filename: f.filename, project_id: m.project_id, title: m.title, icon_url: m.icon_url || '' };
-   }
-  } catch(e) {}
- }));
- const count = Object.keys(updateMap).length;
- showToast(count > 0 ? `${count} plugin ada update!` : 'Semua plugin sudah up to date ✓');
- _pmUpdateMap = updateMap;
- pmRenderInstalled(updateMap);
+async function loadFiles(dir = '', addToHistory = true) { 
+ startProgress(); 
+ currentPath = dir; 
+ 
+ const pathEl = document.getElementById('currentDirPath');
+ if(pathEl) {
+ let breadcrumbHTML = `
+ <span class="text-slate-500 cursor-not-allowed select-none">/ home</span>
+ <span class="text-slate-600 mx-1.5">/</span>
+ <span onclick="loadFiles('')" class="cursor-pointer hover:text-blue-400 transition text-slate-300 font-bold">container</span>
+ `;
+ if (currentPath !== '') {
+ const parts = currentPath.split('/');
+ let buildPath = '';
+ parts.forEach((part, idx) => {
+ buildPath += (idx === 0 ? part : '/' + part);
+ breadcrumbHTML += `<span class="text-slate-600 mx-1.5">/</span>`;
+ if (idx === parts.length - 1) {
+ breadcrumbHTML += `<span class="font-black text-slate-100">${part}</span>`;
+ } else {
+ breadcrumbHTML += `<span onclick="loadFiles('${buildPath}')" class="cursor-pointer hover:text-blue-400 transition text-slate-300">${part}</span>`;
+ }
+ });
+ }
+ pathEl.innerHTML = breadcrumbHTML;
+ }
+ 
+ selectedFiles.clear(); 
+ updateDeleteButton(); 
+ 
+ const list = document.getElementById('fileList'); 
+ if (addToHistory) { 
+ const newHash = dir === '' ? '#files' : `#files/${dir}`; 
+ if (window.location.hash !== newHash) history.pushState({ tab: 'files', path: dir }, '', newHash); 
+ } 
+
+ if (folderCache[currentPath]) {
+ setTimeout(() => { renderFileListHTML(folderCache[currentPath], currentPath, list); finishProgress(); }, 10);
+ return; 
+ }
+ 
+ if(list) {
+ list.innerHTML = `
+ <li class="p-8 bg-[#1e293b] rounded-xl text-center text-slate-400 font-bold flex flex-col items-center justify-center gap-3 w-full h-full min-h-[200px] border border-slate-700/50 shadow-sm">
+ <div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+ <span class="text-sm tracking-wide">Memuat folder...</span>
+ </li>
+ `;
+ }
+ 
+ try { 
+ const res = await fetch(`/api/files?path=${encodeURIComponent(currentPath)}`); 
+ if (res.status === 401) return window.location.href = "/"; 
+ const files = await res.json(); 
+ folderCache[currentPath] = files;
+ renderFileListHTML(files, currentPath, list);
+ } catch(e) {} finally { finishProgress(); }
 }
 
-async function pmUpdatePlugin(oldFilename) {
- const meta = _pmInstalledMeta;
- const m = meta[oldFilename] || {};
- const upd = _pmUpdateMap[oldFilename];
- if (!upd) { showToast('Klik "Cek Update" dulu.', 'error'); return; }
- showToast(`Mengupdate ${m.title || oldFilename}...`);
+const BINARY_EXTENSIONS = new Set(['jar','zip','tar','gz','tgz','war','ear','rar','7z','bz2','xz','zst','whl','egg','apk','ipa','exe','dll','so','dylib','bin','dat','db','sqlite','sqlite3','class','pyc','pyd','pyo','pdf','png','jpg','jpeg','gif','webp','bmp','ico','tiff','svg','mp3','mp4','wav','ogg','webm','mov','avi','mkv','flac','aac','woff','woff2','ttf','eot','otf']);
+
+async function openFile(filePath, fileName, addToHistory = true) {
+ isNewFile = false;
+ if(!fileName) fileName = filePath.split('/').pop();
+
+ const ext = fileName.includes('.') ? fileName.split('.').pop().toLowerCase() : '';
+ const base = fileName.toLowerCase();
+ const isBinary = BINARY_EXTENSIONS.has(ext) || base.endsWith('.tar.gz') || base.endsWith('.tar.bz2') || base.endsWith('.tar.xz');
+
+ if (isBinary) {
+ if(typeof showToast === 'function') showToast(`File "${fileName}" adalah file binary dan tidak bisa dibuka sebagai teks. Gunakan menu ⋮ untuk Extract atau Download.`, 'error');
+ return;
+ }
+
+ startProgress(); 
+ currentEditFile = filePath;
+ const editNameEl = document.getElementById('editingFileName');
+ if(editNameEl) editNameEl.innerText = "Edit: " + fileName; 
+
+ lastQuery = '';
+ searchCursor = null;
+ clearAllSearchMarks();
+ 
+ const searchInput = document.getElementById('editorSearchInput');
+ if(searchInput) searchInput.value = '';
+ 
+ const searchBar = document.getElementById('customSearchBar');
+ if(searchBar) searchBar.classList.add('hidden');
+
+ const [mode, langLabel] = detectLanguage(filePath);
+
+ const fileContentParent = document.getElementById('fileContent').parentElement;
+ let editorSpinner = document.getElementById('editor-spinner');
+ if (!editorSpinner) {
+ editorSpinner = document.createElement('div');
+ editorSpinner.id = 'editor-spinner';
+ editorSpinner.className = 'absolute inset-0 bg-[#1d1f21] z-[60] flex flex-col items-center justify-center gap-3';
+ editorSpinner.innerHTML = `
+ <div class="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+ <span class="text-slate-400 font-bold text-sm tracking-wide">Memuat teks...</span>
+ `;
+ fileContentParent.appendChild(editorSpinner);
+ }
+ editorSpinner.classList.remove('hidden');
+
+ setEditorLanguage(null, 'Plain Text');
+ if (editor) editor.setValue("");
+
+ if(typeof showTab === 'function') showTab('edit', false);
+ if (addToHistory) history.pushState({ tab: 'edit', file: filePath }, '', '#edit/' + filePath);
+
  try {
-  socket.emit('download_plugin', upd.url, upd.filename);
-  if (upd.filename !== oldFilename) {
-   await fetch('/api/delete', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ items: [`plugins/${oldFilename}`] }) });
-   await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename: oldFilename, meta: null }) });
-  }
-  await fetch('/api/plugin-meta', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filename: upd.filename, meta: { source: 'modrinth', project_id: upd.project_id, title: upd.title, icon_url: upd.icon_url, version: upd.version } }) });
-  delete _pmUpdateMap[oldFilename];
-  await pmLoadInstalled();
- } catch(e) { showToast('Gagal update plugin.', 'error'); }
+ const res = await fetch(`/api/file?path=${encodeURIComponent(filePath)}`); 
+ if (res.status === 401) return window.location.href = "/"; 
+ const content = await res.text(); 
+ if (editor) { editor.setValue(content); editor.clearHistory(); }
+ setEditorLanguage(mode, langLabel);
+ } catch(e) {
+ if (editor) editor.setValue("// Gagal memuat isi file. Coba lagi.");
+ setEditorLanguage(null, 'Plain Text');
+ } finally { 
+ finishProgress(); 
+ if (editorSpinner) editorSpinner.classList.add('hidden'); 
+ }
 }
-socket.on('download_lock_state', (isDownloading) => { const startBtn = document.getElementById('startBtn'); const vmBtn = document.getElementById('vm-install-btn'); if (isDownloading) { if(startBtn) { startBtn.disabled = true; startBtn.innerText = "..."; } if(vmBtn) { vmBtn.disabled = true; vmBtn.innerText = "..."; } } else { if(startBtn) { startBtn.disabled = false; startBtn.innerText = "Start"; } if(vmBtn) { vmBtn.disabled = false; vmBtn.innerText = " INSTALL VERSI INI"; } } });
-socket.on('download_success_toast', () => { showToast('Berhasil Mengunduh!'); }); 
-socket.on('plugin_success_toast', (name) => { showToast(`Plugin ${name} terinstall!`); });
-function deleteAccount() { document.getElementById('genericModalTitle').innerText = 'Hapus Akun Permanen?'; document.getElementById('genericModalMsg').innerHTML = 'Semua server, file, dan akun kamu akan <b>Dihapus Tanpa Sisa</b>. Yakin?'; const modal = document.getElementById('genericModal'); modal.classList.remove('hidden'); document.getElementById('genericConfirmBtn').onclick = async () => { modal.classList.add('hidden'); showToast('Sedang menghapus akun...', 'error'); try { const res = await fetch('/api/delete-account', { method: 'POST' }); if(res.ok) { window.location.href = '/'; } else { showToast('Gagal menghapus', 'error'); } } catch(e) { showToast('Koneksi Error', 'error'); } }; }
-document.addEventListener('DOMContentLoaded', () => { const cmdInput = document.getElementById('cmdInput'); if (cmdInput) { cmdInput.addEventListener('focus', function() { setTimeout(() => { window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }, 300); }); } });
+
+function closeEditor() {
+ const savedPath = currentPath;
+ window._skipFileReset = true;
+ if(typeof showTab === 'function') showTab('files', false);
+ currentPath = savedPath;
+ const newHash = savedPath === '' ? '#files' : `#files/${savedPath}`;
+ history.pushState({ tab: 'files', path: savedPath }, '', newHash);
+ delete folderCache[savedPath];
+ loadFiles(savedPath, false);
+}
+
+async function saveFile() { 
+ if (!editor) return;
+ if (isNewFile || !currentEditFile) {
+ const modal = document.getElementById('saveAsModal');
+ if (modal) {
+ document.getElementById('saveAsInput').value = '';
+ modal.classList.remove('hidden');
+ setTimeout(() => document.getElementById('saveAsInput').focus(), 100);
+ }
+ return;
+ }
+ startProgress(); 
+ try { 
+ const res = await fetch('/api/file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: currentEditFile, content: editor.getValue() }) }); 
+ if(res.ok && typeof showToast === 'function') showToast('File Tersimpan!'); 
+ } catch(e) {} finally { finishProgress(); }
+}
+
+async function executeSaveAs() {
+ const nameInput = document.getElementById('saveAsInput');
+ const name = nameInput ? nameInput.value.trim() : '';
+ if (!name) { if (typeof showToast === 'function') showToast('Nama file wajib diisi!', 'error'); return; }
+ const targetPath = currentPath === '' ? name : `${currentPath}/${name}`;
+ document.getElementById('saveAsModal').classList.add('hidden');
+ startProgress();
+ try {
+ const res = await fetch('/api/file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: targetPath, content: editor.getValue() }) });
+ if (res.ok) {
+ isNewFile = false;
+ currentEditFile = targetPath;
+ const editNameEl = document.getElementById('editingFileName');
+ if (editNameEl) editNameEl.innerText = name;
+ history.replaceState({ tab: 'edit', file: targetPath }, '', '#edit/' + targetPath);
+ delete folderCache[currentPath];
+ const [detectedMode, detectedLabel] = detectLanguage(name);
+ setEditorLanguage(detectedMode, detectedLabel);
+ if (typeof showToast === 'function') showToast('File berhasil disimpan!');
+ } else {
+ if (typeof showToast === 'function') showToast('Gagal menyimpan file', 'error');
+ }
+ } catch(e) { if (typeof showToast === 'function') showToast('Error jaringan', 'error'); } 
+ finally { finishProgress(); }
+}
+
+// === UPLOAD MANUAL 100% REALTIME VIA SERVER SOCKET + TOLERANSI 5 DETIK ===
+function getOrCreateUnifiedBox() { let box = document.getElementById('unified-upload-box'); if (!box) { box = document.createElement('div'); box.id = 'unified-upload-box'; box.className = 'fixed bottom-6 right-6 w-[320px] bg-[#1e293b] border border-slate-600 rounded-2xl shadow-2xl z-[999] flex flex-col max-h-[50vh] transition-all duration-300'; box.innerHTML = `<div class="p-3 bg-slate-800 border-b border-slate-700 flex justify-between items-center rounded-t-2xl shrink-0"><h4 class="text-sm font-black text-blue-400 flex items-center gap-2"><svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span id="unified-upload-title">Memproses tugas...</span></h4><button onclick="window.minimizeUpload()" class="bg-slate-700 hover:bg-slate-600 p-1.5 rounded transition text-white" title="Minimize"><svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></button></div><div id="unified-upload-list" class="p-4 flex flex-col gap-4 overflow-y-auto ptero-scrollbar"></div>`; document.body.appendChild(box); } return box; }
+function getOrCreateMiniIndicator() { let mini = document.getElementById('miniUploadIndicator'); if (!mini) { mini = document.createElement('div'); mini.id = 'miniUploadIndicator'; mini.onclick = window.maximizeUpload; mini.className = 'hidden fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-full shadow-xl z-[200] cursor-pointer flex items-center gap-2 transition-all active:scale-95 border border-blue-400/50'; mini.title = 'Klik untuk memperbesar'; mini.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span class="text-xs font-black tracking-wider" id="miniUploadText">Memproses file...</span>`; document.body.appendChild(mini); } return mini; }
+function updateUploadState() { const titleSpan = document.getElementById('unified-upload-title'); if (titleSpan) { titleSpan.innerText = activeUploadsCount > 0 ? `Memproses ${activeUploadsCount} tugas...` : 'Selesai'; } const miniText = document.getElementById('miniUploadText'); if (miniText) { miniText.innerText = `Memproses ${activeUploadsCount} tugas...`; } if (activeUploadsCount <= 0) { const mini = document.getElementById('miniUploadIndicator'); if (mini) mini.classList.add('hidden'); setTimeout(() => { if (activeUploadsCount <= 0) { const box = document.getElementById('unified-upload-box'); if (box) box.classList.add('hidden'); const list = document.getElementById('unified-upload-list'); if (list) list.innerHTML = ''; } }, 3000); } }
+window.minimizeUpload = function() { const box = document.getElementById('unified-upload-box'); if (box) box.classList.add('hidden'); if (activeUploadsCount > 0) { const mini = getOrCreateMiniIndicator(); mini.classList.remove('hidden'); } }
+window.maximizeUpload = function() { const box = getOrCreateUnifiedBox(); box.classList.remove('hidden'); const mini = document.getElementById('miniUploadIndicator'); if (mini) mini.classList.add('hidden'); }
+
+function formatDynamicSize(bytes) {
+ if (bytes === 0) return '0.00 B';
+ const k = 1024;
+ const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+ const i = Math.floor(Math.log(bytes) / Math.log(k));
+ return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+}
+
+async function uploadFile() { 
+ const fileInput = document.getElementById('fileUploader'); 
+ if (!fileInput || fileInput.files.length === 0) return; 
+ 
+ const box = getOrCreateUnifiedBox(); box.classList.remove('hidden'); 
+ const mini = document.getElementById('miniUploadIndicator'); if (mini) mini.classList.add('hidden'); 
+ const list = document.getElementById('unified-upload-list'); 
+ const files = fileInput.files; 
+ 
+ for (let i = 0; i < files.length; i++) { 
+ const file = files[i]; 
+ const uploadId = 'up_' + Date.now() + '_' + i; 
+ activeUploadsCount++; 
+ updateUploadState(); 
+ 
+ const fileItem = document.createElement('div'); 
+ fileItem.id = uploadId; 
+ fileItem.className = 'flex flex-col gap-1.5 transition-all duration-300 opacity-100 border-b border-slate-700/50 pb-3 last:border-0 last:pb-0'; 
+ 
+ const totalSizeStr = formatDynamicSize(file.size);
+
+ fileItem.innerHTML = `
+ <div class="flex justify-between items-center">
+ <span class="text-xs text-white font-bold truncate w-4/5" title="${file.name}"> ${file.name}</span>
+ <button id="cancel_${uploadId}" class="text-slate-500 hover:text-red-400 transition active:scale-95 flex items-center justify-center w-6 h-6 rounded-full hover:bg-red-400/10" title="Batal"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+ </div>
+ <div class="w-full bg-slate-900 rounded-full h-2 shadow-inner overflow-hidden border border-slate-700">
+ <div id="bar_${uploadId}" class="bg-gradient-to-r from-blue-600 to-blue-400 h-2 rounded-full transition-all duration-100 ease-linear" style="width: 0%"></div>
+ </div>
+ <div class="flex justify-between items-center text-[10px] font-mono font-bold text-slate-400 mt-0.5">
+ <div class="flex items-center gap-2">
+ <span id="mb_text_${uploadId}">0.00 B / ${totalSizeStr}</span>
+ <span id="speed_${uploadId}" class="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded animate-pulse">Menghitung...</span>
+ </div>
+ <span id="percent_${uploadId}" class="text-blue-400">0.0%</span>
+ </div>
+ `; 
+ list.appendChild(fileItem); 
+
+ const xhr = new XMLHttpRequest();
+ let isCancelled = false;
+
+ document.getElementById(`cancel_${uploadId}`).onclick = function() { 
+ isCancelled = true;
+ xhr.abort(); 
+ fileItem.style.opacity = '0'; 
+ setTimeout(() => fileItem.remove(), 300); 
+ if(typeof showToast === 'function') showToast(' Dibatalkan: ' + file.name, 'error'); 
+ activeUploadsCount--; updateUploadState();
+ }; 
+
+ let lastLoaded = 0;
+ let lastLoadedForSpeed = 0;
+ let smoothedSpeed = 0;
+ let zeroSpeedCounter = 0; 
+
+ const speedMonitor = setInterval(() => {
+ if (isCancelled) { clearInterval(speedMonitor); return; }
+ 
+ let rawSpeed = lastLoaded - lastLoadedForSpeed; 
+ lastLoadedForSpeed = lastLoaded;
+
+ if (rawSpeed > 0) {
+ zeroSpeedCounter = 0; 
+ if (smoothedSpeed === 0) smoothedSpeed = rawSpeed;
+ else smoothedSpeed = (rawSpeed * 0.2) + (smoothedSpeed * 0.8);
+
+ const speedEl = document.getElementById(`speed_${uploadId}`);
+ if (speedEl) {
+ speedEl.innerText = formatDynamicSize(smoothedSpeed) + '/s';
+ speedEl.className = 'text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded';
+ }
+ } else {
+ zeroSpeedCounter++;
+ smoothedSpeed = smoothedSpeed * 0.5; 
+ 
+ const speedEl = document.getElementById(`speed_${uploadId}`);
+ if (speedEl) {
+ if (zeroSpeedCounter >= 5) { 
+ speedEl.innerText = '0 B/s (Sinyal Lelet...)';
+ speedEl.className = 'text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded animate-pulse';
+ } else { 
+ speedEl.innerText = formatDynamicSize(smoothedSpeed) + '/s';
+ }
+ }
+ }
+ }, 1000);
+
+ const progressHandler = (data) => {
+ if (data.uploadId === uploadId) {
+ lastLoaded = data.loaded;
+
+ let percentComplete = (data.loaded / file.size) * 100;
+ if (percentComplete > 100) percentComplete = 100;
+
+ const bar = document.getElementById(`bar_${uploadId}`);
+ const mbTextEl = document.getElementById(`mb_text_${uploadId}`);
+ const percentEl = document.getElementById(`percent_${uploadId}`);
+
+ if (bar) bar.style.width = percentComplete + '%';
+ if (mbTextEl) mbTextEl.innerText = `${formatDynamicSize(data.loaded)} / ${totalSizeStr}`;
+ if (percentEl) percentEl.innerText = percentComplete.toFixed(1) + '%';
+ }
+ };
+
+ socket.on('manual_upload_progress', progressHandler);
+
+ xhr.onload = function() {
+ if (isCancelled) return;
+ clearInterval(speedMonitor);
+ socket.off('manual_upload_progress', progressHandler);
+
+ if (xhr.status >= 200 && xhr.status < 300) {
+ activeUploadsCount--; updateUploadState(); 
+ 
+ const speedEl = document.getElementById(`speed_${uploadId}`);
+ if (speedEl) speedEl.remove(); 
+ 
+ if(typeof showToast === 'function') showToast(' Selesai: ' + file.name); 
+ const bar = document.getElementById(`bar_${uploadId}`); 
+ const mbTextEl = document.getElementById(`mb_text_${uploadId}`);
+ const percent = document.getElementById(`percent_${uploadId}`);
+ 
+ if (bar) { bar.classList.remove('from-blue-600', 'to-blue-400'); bar.classList.add('from-green-600', 'to-green-400'); bar.style.width = '100%'; } 
+ if (mbTextEl) { mbTextEl.innerText = `${totalSizeStr} / ${totalSizeStr}`; }
+ if (percent) { percent.innerText = 'Selesai'; percent.className = 'text-green-400'; }
+ 
+ setTimeout(() => { fileItem.style.opacity = '0'; setTimeout(() => fileItem.remove(), 300); }, 3000); 
+ delete folderCache[currentPath]; loadFiles(currentPath); 
+ } else {
+ handleError();
+ }
+ };
+
+ xhr.onerror = handleError;
+ xhr.onabort = () => { clearInterval(speedMonitor); socket.off('manual_upload_progress', progressHandler); };
+
+ function handleError() {
+ if (isCancelled) return;
+ clearInterval(speedMonitor);
+ socket.off('manual_upload_progress', progressHandler);
+ if(typeof showToast === 'function') showToast(' Gagal upload: Server Error', 'error'); 
+ fileItem.innerHTML = `<p class="text-red-400 text-xs font-bold text-center py-2"> Upload Gagal</p>`; 
+ setTimeout(() => fileItem.remove(), 4000); 
+ activeUploadsCount--; updateUploadState();
+ }
+
+ xhr.open("POST", `/api/upload?uploadId=${uploadId}`, true);
+ const formData = new FormData();
+ formData.append("path", currentPath);
+ formData.append("filename", file.name);
+ formData.append("file", file); 
+ xhr.send(formData);
+ } 
+ fileInput.value = ''; 
+}
+
+window.showRemoteDownloadModal = function() {
+ document.getElementById('rdlUrlInput').value = '';
+ document.getElementById('rdlNameInput').value = '';
+ document.getElementById('remoteDlModal').classList.remove('hidden');
+ document.getElementById('rdlUrlInput').focus();
+}
+
+window.executeRemoteDownload = async function() {
+ const url = document.getElementById('rdlUrlInput').value.trim();
+ const filename = document.getElementById('rdlNameInput').value.trim();
+ 
+ if (!url || !filename) {
+ if(typeof showToast === 'function') showToast('URL dan Nama File wajib diisi!', 'error');
+ return;
+ }
+
+ document.getElementById('remoteDlModal').classList.add('hidden');
+ 
+ const box = getOrCreateUnifiedBox(); box.classList.remove('hidden'); 
+ const mini = document.getElementById('miniUploadIndicator'); if (mini) mini.classList.add('hidden'); 
+ const list = document.getElementById('unified-upload-list'); 
+
+ activeUploadsCount++; 
+ updateUploadState();
+
+ const dlId = 'dl_' + Date.now(); 
+ const fileItem = document.createElement('div'); 
+ fileItem.id = dlId; 
+ fileItem.className = 'flex flex-col gap-1.5 transition-all duration-300 opacity-100 border-b border-slate-700/50 pb-3 last:border-0 last:pb-0'; 
+
+ let isCancelledDl = false;
+
+ fileItem.innerHTML = `
+ <div class="flex justify-between items-center">
+ <span class="text-xs text-white font-bold truncate w-4/5 pr-2" title="${filename}"> Menarik: ${filename}</span>
+ <button id="cancel_${dlId}" class="text-slate-500 hover:text-red-400 transition active:scale-95 flex items-center justify-center w-6 h-6 rounded-full hover:bg-red-400/10" title="Batal"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+ </div>
+ <div class="w-full bg-slate-900 rounded-full h-2 shadow-inner overflow-hidden border border-slate-700">
+ <div id="bar_${dlId}" class="bg-gradient-to-r from-purple-600 to-blue-500 h-2 rounded-full w-full animate-pulse"></div>
+ </div>
+ <div class="flex justify-between items-center text-[10px] font-mono font-bold text-slate-400 mt-0.5">
+ <div class="flex items-center gap-2">
+ <span id="mb_text_${dlId}">0.00 B Disedot</span>
+ <span id="speed_${dlId}" class="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded animate-pulse">Menghitung...</span>
+ </div>
+ </div>
+ `;
+
+ document.getElementById(`cancel_${dlId}`).onclick = function() {
+ isCancelledDl = true;
+ cleanup();
+ fileItem.style.opacity = '0';
+ setTimeout(() => fileItem.remove(), 300);
+ if(typeof showToast === 'function') showToast(' Dibatalkan: ' + filename, 'error');
+ activeUploadsCount--; updateUploadState();
+ }; 
+ list.appendChild(fileItem);
+
+ let lastLoaded = 0;
+ let lastTime = Date.now();
+ let smoothedSpeed = 0;
+
+ const progressHandler = (data) => {
+ if (data.filename === filename) {
+ const now = Date.now();
+ const timeDiff = (now - lastTime) / 1000;
+ 
+ if (timeDiff >= 0.5) {
+ let rawSpeed = (data.loaded - lastLoaded) / timeDiff;
+ if (smoothedSpeed === 0) smoothedSpeed = rawSpeed;
+ else smoothedSpeed = (rawSpeed * 0.2) + (smoothedSpeed * 0.8); 
+
+ const speedEl = document.getElementById(`speed_${dlId}`);
+ if (speedEl && smoothedSpeed > 0) {
+ speedEl.classList.remove('animate-pulse');
+ speedEl.innerText = formatDynamicSize(smoothedSpeed) + '/s';
+ }
+ lastLoaded = data.loaded;
+ lastTime = now;
+ }
+
+ const mbTextEl = document.getElementById(`mb_text_${dlId}`);
+ if (mbTextEl) mbTextEl.innerText = formatDynamicSize(data.loaded) + ' Disedot';
+ }
+ };
+
+ const successHandler = (doneFilename) => {
+ if (doneFilename === filename) {
+ cleanup();
+ const speedEl = document.getElementById(`speed_${dlId}`);
+ if (speedEl) speedEl.remove();
+
+ const bar = document.getElementById(`bar_${dlId}`);
+ const mbTextEl = document.getElementById(`mb_text_${dlId}`);
+
+ if (bar) { bar.classList.remove('from-purple-600', 'to-blue-500', 'animate-pulse'); bar.classList.add('from-green-600', 'to-green-400'); }
+ if (mbTextEl) mbTextEl.innerText = 'Selesai didownload!';
+
+ activeUploadsCount--; updateUploadState();
+ setTimeout(() => { fileItem.style.opacity = '0'; setTimeout(() => fileItem.remove(), 300); }, 3000);
+ delete folderCache[currentPath]; loadFiles(currentPath);
+ }
+ };
+
+ const errorHandler = (failData) => {
+ if (failData.filename === filename) {
+ cleanup();
+ fileItem.innerHTML = `<p class="text-red-400 text-xs font-bold text-center py-2"> Gagal (Error ${failData.code})</p>`;
+ setTimeout(() => fileItem.remove(), 4000);
+ activeUploadsCount--; updateUploadState();
+ }
+ };
+
+ socket.on('remote_dl_progress', progressHandler);
+ socket.on('remote_dl_done', successHandler);
+ socket.on('remote_dl_error', errorHandler);
+
+ function cleanup() {
+ socket.off('remote_dl_progress', progressHandler);
+ socket.off('remote_dl_done', successHandler);
+ socket.off('remote_dl_error', errorHandler);
+ }
+
+ try {
+ const res = await fetch('/api/remote-download', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ url: url, filename: filename, path: currentPath })
+ });
+ const data = await res.json();
+ if (!res.ok || !data.success) throw new Error('Failed');
+ } catch(e) {
+ cleanup();
+ fileItem.innerHTML = `<p class="text-red-400 text-xs font-bold text-center py-2"> Koneksi Server Error</p>`;
+ setTimeout(() => fileItem.remove(), 4000);
+ activeUploadsCount--; updateUploadState();
+ }
+}
+
+async function executeExtract(filePath) { 
+ if(typeof closeAllDropdowns === 'function') closeAllDropdowns(); 
+ startProgress(); 
+ try { 
+ const res = await fetch('/api/extract', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filePath: filePath, destination: currentPath }) }); 
+ if(res.ok) {
+ delete folderCache[currentPath];
+ await loadFiles(currentPath); 
+ if(typeof showToast === 'function') showToast('Ekstrak berhasil!');
+ } else {
+ if(typeof showToast === 'function') showToast('Gagal mengekstrak', 'error');
+ }
+ } catch(e) {} finally { finishProgress(); }
+}
+
+function showArchiveModal() { const aInput = document.getElementById('archiveInput'); if(aInput) aInput.value = ''; const aModal = document.getElementById('archiveModal'); if(aModal) aModal.classList.remove('hidden'); if(aInput) aInput.focus(); }
+
+async function executeArchive() { 
+ const name = document.getElementById('archiveInput').value.trim(); if(!name) return; 
+ document.getElementById('archiveModal').classList.add('hidden'); 
+ startProgress(); 
+ try { 
+ const res = await fetch('/api/archive', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: Array.from(selectedFiles), archiveName: name, currentPath: currentPath }) }); 
+ if(res.ok) {
+ delete folderCache[currentPath];
+ selectedFiles.clear(); updateDeleteButton(); await loadFiles(currentPath); 
+ if(typeof showToast === 'function') showToast('Arsip berhasil dibuat!');
+ }
+ } catch(e) {} finally { finishProgress(); }
+}
+
+window.showMoveModal = function() { 
+ moveTargetPath = currentPath; 
+ const mModal = document.getElementById('moveModal'); 
+ if(mModal) mModal.classList.remove('hidden'); 
+ 
+ const mInput = document.getElementById('moveNewDirInput'); 
+ if(mInput) mInput.value = ''; 
+ 
+ loadMoveFolders(moveTargetPath); 
+}
+
+window.loadMoveFolders = async function(targetDir) {
+ moveTargetPath = targetDir;
+ const listEl = document.getElementById('moveFolderList');
+ const pathText = document.getElementById('moveCurrentPathText');
+ 
+ if(pathText) { pathText.innerText = targetDir === '' ? '/home/container/' : `/home/container/${targetDir}/`; }
+ if(listEl) { listEl.innerHTML = '<div class="flex justify-center py-6"><div class="w-6 h-6 border-4 border-slate-600 border-t-yellow-500 rounded-full animate-spin"></div></div>'; }
+ 
+ try {
+ const res = await fetch(`/api/files?path=${encodeURIComponent(targetDir)}`);
+ if (!res.ok) throw new Error('Failed');
+ const files = await res.json();
+ 
+ let htmlBuffer = '';
+ 
+ if (targetDir !== '') {
+ const parentPath = targetDir.split('/').slice(0, -1).join('/');
+ htmlBuffer += `
+ <button onclick="loadMoveFolders('${parentPath}')" class="w-full bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 p-3 rounded-xl flex items-center justify-center gap-2 text-slate-300 font-bold transition active:scale-95 shadow-sm mb-1">
+ <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+ Go back
+ </button>
+ `;
+ }
+ 
+ const dirs = files.filter(f => f.isDirectory);
+ if (dirs.length === 0) {
+ htmlBuffer += '<p class="text-center text-slate-500 py-6 text-xs font-bold">Tidak ada sub-folder di sini.</p>';
+ } else {
+ dirs.forEach(dir => {
+ htmlBuffer += `
+ <div onclick="loadMoveFolders('${dir.path}')" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700/80 p-3.5 rounded-xl flex items-center gap-3 text-slate-200 font-bold transition cursor-pointer active:scale-95 shadow-sm group">
+ <span class="text-yellow-400 text-lg group-hover:scale-110 transition-transform"></span>
+ <span class="truncate">${dir.name}</span>
+ </div>
+ `;
+ });
+ }
+ 
+ if(listEl) listEl.innerHTML = htmlBuffer;
+ } catch (e) {
+ if(listEl) listEl.innerHTML = '<p class="text-center text-red-400 py-4 text-xs font-bold">Gagal memuat direktori.</p>';
+ }
+}
+
+window.createDirInMove = async function() {
+ const input = document.getElementById('moveNewDirInput');
+ if (!input) return;
+ const name = input.value.trim();
+ if (!name) return;
+ 
+ const targetPath = moveTargetPath === '' ? name : `${moveTargetPath}/${name}`;
+ input.disabled = true;
+ 
+ try {
+ const res = await fetch('/api/folder', { 
+ method: 'POST', 
+ headers: { 'Content-Type': 'application/json' }, 
+ body: JSON.stringify({ path: targetPath }) 
+ });
+ 
+ if (res.ok) {
+ input.value = '';
+ delete folderCache[moveTargetPath]; 
+ await loadMoveFolders(moveTargetPath); 
+ if(typeof showToast === 'function') showToast('Folder ' + name + ' berhasil dibuat!');
+ } else {
+ if(typeof showToast === 'function') showToast('Nama sudah ada / gagal dibuat', 'error');
+ }
+ } catch(e) {
+ if(typeof showToast === 'function') showToast('Error jaringan', 'error');
+ } finally {
+ input.disabled = false;
+ input.focus();
+ }
+}
+
+window.executeInteractiveMove = async function() { 
+ document.getElementById('moveModal').classList.add('hidden'); 
+ startProgress(); 
+ try { 
+ const res = await fetch('/api/move', { 
+ method: 'POST', 
+ headers: { 'Content-Type': 'application/json' }, 
+ body: JSON.stringify({ items: Array.from(selectedFiles), destination: moveTargetPath }) 
+ }); 
+ 
+ if(res.ok) {
+ delete folderCache[currentPath]; 
+ delete folderCache[moveTargetPath]; 
+ selectedFiles.clear(); 
+ updateDeleteButton(); 
+ await loadFiles(currentPath); 
+ if(typeof showToast === 'function') showToast('File berhasil dipindah!');
+ } else {
+ if(typeof showToast === 'function') showToast('Gagal memindah file', 'error');
+ }
+ } catch(e) {
+ if(typeof showToast === 'function') showToast('Error jaringan', 'error');
+ } finally { 
+ finishProgress(); 
+ }
+}
+
+window.addEventListener('popstate', function(event) {
+ const hash = window.location.hash;
+ if (hash === '#files' || hash.startsWith('#files/')) {
+ if(typeof showTab === 'function') showTab('files', false);
+ let dir = hash.replace('#files', '');
+ if (dir.startsWith('/')) dir = dir.substring(1);
+ loadFiles(dir, false); 
+ } 
+ else if (hash.startsWith('#edit/')) {
+ if(typeof showTab === 'function') showTab('edit', false);
+ let file = hash.replace('#edit/', '');
+ openFile(file, '', false);
+ }
+});
