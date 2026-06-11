@@ -17,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// ================= ðŸ”¥ AUTO JAVA MANAGER ðŸ”¥ =================
+// ================= AUTO JAVA MANAGER =================
 function getRequiredJavaVersion(mcVersion) {
  if (!mcVersion) return 21; // Default standar
  const v = mcVersion.toLowerCase();
@@ -401,7 +401,7 @@ function formatBytes(bytes) { if (!+bytes) return '0 B'; const k = 1024, sizes =
 app.get('/api/files', checkAuth, (req, res) => { try { const mcDir = getUserDir(getServerName(req)); let subPath = req.query.path || ''; if (subPath.includes('..')) return res.status(403).json({ error: 'Akses ditolak!' }); let targetDir = path.join(mcDir, subPath); if (!fs.existsSync(targetDir)) targetDir = mcDir; const files = fs.readdirSync(targetDir, { withFileTypes: true }); let fileList = files.filter(dirent => !(subPath === '' && dirent.name === 'panel_settings.json') && dirent.name !== '.plugin_meta.json').map(dirent => { const currentFilePath = path.join(targetDir, dirent.name); let size = ''; if (!dirent.isDirectory()) { try { size = formatBytes(fs.statSync(currentFilePath).size); } catch(e){} } return { name: dirent.name, isDirectory: dirent.isDirectory(), path: subPath === '' ? dirent.name : `${subPath}/${dirent.name}`, date: getRawDate(currentFilePath), size: size }; }); fileList.sort((a, b) => (a.isDirectory === b.isDirectory) ? a.name.localeCompare(b.name) : (a.isDirectory ? -1 : 1)); res.json(fileList); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.get('/api/file', checkAuth, (req, res) => { let subPath = req.query.path || ''; if (subPath.includes('..')) return res.status(403).send("Akses ditolak!"); fs.readFile(path.join(getUserDir(getServerName(req)), subPath), 'utf8', (err, data) => res.send(err ? "Gagal membaca file" : data)); });
 
-// ðŸ”¥ FITUR DOWNLOAD FILE AMAN (DITAMBAHKAN DI SINI) ðŸ”¥
+// FITUR DOWNLOAD FILE AMAN (DITAMBAHKAN DI SINI) 
 app.get('/api/download', checkAuth, (req, res) => {
  let subPath = req.query.path || '';
  if (subPath.includes('..')) return res.status(403).send("Akses ditolak!");
@@ -731,6 +731,8 @@ function startResourceMonitor(srvName, state, uLog) {
  }
 }
 
+const lastCpuCache = {};
+
 setInterval(() => {
  const curNet = readNetStats();
  prevNetStats = curNet;
@@ -742,7 +744,8 @@ setInterval(() => {
  let owner = null; for (let u in users) { if (users[u].servers && users[u].servers.includes(srvName)) { owner = u; break; } }
  if(!owner) owner = srvName;
 
- if (!state.process) { 
+ if (!state.process) {
+ lastCpuCache[srvName] = 0;
  io.to(owner).emit('dashboard_stats', { serverName: srvName, cpu: "0.00", ramMB: 0, isOnline: false, status: 'offline' });
  continue; 
  }
@@ -750,13 +753,17 @@ setInterval(() => {
  const netInBytes = Math.max(0, curNet.rx - state.netBaseRx);
  const netOutBytes = Math.max(0, curNet.tx - state.netBaseTx);
 
+ const userCpuLimit = users[owner]?.limits?.cpu || 100;
  pidusage(state.process.pid, (err, stats) => {
  if (!err && stats) { 
- let cpuRaw = stats.cpu; if (cpuRaw > 0 && cpuRaw % 1 === 0) { cpuRaw += (Math.random() * 0.98 + 0.01); }
+ let cpuRaw = Math.min(stats.cpu, userCpuLimit);
+ if (cpuRaw === 0 && lastCpuCache[srvName] > 0) cpuRaw = lastCpuCache[srvName];
+ if (cpuRaw > 0) lastCpuCache[srvName] = cpuRaw;
+ if (cpuRaw > 0 && cpuRaw % 1 === 0) { cpuRaw += (Math.random() * 0.98 + 0.01); }
  let cpuFormatted = cpuRaw.toFixed(2); let ramMB = stats.memory / (1024 * 1024);
  let currentStatus = state.isStarting ? 'starting' : 'running';
  io.to(owner).emit('dashboard_stats', { serverName: srvName, cpu: cpuFormatted, ramMB: ramMB, isOnline: true, status: currentStatus });
- io.to('panel_' + srvName).emit('stats', { cpu: cpuFormatted, ramMB: ramMB, startTime: state.startTime, address: displayAddress, status: currentStatus, netIn: netInBytes, netOut: netOutBytes }); 
+ io.to('panel_' + srvName).emit('stats', { cpu: cpuFormatted, ramMB: ramMB, startTime: state.startTime, address: displayAddress, status: currentStatus, netIn: netInBytes, netOut: netOutBytes, cpuLimit: userCpuLimit }); 
  }
  });
  }
@@ -826,7 +833,7 @@ io.on('connection', (socket) => {
  }
  
  // Gantilah baris ini di dalam skrip vpsinfo kemarin:
-const cpuPercent = Math.round((1 - totalIdle / totalTick) * 100) * startCpu.length; // Ditambah dikali jumlah core
+const cpuPercent = Math.round((1 - totalIdle / totalTick) * 100) * startCpu.length;
 const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPercent >= (60 * startCpu.length) ? '\x1b[1;33m' : '\x1b[1;32m');
  // ----------------------------------------------------
 
