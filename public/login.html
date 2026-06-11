@@ -49,10 +49,44 @@
             <button id="btnLogin" type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-lg py-4 rounded-xl shadow-lg transition transform active:scale-95 duration-300">
                 🚀 MASUK SEKARANG
             </button>
-            <p class="text-center text-sm font-bold text-slate-400 mt-4 cursor-pointer hover:text-blue-400 transition" onclick="toggleForm('register')">
+            <p class="text-center text-sm font-bold text-slate-400 mt-2 cursor-pointer hover:text-orange-400 transition" onclick="toggleForm('reset')">
+                Lupa password? <span class="text-orange-500 underline">Reset disini</span>
+            </p>
+            <p class="text-center text-sm font-bold text-slate-400 mt-2 cursor-pointer hover:text-blue-400 transition" onclick="toggleForm('register')">
                 Belum punya akun? <span class="text-blue-500 underline">Daftar disini</span>
             </p>
         </form>
+
+        <div id="form-reset" class="space-y-5 fade-enter hidden scrollable-form">
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Username</label>
+                <input type="text" id="reset-username" placeholder="Username kamu" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition font-medium shadow-inner text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Email</label>
+                <input type="email" id="reset-email" placeholder="Email yang terdaftar" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition font-medium shadow-inner text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Password Baru</label>
+                <div class="relative flex items-center">
+                    <input type="password" id="reset-newpw" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-600 rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition font-medium shadow-inner text-white">
+                    <button type="button" onclick="togglePass('reset-newpw')" class="absolute right-4 text-slate-400 hover:text-orange-400 transition">
+                        <svg id="eye-reset-newpw" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        <svg id="slash-reset-newpw" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Konfirmasi Password</label>
+                <input type="password" id="reset-confirmpw" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition font-medium shadow-inner text-white">
+            </div>
+            <button id="btnReset" onclick="handleResetReq(event)" class="w-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-lg py-4 rounded-xl shadow-lg transition transform active:scale-95 duration-300 mt-2">
+                🔑 RESET PASSWORD
+            </button>
+            <p class="text-center text-sm font-bold text-slate-400 pt-2 cursor-pointer hover:text-blue-400 transition" onclick="toggleForm('login')">
+                Ingat password? <span class="text-blue-500 underline">Kembali Login</span>
+            </p>
+        </div>
 
         <form id="form-register" onsubmit="handleRegReq(event)" class="space-y-5 fade-enter hidden scrollable-form">
             <div>
@@ -116,14 +150,46 @@
         }
 
         function toggleForm(type) {
-            const forms = ['login', 'register'];
-            forms.forEach(f => document.getElementById(`form-${f}`).classList.add('hidden'));
-            document.getElementById(`form-${type}`).classList.remove('hidden');
-            document.getElementById('alert-box').classList.add('hidden'); 
+            ['login', 'register', 'reset'].forEach(f => {
+                const el = document.getElementById(`form-${f}`);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(`form-${type}`);
+            if (target) target.classList.remove('hidden');
+            document.getElementById('alert-box').classList.add('hidden');
 
             const subtitle = document.getElementById('form-subtitle');
             if(type === 'register') subtitle.innerText = "Buat akun baru untuk mengelola server.";
+            else if(type === 'reset') subtitle.innerText = "Reset password dengan username & email.";
             else subtitle.innerText = "Silakan masuk untuk melanjutkan.";
+        }
+
+        async function handleResetReq(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnReset');
+            const username = document.getElementById('reset-username').value.trim();
+            const email = document.getElementById('reset-email').value.trim();
+            const newPassword = document.getElementById('reset-newpw').value;
+            const confirmPw = document.getElementById('reset-confirmpw').value;
+            if (!username || !email || !newPassword) return showAlert('Semua kolom harus diisi!', 'error');
+            if (newPassword !== confirmPw) return showAlert('Konfirmasi password tidak sama!', 'error');
+            if (newPassword.length < 6) return showAlert('Password minimal 6 karakter!', 'error');
+            btn.innerText = '⏳ Memproses...'; btn.disabled = true;
+            try {
+                const res = await fetch('/api/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, newPassword })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    setTimeout(() => toggleForm('login'), 2000);
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch(err) { showAlert('Gagal terhubung.', 'error'); }
+            btn.innerText = '🔑 RESET PASSWORD'; btn.disabled = false;
         }
 
         function showAlert(msg, type) {
