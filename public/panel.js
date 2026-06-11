@@ -9,6 +9,8 @@ let isStoppingServer = false;
 
 let settingsCache = null;
 let currentServerRamMB = 2048;
+let currentServerCpuLimit = 100;
+let currentServerDiskLimitMB = 32768;
 
 let _reconnectBanner = null;
 let _wasEverConnected = false;
@@ -155,6 +157,9 @@ socket.on('stats', (data) => {
 
  if (currentlyOnline) {
  latestStats.cpu = parseFloat(data.cpu) || 0; latestStats.ram = parseFloat(data.ramMB) || 0;
+ if (data.cpuLimit) currentServerCpuLimit = parseFloat(data.cpuLimit);
+ if (data.ramLimit) currentServerRamMB = parseFloat(data.ramLimit);
+ if (data.diskLimit) currentServerDiskLimitMB = parseFloat(data.diskLimit);
  latestStats.netIn = parseFloat(data.netIn) || 0; latestStats.netOut = parseFloat(data.netOut) || 0;
  isServerOnline = true;
  } else {
@@ -201,14 +206,14 @@ setInterval(() => {
  diskData.shift(); diskData.push(currentDiskUsedMB); 
  
  // FIX FINAL: Paksa durasi 1000ms biar jalannya ngalir mulus tanpa henti 
- if(cpuChart) { cpuChart.options.scales.y.max = getCleanMax(cpuData, 100, 50); cpuChart.update({duration: 1000, easing: 'linear'}); }
+ if(cpuChart) { cpuChart.options.scales.y.max = getCleanMax(cpuData, currentServerCpuLimit, 50); cpuChart.update({duration: 1000, easing: 'linear'}); }
  if(ramChart) {
  let maxRamInChart = Math.max(...ramData);
  if (maxRamInChart > currentServerRamMB) { ramChart.options.scales.y.max = Math.ceil(maxRamInChart + 100); } 
  else { ramChart.options.scales.y.max = currentServerRamMB; }
  ramChart.update({duration: 1000, easing: 'linear'});
  }
- if(diskChart) { diskChart.options.scales.y.max = getCleanMax(diskData, 500, 500); diskChart.update({duration: 1000, easing: 'linear'}); }
+ if(diskChart) { diskChart.options.scales.y.max = getCleanMax(diskData, currentServerDiskLimitMB, 500); diskChart.update({duration: 1000, easing: 'linear'}); }
 }, 1000);
 
 async function fetchVersions() { 
