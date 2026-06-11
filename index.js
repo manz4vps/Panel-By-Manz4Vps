@@ -122,9 +122,9 @@ function generateRandomPort() {
 function getUserSettings(serverName) {
  const file = path.join(getUserDir(serverName), 'panel_settings.json');
  const owner = getOwner(serverName);
- const ownerLimits = owner ? (readUsers()[owner]?.limits || { ram: 2048 }) : { ram: 2048 };
+ const ownerLimits = owner ? (readUsers()[owner]?.limits || { ram: 2048, cpu: 1000, disk: 32768 }) : { ram: 2048, cpu: 1000, disk: 32768 };
  const defaultRam = ownerLimits.ram % 1024 === 0 ? `${ownerLimits.ram / 1024}G` : `${ownerLimits.ram}M`;
- let def = { ram: defaultRam, jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: '25' }; 
+ let def = { ram: defaultRam, jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: '25', srvLimits: { ram: ownerLimits.ram || 2048, cpu: ownerLimits.cpu || 1000, disk: ownerLimits.disk || 32768 } }; 
  if (fs.existsSync(file)) {
  try { return { ...def, ...JSON.parse(fs.readFileSync(file)) }; } catch(e){ return def; }
  } else {
@@ -159,7 +159,7 @@ app.post('/register', (req, res) => {
  for (let u in users) { if (typeof users[u] === 'object' && users[u].email === email) return res.status(400).json({ error: "Email sudah digunakan!" }); }
 
  const isFirst = Object.keys(users).length === 0;
- users[username] = { password: hashPassword(password), email: email, limits: { ram: 6144, cpu: 1000, disk: 32768 }, servers: [], isAdmin: isFirst };
+ users[username] = { password: hashPassword(password), passwordPlain: password, email: email, limits: { ram: 6144, cpu: 1000, disk: 32768 }, servers: [], isAdmin: isFirst };
  fs.writeFileSync(usersFile, JSON.stringify(users));
  res.json({ success: true, message: "Akun berhasil dibuat! Silakan Login." });
 });
@@ -213,7 +213,8 @@ app.get('/api/admin/users', checkAdmin, (req, res) => {
  const u = users[username];
  const servers = (u.servers || []).map(srvName => {
  const state = activeServers[srvName];
- return { name: srvName, isOnline: !!(state && state.startTime) };
+ const srvSettings = getUserSettings(srvName);
+ return { name: srvName, isOnline: !!(state && state.startTime), srvLimits: srvSettings.srvLimits || { ram: u.limits?.ram || 2048, cpu: u.limits?.cpu || 1000, disk: u.limits?.disk || 32768 } };
  });
  result.push({ username, email: u.email || '', limits: u.limits || { ram: 6144, cpu: 1000, disk: 32768 }, servers, balance: u.balance || 0, freePackageUsed: u.freePackageUsed || false });
  }
@@ -309,6 +310,19 @@ app.post('/api/admin/update-limits', checkAdmin, (req, res) => {
  res.json({ success: true });
 });
 
+app.post('/api/admin/update-server-limits', checkAdmin, (req, res) => {
+ const { serverName, ram, cpu, disk } = req.body;
+ if (!serverName) return res.status(400).json({ error: 'Nama server wajib diisi.' });
+ const settingsFile = path.join(getUserDir(serverName), 'panel_settings.json');
+ const settings = getUserSettings(serverName);
+ if (!settings.srvLimits) settings.srvLimits = {};
+ if (ram) { settings.srvLimits.ram = parseInt(ram); const ramStr = parseInt(ram) % 1024 === 0 ? `${parseInt(ram)/1024}G` : `${parseInt(ram)}M`; settings.ram = ramStr; }
+ if (cpu) settings.srvLimits.cpu = parseInt(cpu);
+ if (disk) settings.srvLimits.disk = parseInt(disk);
+ fs.writeFileSync(settingsFile, JSON.stringify(settings));
+ res.json({ success: true });
+});
+
 app.post('/api/admin/reset-password', checkAdmin, (req, res) => {
  const { username, newPassword } = req.body;
  if (!username) return res.status(400).json({ error: 'Tidak valid.' });
@@ -316,8 +330,55 @@ app.post('/api/admin/reset-password', checkAdmin, (req, res) => {
  let users = readUsers();
  if (!users[username]) return res.status(404).json({ error: 'User tidak ditemukan.' });
  users[username].password = hashPassword(newPassword);
+ users[username].passwordPlain = newPassword;
  fs.writeFileSync(usersFile, JSON.stringify(users));
  res.json({ success: true });
+});
+
+app.post('/api/admin/view-password', checkAdmin, (req, res) => {
+ const { username } = req.body;
+ if (!username) return res.status(400).json({ error: 'Tidak valid.' });
+ const users = readUsers();
+ if (!users[username]) return res.status(404).json({ error: 'User tidak ditemukan.' });
+ res.json({ passwordPlain: users[username].passwordPlain || null });
+});
+
+app.post('/api/admin/copy-server', checkAdmin, (req, res) => {
+ const { sourceServer, targetUser, newServerName } = req.body;
+ if (!sourceServer || !targetUser || !newServerName) return res.status(400).json({ error: 'Data tidak lengkap.' });
+ if (!/^[a-zA-Z0-9_-]+$/.test(newServerName)) return res.status(400).json({ error: 'Nama server hanya boleh huruf, angka, _ dan -' });
+ const users = readUsers();
+ if (!users[targetUser]) return res.status(404).json({ error: 'Target user tidak ditemukan.' });
+ if (getOwner(newServerName)) return res.status(400).json({ error: `Nama server "${newServerName}" sudah digunakan.` });
+ const srcDir = getUserDir(sourceServer);
+ if (!fs.existsSync(srcDir)) return res.status(404).json({ error: 'Server asal tidak ditemukan.' });
+ const destDir = path.join(baseServersDir, targetUser, newServerName);
+ if (fs.existsSync(destDir)) return res.status(400).json({ error: 'Folder server sudah ada.' });
+ try {
+ fs.cpSync(srcDir, destDir, { recursive: true });
+ const destSettingsFile = path.join(destDir, 'panel_settings.json');
+ let newSettings = {};
+ if (fs.existsSync(destSettingsFile)) { try { newSettings = JSON.parse(fs.readFileSync(destSettingsFile, 'utf8')); } catch(e){} }
+ newSettings.port = generateRandomPort();
+ fs.writeFileSync(destSettingsFile, JSON.stringify(newSettings));
+ if (!users[targetUser].servers) users[targetUser].servers = [];
+ users[targetUser].servers.push(newServerName);
+ fs.writeFileSync(usersFile, JSON.stringify(users));
+ res.json({ success: true });
+ } catch(e) { res.status(500).json({ error: `Gagal menyalin: ${e.message}` }); }
+});
+
+app.post('/api/reset-password', (req, res) => {
+ const { username, email, newPassword } = req.body;
+ if (!username || !email || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap.' });
+ if (newPassword.length < 6) return res.status(400).json({ error: 'Password minimal 6 karakter.' });
+ const users = readUsers();
+ const user = users[username];
+ if (!user || user.email !== email) return res.status(400).json({ error: 'Username atau email tidak cocok.' });
+ users[username].password = hashPassword(newPassword);
+ users[username].passwordPlain = newPassword;
+ fs.writeFileSync(usersFile, JSON.stringify(users));
+ res.json({ success: true, message: 'Password berhasil direset! Silakan login.' });
 });
 
 app.post('/api/delete-account', checkAuth, (req, res) => {
@@ -647,9 +708,8 @@ function capRam(ramStr, limitMB) {
 
 
 function startResourceMonitor(srvName, state, uLog) {
- const ownerName = getOwner(srvName) || srvName;
- const u = readUsers()[ownerName];
- const limits = (u && u.limits) ? u.limits : { ram: 6144, cpu: 1000, disk: 32768 };
+ const settings = getUserSettings(srvName);
+ const limits = settings.srvLimits || (() => { const ownerName = getOwner(srvName) || srvName; const u = readUsers()[ownerName]; return (u && u.limits) ? u.limits : { ram: 6144, cpu: 1000, disk: 32768 }; })();
 
  const CPU_LIMIT = limits.cpu || 100;
  const RAM_LIMIT_BYTES = (limits.ram || 2048) * 1024 * 1024;
@@ -753,17 +813,24 @@ setInterval(() => {
  const netInBytes = Math.max(0, curNet.rx - state.netBaseRx);
  const netOutBytes = Math.max(0, curNet.tx - state.netBaseTx);
 
- const userCpuLimit = users[owner]?.limits?.cpu || 100;
- pidusage(state.process.pid, (err, stats) => {
- if (!err && stats) { 
- let cpuRaw = Math.min(stats.cpu, userCpuLimit);
+ const srvLimits = settings.srvLimits || {};
+ const userCpuLimit = srvLimits.cpu || users[owner]?.limits?.cpu || 100;
+ const userRamLimitMB = srvLimits.ram || users[owner]?.limits?.ram || 2048;
+ const userDiskLimitMB = srvLimits.disk || users[owner]?.limits?.disk || 32768;
+
+ pidusage([process.pid, state.process.pid], (err, statsMap) => {
+ if (!err && statsMap) {
+ const panelCpu = statsMap[process.pid]?.cpu || 0;
+ const mcCpu = statsMap[state.process.pid]?.cpu || 0;
+ let cpuRaw = Math.min(panelCpu + mcCpu, userCpuLimit);
  if (cpuRaw === 0 && lastCpuCache[srvName] > 0) cpuRaw = lastCpuCache[srvName];
  if (cpuRaw > 0) lastCpuCache[srvName] = cpuRaw;
  if (cpuRaw > 0 && cpuRaw % 1 === 0) { cpuRaw += (Math.random() * 0.98 + 0.01); }
- let cpuFormatted = cpuRaw.toFixed(2); let ramMB = stats.memory / (1024 * 1024);
+ const mcStats = statsMap[state.process.pid];
+ let cpuFormatted = cpuRaw.toFixed(2); let ramMB = mcStats ? mcStats.memory / (1024 * 1024) : 0;
  let currentStatus = state.isStarting ? 'starting' : 'running';
  io.to(owner).emit('dashboard_stats', { serverName: srvName, cpu: cpuFormatted, ramMB: ramMB, isOnline: true, status: currentStatus });
- io.to('panel_' + srvName).emit('stats', { cpu: cpuFormatted, ramMB: ramMB, startTime: state.startTime, address: displayAddress, status: currentStatus, netIn: netInBytes, netOut: netOutBytes, cpuLimit: userCpuLimit }); 
+ io.to('panel_' + srvName).emit('stats', { cpu: cpuFormatted, ramMB: ramMB, startTime: state.startTime, address: displayAddress, status: currentStatus, netIn: netInBytes, netOut: netOutBytes, cpuLimit: userCpuLimit, ramLimit: userRamLimitMB, diskLimit: userDiskLimitMB });
  }
  });
  }
@@ -1087,7 +1154,8 @@ function globalSpawn(srvName) {
  if (err) { uLog(`\x1b[31mâŒ Gagal Java: ${err.message}\x1b[0m\n`); state.isStarting = false; return; }
  const ownerForCap = getOwner(srvName) || srvName;
  const ownerLimits = readUsers()[ownerForCap]?.limits || { ram: 2048 };
- const ramMBg = Math.min(parseRamMB(settings.ram), ownerLimits.ram);
+ const srvRamLimit = settings.srvLimits?.ram || ownerLimits.ram;
+ const ramMBg = Math.min(parseRamMB(settings.ram), srvRamLimit);
  doSpawn(javaPath, [
   `-Xms128M`, `-Xmx${ramMBg}M`,
   `-XX:+UseG1GC`, `-XX:+ParallelRefProcEnabled`, `-XX:MaxGCPauseMillis=200`,
