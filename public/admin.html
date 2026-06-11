@@ -71,7 +71,8 @@
  <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
  <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition"></button>
  <h3 class="text-xl font-black text-white mb-1"> Edit Limit</h3>
- <p class="text-sm text-slate-400 mb-5">User: <span id="modal-username" class="font-bold text-white"></span></p>
+ <p class="text-sm text-slate-400 mb-1" id="modal-label-user">User: <span id="modal-username" class="font-bold text-white"></span></p>
+ <p class="text-sm text-slate-400 mb-4 hidden" id="modal-label-server">Server: <span id="modal-servername" class="font-bold text-sky-400"></span></p>
  <div class="space-y-4">
  <div>
  <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">RAM (GB) — contoh: 2G, 6G</label>
@@ -132,12 +133,53 @@
  </div>
  </div>
 
+ <div id="modal-view-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+ <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
+ <button onclick="document.getElementById('modal-view-password').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✕</button>
+ <h3 class="text-xl font-black text-white mb-1">🔑 Password User</h3>
+ <p class="text-sm text-slate-400 mb-5">User: <span id="view-pw-username" class="font-bold text-white"></span></p>
+ <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+ <p class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Password</p>
+ <div class="flex items-center gap-2">
+ <input type="password" id="view-pw-value" readonly class="flex-1 bg-transparent text-white font-mono text-base outline-none min-w-0">
+ <button type="button" onclick="toggleViewPw()" class="text-slate-400 hover:text-white transition text-xl flex-shrink-0">👁</button>
+ <button onclick="navigator.clipboard.writeText(document.getElementById('view-pw-value').value).then(()=>showToast('Password dicopy!','success'))" class="text-slate-400 hover:text-white transition text-xs font-bold px-2 py-1 bg-slate-700 rounded flex-shrink-0">Copy</button>
+ </div>
+ </div>
+ <p id="view-pw-note" class="hidden text-xs text-yellow-400 mt-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2"></p>
+ </div>
+ </div>
+
+ <div id="modal-copy-server" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+ <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
+ <button onclick="document.getElementById('modal-copy-server').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✕</button>
+ <h3 class="text-xl font-black text-white mb-1">📋 Copy / Pindah Server</h3>
+ <p class="text-sm text-slate-400 mb-5">Server asal: <span id="copy-srv-source" class="font-bold text-purple-400"></span></p>
+ <div class="space-y-4">
+ <div>
+ <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Target User</label>
+ <select id="copy-target-user" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-purple-500 transition text-sm"></select>
+ </div>
+ <div>
+ <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Nama Server Baru</label>
+ <input type="text" id="copy-new-name" placeholder="Contoh: ServerBaru" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-purple-500 transition font-mono text-sm">
+ <p class="text-xs text-slate-500 mt-1">Port baru akan dibuat otomatis. Isi folder (world, plugins, dll) ikut tercopy.</p>
+ </div>
+ </div>
+ <div class="flex gap-3 mt-6">
+ <button onclick="document.getElementById('modal-copy-server').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+ <button onclick="executeCopyServer()" class="w-1/2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-purple-500/20">📋 Copy Server</button>
+ </div>
+ </div>
+ </div>
+
  <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-1.5 w-72 flex flex-col gap-1.5"></div>
 
  <script>
  let allUsers = [];
  let pendingDeleteUser = null;
  let editingUser = null;
+ let editingServer = null;
 
  function showToast(message, type = 'success') {
  const container = document.getElementById('toast-container');
@@ -201,14 +243,20 @@
 
  const serversHtml = user.servers.length === 0
  ? `<p class="text-slate-500 text-xs italic">Tidak ada server</p>`
- : user.servers.map(srv => `
+ : user.servers.map(srv => {
+ const sl = srv.srvLimits || { ram: user.limits.ram, cpu: user.limits.cpu, disk: user.limits.disk };
+ const srvRamGB = (sl.ram / 1024).toFixed(1);
+ return `
  <div class="flex items-center justify-between bg-slate-900/60 rounded-lg px-3 py-2 border border-slate-700/40">
- <div class="flex items-center gap-2">
+ <div class="flex items-center gap-2 flex-wrap">
  <span class="w-2 h-2 rounded-full flex-shrink-0 ${srv.isOnline ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]' : 'bg-slate-600'}"></span>
  <span class="text-sm font-mono font-bold text-slate-200">${srv.name}</span>
  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${srv.isOnline ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-500'}">${srv.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+ <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50"> ${srvRamGB}G | CPU ${sl.cpu}% | Disk ${(sl.disk/1024).toFixed(0)}G</span>
  </div>
- <div class="flex gap-1.5">
+ <div class="flex gap-1.5 flex-wrap justify-end">
+ <button onclick="openServerLimits('${srv.name}', ${sl.ram}, ${sl.cpu}, ${sl.disk}, '${user.username}')" class="text-[11px] font-bold bg-sky-500/10 text-sky-400 hover:bg-sky-500 hover:text-white px-2 py-1 rounded transition active:scale-95"> Limit</button>
+ <button onclick="openCopyServer('${srv.name}')" class="text-[11px] font-bold bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white px-2 py-1 rounded transition active:scale-95">📋 Copy</button>
  ${srv.isOnline ? `
  <button onclick="restartServer('${srv.name}')" class="text-[11px] font-bold bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Restart</button>
  <button onclick="stopServer('${srv.name}', false)" class="text-[11px] font-bold bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Stop</button>
@@ -217,10 +265,8 @@
  <button onclick="startServer('${srv.name}')" class="text-[11px] font-bold bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Start</button>
  `}
  </div>
- </div>`).join('');
-
- const ramGB = (user.limits.ram / 1024).toFixed(1);
- const diskGB = (user.limits.disk / 1024).toFixed(1);
+ </div>`;
+ }).join('');
 
  const card = document.createElement('div');
  card.className = 'user-card bg-panel border border-slate-700/50 rounded-xl p-5 shadow-lg fade-in';
@@ -236,13 +282,7 @@
  </div>
  </div>
  <div class="flex flex-wrap gap-2 sm:items-start">
- <div class="flex flex-wrap gap-2 text-[11px] font-bold">
- <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700"> RAM ${ramGB} GB</span>
- <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700"> CPU ${user.limits.cpu}%</span>
- <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700"> Disk ${diskGB} GB</span>
-
- </div>
- <button onclick="openLimits('${user.username}', ${user.limits.ram}, ${user.limits.cpu}, ${user.limits.disk})" class="text-[12px] font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 transition active:scale-95"> Edit Limit</button>
+ <button onclick="viewPassword('${user.username}')" class="text-[12px] font-bold bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded-lg border border-green-500/20 transition active:scale-95">🔑 Lihat Password</button>
  <button onclick="openResetPassword('${user.username}')" class="text-[12px] font-bold bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-3 py-1.5 rounded-lg border border-yellow-500/20 transition active:scale-95"> Reset Password</button>
  <button onclick="confirmDeleteUser('${user.username}')" class="text-[12px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg border border-red-500/20 transition active:scale-95"> Hapus User</button>
  </div>
@@ -330,7 +370,23 @@
 
  function openLimits(username, ram, cpu, disk) {
  editingUser = username;
+ editingServer = null;
  document.getElementById('modal-username').textContent = username;
+ document.getElementById('modal-label-user').classList.remove('hidden');
+ document.getElementById('modal-label-server').classList.add('hidden');
+ document.getElementById('input-ram').value = mbToG(ram);
+ document.getElementById('input-cpu').value = cpu;
+ document.getElementById('input-disk').value = mbToG(disk);
+ document.getElementById('modal-limits').classList.remove('hidden');
+ }
+
+ function openServerLimits(serverName, ram, cpu, disk, username) {
+ editingServer = serverName;
+ editingUser = null;
+ document.getElementById('modal-servername').textContent = serverName;
+ document.getElementById('modal-username').textContent = username;
+ document.getElementById('modal-label-user').classList.remove('hidden');
+ document.getElementById('modal-label-server').classList.remove('hidden');
  document.getElementById('input-ram').value = mbToG(ram);
  document.getElementById('input-cpu').value = cpu;
  document.getElementById('input-disk').value = mbToG(disk);
@@ -340,10 +396,10 @@
  function closeModal() {
  document.getElementById('modal-limits').classList.add('hidden');
  editingUser = null;
+ editingServer = null;
  }
 
  async function saveLimits() {
- if (!editingUser) return;
  const ramRaw = document.getElementById('input-ram').value;
  const cpu = document.getElementById('input-cpu').value;
  const diskRaw = document.getElementById('input-disk').value;
@@ -351,6 +407,19 @@
  const disk = gToMb(diskRaw);
  if (!ram || ram < 128) return showToast('RAM minimal 128M / 0.125G', 'error');
  if (!disk || disk < 512) return showToast('Disk minimal 512M / 0.5G', 'error');
+
+ if (editingServer) {
+ try {
+ const res = await fetch('/api/admin/update-server-limits', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ serverName: editingServer, ram, cpu, disk })
+ });
+ const data = await res.json();
+ if (res.ok) { showToast(`Limit server "${editingServer}" disimpan!`); closeModal(); loadData(); }
+ else showToast(data.error || 'Gagal menyimpan', 'error');
+ } catch(e) { showToast('Error jaringan', 'error'); }
+ } else if (editingUser) {
  try {
  const res = await fetch('/api/admin/update-limits', {
  method: 'POST',
@@ -358,9 +427,10 @@
  body: JSON.stringify({ username: editingUser, ram, cpu, disk })
  });
  const data = await res.json();
- if (res.ok) { showToast('Limit berhasil disimpan!'); closeModal(); loadData(); }
+ if (res.ok) { showToast('Limit user berhasil disimpan!'); closeModal(); loadData(); }
  else showToast(data.error || 'Gagal menyimpan', 'error');
  } catch(e) { showToast('Error jaringan', 'error'); }
+ }
  }
 
  let resetingUser = null;
@@ -430,6 +500,70 @@
  document.getElementById('input-confirm-password').addEventListener('keydown', (e) => {
  if (e.key === 'Enter') executeResetPassword();
  });
+
+ async function viewPassword(username) {
+ try {
+ const res = await fetch('/api/admin/view-password', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ username })
+ });
+ const data = await res.json();
+ document.getElementById('view-pw-username').textContent = username;
+ const pwField = document.getElementById('view-pw-value');
+ const noteEl = document.getElementById('view-pw-note');
+ pwField.type = 'password';
+ if (data.passwordPlain) {
+ pwField.value = data.passwordPlain;
+ noteEl.classList.add('hidden');
+ } else {
+ pwField.value = '';
+ noteEl.textContent = '⚠️ Password belum tersimpan. Gunakan Reset Password dulu untuk mendapatkan password baru yang bisa dilihat.';
+ noteEl.classList.remove('hidden');
+ }
+ document.getElementById('modal-view-password').classList.remove('hidden');
+ } catch(e) { showToast('Gagal mengambil password', 'error'); }
+ }
+
+ function toggleViewPw() {
+ const inp = document.getElementById('view-pw-value');
+ inp.type = inp.type === 'password' ? 'text' : 'password';
+ }
+
+ let copyingServer = null;
+
+ function openCopyServer(serverName) {
+ copyingServer = serverName;
+ document.getElementById('copy-srv-source').textContent = serverName;
+ const sel = document.getElementById('copy-target-user');
+ sel.innerHTML = allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+ document.getElementById('copy-new-name').value = serverName + '_copy';
+ document.getElementById('modal-copy-server').classList.remove('hidden');
+ }
+
+ async function executeCopyServer() {
+ if (!copyingServer) return;
+ const targetUser = document.getElementById('copy-target-user').value;
+ const newServerName = document.getElementById('copy-new-name').value.trim();
+ if (!newServerName) return showToast('Nama server baru wajib diisi', 'error');
+ try {
+ const btn = document.querySelector('#modal-copy-server button[onclick="executeCopyServer()"]');
+ if (btn) { btn.textContent = '⏳ Menyalin...'; btn.disabled = true; }
+ const res = await fetch('/api/admin/copy-server', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ sourceServer: copyingServer, targetUser, newServerName })
+ });
+ const data = await res.json();
+ if (btn) { btn.textContent = '📋 Copy Server'; btn.disabled = false; }
+ if (res.ok) {
+ showToast(`Server "${copyingServer}" berhasil dicopy ke ${targetUser} sebagai "${newServerName}"!`);
+ document.getElementById('modal-copy-server').classList.add('hidden');
+ copyingServer = null;
+ loadData();
+ } else showToast(data.error || 'Gagal menyalin server', 'error');
+ } catch(e) { showToast('Error jaringan', 'error'); }
+ }
 
  loadData();
  setInterval(loadData, 10000);
