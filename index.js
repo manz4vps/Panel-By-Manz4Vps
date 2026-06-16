@@ -38,27 +38,47 @@ function getRequiredJavaVersion(mcVersion) {
  return 21;
 }
 
+function fetchJsonHttps(url) {
+ return new Promise((resolve, reject) => {
+  https.get(url, { headers: { 'User-Agent': 'Manz4VPS-Panel/1.0' } }, (res) => {
+   let data = '';
+   res.on('data', chunk => data += chunk);
+   res.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { reject(e); } });
+  }).on('error', reject);
+ });
+}
+
+async function getZuluDownloadUrl(version) {
+ const arch = os.arch().includes('arm') ? 'aarch64' : 'x86_64';
+ const isAlpine = fs.existsSync('/etc/alpine-release');
+ const zuluOs = isAlpine ? 'linux_musl' : 'linux';
+ for (const status of ['ga', 'ea']) {
+  try {
+   const url = `https://api.azul.com/metadata/v1/zulu/packages/?java_version=${version}&os=${zuluOs}&arch=${arch}&archive_type=tar.gz&java_package_type=jdk&release_status=${status}&page=1&page_size=1`;
+   const data = await fetchJsonHttps(url);
+   if (data && data.length > 0 && data[0].download_url) return data[0].download_url;
+  } catch(e) {}
+ }
+ throw new Error(`Tidak ada Zulu JDK ${version} tersedia`);
+}
+
 function ensureJava(version, logCallback, callback) {
  const javaDir = path.join(__dirname, `java-runtime-${version}`);
  const javaExe = path.join(javaDir, 'bin', 'java');
 
- // Kalo Javanya udah pernah didownload, langsung pake
  if (fs.existsSync(javaExe)) return callback(null, javaExe);
 
- logCallback(`\x1b[33mâ³ Mendownload & Instalasi OpenJDK ${version}... (Hanya sekali)\x1b[0m\n`);
- 
- const arch = os.arch().includes('arm') ? 'aarch64' : 'x64';
- const isAlpine = fs.existsSync('/etc/alpine-release');
- const osType = isAlpine ? 'alpine-linux' : 'linux';
- 
- // API Pintar Adoptium
- const apiUrl = `https://api.adoptium.net/v3/binary/latest/${version}/ga/${osType}/${arch}/jdk/hotspot/normal/eclipse`;
- const tmpDir = path.join(__dirname, `tmp-java-${version}`);
+ logCallback(`\x1b[33m⏳ Mendownload & Instalasi Zulu JDK ${version}... (Hanya sekali)\x1b[0m\n`);
 
- exec(`rm -rf "${tmpDir}" && mkdir -p "${tmpDir}" && curl -L -# -o "${tmpDir}/java.tar.gz" "${apiUrl}" && tar -xzf "${tmpDir}/java.tar.gz" -C "${tmpDir}" && rm -rf "${javaDir}" && mv "${tmpDir}"/jdk* "${javaDir}" && rm -rf "${tmpDir}"`, (err, stdout, stderr) => {
- if (err) return callback(err, null);
- callback(null, javaExe);
- });
+ getZuluDownloadUrl(version)
+  .then(apiUrl => {
+   const tmpDir = path.join(__dirname, `tmp-java-${version}`);
+   exec(`rm -rf "${tmpDir}" "${javaDir}" && mkdir -p "${tmpDir}" "${javaDir}" && curl -L -# -o "${tmpDir}/java.tar.gz" "${apiUrl}" && tar -xzf "${tmpDir}/java.tar.gz" -C "${javaDir}" --strip-components=1 && rm -rf "${tmpDir}"`, (err) => {
+    if (err) return callback(err, null);
+    callback(null, javaExe);
+   });
+  })
+  .catch(err => callback(err, null));
 }
 // ===========================================================
 
@@ -124,7 +144,7 @@ function getUserSettings(serverName) {
  const owner = getOwner(serverName);
  const ownerLimits = owner ? (readUsers()[owner]?.limits || { ram: 2048, cpu: 1000, disk: 32768 }) : { ram: 2048, cpu: 1000, disk: 32768 };
  const defaultRam = ownerLimits.ram % 1024 === 0 ? `${ownerLimits.ram / 1024}G` : `${ownerLimits.ram}M`;
- let def = { ram: defaultRam, jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: '25', srvLimits: { ram: ownerLimits.ram || 2048, cpu: ownerLimits.cpu || 1000, disk: ownerLimits.disk || 32768 } }; 
+ let def = { ram: defaultRam, jarFile: 'server.jar', ip: '127.0.0.1', port: '25565', engine: 'java', installedVersion: '', autoStart: true, javaVersion: '25', useCustomStartup: false, customStartupCmd: '', srvLimits: { ram: ownerLimits.ram || 2048, cpu: ownerLimits.cpu || 1000, disk: ownerLimits.disk || 32768 } }; 
  if (fs.existsSync(file)) {
  try { return { ...def, ...JSON.parse(fs.readFileSync(file)) }; } catch(e){ return def; }
  } else {
@@ -454,7 +474,7 @@ app.get('/api/whoami', checkAuth, (req, res) => { const users = readUsers(); con
 
 app.get('/api/settings', checkAuth, (req, res) => { res.json(getUserSettings(getServerName(req))); });
 
-app.post('/api/settings', checkAuth, (req, res) => { const srv = getServerName(req); const settings = getUserSettings(srv); if (req.body.ram) settings.ram = req.body.ram.trim(); if (req.body.jarFile) settings.jarFile = req.body.jarFile.trim(); if (req.body.ip !== undefined) settings.ip = req.body.ip.trim(); if (req.body.port) settings.port = String(req.body.port).trim(); if (req.body.engine) settings.engine = String(req.body.engine).trim(); if (req.body.autoStart !== undefined) settings.autoStart = Boolean(req.body.autoStart); if (req.body.javaVersion !== undefined) settings.javaVersion = String(req.body.javaVersion).trim(); fs.writeFileSync(path.join(getUserDir(srv), 'panel_settings.json'), JSON.stringify(settings)); res.send('Pengaturan disimpan'); });
+app.post('/api/settings', checkAuth, (req, res) => { const srv = getServerName(req); const settings = getUserSettings(srv); if (req.body.ram) settings.ram = req.body.ram.trim(); if (req.body.jarFile) settings.jarFile = req.body.jarFile.trim(); if (req.body.ip !== undefined) settings.ip = req.body.ip.trim(); if (req.body.port) settings.port = String(req.body.port).trim(); if (req.body.engine) settings.engine = String(req.body.engine).trim(); if (req.body.autoStart !== undefined) settings.autoStart = Boolean(req.body.autoStart); if (req.body.javaVersion !== undefined) settings.javaVersion = String(req.body.javaVersion).trim(); if (req.body.useCustomStartup !== undefined) settings.useCustomStartup = Boolean(req.body.useCustomStartup); if (req.body.customStartupCmd !== undefined) settings.customStartupCmd = String(req.body.customStartupCmd); fs.writeFileSync(path.join(getUserDir(srv), 'panel_settings.json'), JSON.stringify(settings)); res.send('Pengaturan disimpan'); });
 app.get('/api/dashboard-stats', checkAuth, (req, res) => { const srv = getServerName(req); const username = req.session.username; const users = readUsers(); const userLimits = users[username]?.limits || { ram: 2048, cpu: 100, disk: 51200 }; const mcDir = getUserDir(srv); const state = getUserState(srv); function getDirSizeSync(dirPath) { let size = 0; try { const files = fs.readdirSync(dirPath); files.forEach(file => { const fullPath = path.join(dirPath, file); const stats = fs.statSync(fullPath); if (stats.isDirectory()) size += getDirSizeSync(fullPath); else size += stats.size; }); } catch (e) {} return size; } let diskBytes = getDirSizeSync(mcDir); if (state.process) { pidusage(state.process.pid, (err, stats) => { if (!err && stats) { res.json({ name: srv, cpu: stats.cpu.toFixed(2), ramUsed: stats.memory, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } else { res.json({ name: srv, cpu: "0.00", ramUsed: 0, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } }); } else { res.json({ name: srv, cpu: "0.00", ramUsed: 0, ramTotal: userLimits.ram * 1024 * 1024, diskUsed: diskBytes, diskTotal: userLimits.disk * 1024 * 1024 }); } });
 function getRawDate(filePath) { try { if (!fs.existsSync(filePath)) return null; return fs.statSync(filePath).mtime.toISOString(); } catch (e) { return null; } }
 function formatBytes(bytes) { if (!+bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`; }
@@ -1119,10 +1139,10 @@ function globalSpawn(srvName) {
  const snap = readNetStats(); state.netBaseRx = snap.rx; state.netBaseTx = snap.tx;
  state.isStarting = true;
 
- const doSpawn = (cmd, args) => {
+ const doSpawn = (cmd, args, extraEnv = {}) => {
  uLog(`\x1b[38;2;234;179;8m\x1b[1mcontainer@manz4vps~\x1b[0m ${cmd} ${args.join(' ')}\n`);
  try {
- state.process = spawn(cmd, args, { cwd: mcDir, env: { ...process.env, TZ: 'Asia/Jakarta' } });
+ state.process = spawn(cmd, args, { cwd: mcDir, env: { ...process.env, TZ: 'Asia/Jakarta', ...extraEnv } });
  state.startTime = Date.now();
  startResourceMonitor(srvName, state, uLog);
  state.process.stdout.on('data', d => { const o = d.toString(); uLog(o); if (o.includes('Done (') || /bot is online|ready|listening on port/i.test(o)) state.isStarting = false; });
@@ -1156,6 +1176,12 @@ function globalSpawn(srvName) {
  const ownerLimits = readUsers()[ownerForCap]?.limits || { ram: 2048 };
  const srvRamLimit = settings.srvLimits?.ram || ownerLimits.ram;
  const ramMBg = Math.min(parseRamMB(settings.ram), srvRamLimit);
+ if (settings.useCustomStartup && settings.customStartupCmd && settings.customStartupCmd.trim()) {
+  const javaBinDir = path.dirname(javaPath);
+  uLog(`\x1b[1;35m[Manz4VPS Daemon]:\x1b[0m Menggunakan Custom Startup Command.\n`);
+  doSpawn('sh', ['-c', settings.customStartupCmd.trim()], { PATH: javaBinDir + ':' + (process.env.PATH || '') });
+  return;
+ }
  doSpawn(javaPath, [
   `-Xms128M`, `-Xmx${ramMBg}M`,
   `-XX:+UseG1GC`, `-XX:+ParallelRefProcEnabled`, `-XX:MaxGCPauseMillis=200`,
