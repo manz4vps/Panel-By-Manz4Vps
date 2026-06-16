@@ -194,6 +194,7 @@ setInterval(() => {
  if(ramText) ramText.innerHTML = `<span class="text-slate-400">Offline</span>`;
  if(netInText) netInText.innerHTML = `<span class="text-slate-400">Offline</span>`;
  if(netOutText) netOutText.innerHTML = `<span class="text-slate-400">Offline</span>`;
+ if (socket.disconnected) { _getOrCreateReconnectBanner().style.display = 'flex'; }
  } else {
  if(cpuText) cpuText.innerHTML = `${latestStats.cpu.toFixed(2)}%`; 
  if(ramText) ramText.innerHTML = `${formatMB(latestStats.ram)}`;
@@ -302,6 +303,7 @@ async function loadSettings(forceRefresh = false) {
  document.getElementById('set-java-version').value = jv;
  }
  setAutoStartUI(data.autoStart === true);
+ updateCustomStartupUI(data.useCustomStartup || false, data.customStartupCmd || '');
  updateCommandPreview(); 
  } catch(e) {} finally { if (window.finishProgress) window.finishProgress(); }
 }
@@ -330,12 +332,61 @@ async function saveSettings() {
  if (window.startProgress) window.startProgress();
  try { 
  const ramInput = document.getElementById('set-ram') ? document.getElementById('set-ram').value : (settingsCache ? settingsCache.ram : '2G'); const newEngine = document.getElementById('set-engine') ? document.getElementById('set-engine').value : (settingsCache ? settingsCache.engine : 'java'); const newJar = document.getElementById('set-jar') ? document.getElementById('set-jar').value : (settingsCache ? settingsCache.jarFile : 'server.jar'); const newIp = document.getElementById('set-ip') ? document.getElementById('set-ip').value : (settingsCache ? settingsCache.ip : ''); const newPort = document.getElementById('set-port') ? document.getElementById('set-port').value : (settingsCache ? settingsCache.port : '25565'); const newJavaVer = document.getElementById('set-java-version') ? document.getElementById('set-java-version').value : (settingsCache ? (settingsCache.javaVersion || '25') : '25');
- await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, autoStart: _autoStartValue, javaVersion: newJavaVer }) }); 
- settingsCache = { engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, autoStart: _autoStartValue, javaVersion: newJavaVer, installedVersion: settingsCache ? settingsCache.installedVersion : '' };
+ const useCustom = settingsCache ? (settingsCache.useCustomStartup || false) : false;
+ const customCmd = settingsCache ? (settingsCache.customStartupCmd || '') : '';
+ await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, autoStart: _autoStartValue, javaVersion: newJavaVer, useCustomStartup: useCustom, customStartupCmd: customCmd }) }); 
+ settingsCache = { engine: newEngine, ram: ramInput, jarFile: newJar, ip: newIp, port: newPort, autoStart: _autoStartValue, javaVersion: newJavaVer, useCustomStartup: useCustom, customStartupCmd: customCmd, installedVersion: settingsCache ? settingsCache.installedVersion : '' };
  currentServerRamMB = parseRamToMB(ramInput);
  if (ramChart) { let maxRamInChart = Math.max(...ramData); if (maxRamInChart > currentServerRamMB) { ramChart.options.scales.y.max = Math.ceil(maxRamInChart + 100); } else { ramChart.options.scales.y.max = currentServerRamMB; } ramChart.update({duration: 1000, easing: 'linear'}); }
  showToast('Tersimpan!'); updateCommandPreview(); 
  } catch(e) {} finally { if (window.finishProgress) window.finishProgress(); }
+}
+
+let _useCustomStartup = false;
+
+function autoResizeStartupInput(el) {
+ el.style.height = 'auto';
+ el.style.height = Math.max(80, el.scrollHeight) + 'px';
+}
+
+function updateCustomStartupUI(enabled, cmd) {
+ _useCustomStartup = enabled;
+ const badge = document.getElementById('custom-startup-badge');
+ const input = document.getElementById('custom-startup-input');
+ if (badge) badge.classList.toggle('hidden', !enabled);
+ if (input) {
+  input.value = cmd || '';
+  setTimeout(() => autoResizeStartupInput(input), 50);
+ }
+}
+
+async function saveCustomStartup() {
+ const input = document.getElementById('custom-startup-input');
+ const newCmd = input ? input.value.trim() : '';
+ const useCustom = newCmd.length > 0;
+ if (window.startProgress) window.startProgress();
+ try {
+  await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ useCustomStartup: useCustom, customStartupCmd: newCmd }) });
+  if (settingsCache) { settingsCache.useCustomStartup = useCustom; settingsCache.customStartupCmd = newCmd; }
+  const badge = document.getElementById('custom-startup-badge');
+  if (badge) badge.classList.toggle('hidden', !useCustom);
+  _useCustomStartup = useCustom;
+  showToast(useCustom ? 'Custom startup disimpan!' : 'Kembali ke command default!', 'success');
+ } catch(e) { showToast('Gagal menyimpan.', 'error'); } finally { if (window.finishProgress) window.finishProgress(); }
+}
+
+async function resetCustomStartup() {
+ if (window.startProgress) window.startProgress();
+ try {
+  await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ useCustomStartup: false, customStartupCmd: '' }) });
+  if (settingsCache) { settingsCache.useCustomStartup = false; settingsCache.customStartupCmd = ''; }
+  const input = document.getElementById('custom-startup-input');
+  if (input) { input.value = ''; autoResizeStartupInput(input); }
+  const badge = document.getElementById('custom-startup-badge');
+  if (badge) badge.classList.add('hidden');
+  _useCustomStartup = false;
+  showToast('Command direset ke default!', 'success');
+ } catch(e) { showToast('Gagal reset.', 'error'); } finally { if (window.finishProgress) window.finishProgress(); }
 }
 
 function showTab(tab, addToHistory = true, forceRefresh = false) {
