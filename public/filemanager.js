@@ -1078,15 +1078,17 @@ window.executeRemoteDownload = async function() {
  </div>
  `;
 
- document.getElementById(`cancel_${dlId}`).onclick = function() {
- isCancelledDl = true;
- cleanup();
- fileItem.style.opacity = '0';
- setTimeout(() => fileItem.remove(), 300);
- if(typeof showToast === 'function') showToast(' Dibatalkan: ' + filename, 'error');
- activeUploadsCount--; updateUploadState();
- }; 
  list.appendChild(fileItem);
+
+ const cancelBtn = fileItem.querySelector(`#cancel_${dlId}`);
+ if (cancelBtn) cancelBtn.onclick = function() {
+  isCancelledDl = true;
+  cleanup();
+  fileItem.style.opacity = '0';
+  setTimeout(() => fileItem.remove(), 300);
+  if(typeof showToast === 'function') showToast(' Dibatalkan: ' + filename, 'error');
+  activeUploadsCount--; updateUploadState();
+ };
 
  let lastLoaded = 0;
  let lastTime = Date.now();
