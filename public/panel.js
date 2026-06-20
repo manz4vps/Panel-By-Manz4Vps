@@ -371,6 +371,7 @@ async function saveCustomStartup() {
   const badge = document.getElementById('custom-startup-badge');
   if (badge) badge.classList.toggle('hidden', !useCustom);
   _useCustomStartup = useCustom;
+  updateCommandPreview();
   showToast(useCustom ? 'Custom startup disimpan!' : 'Kembali ke command default!', 'success');
  } catch(e) { showToast('Gagal menyimpan.', 'error'); } finally { if (window.finishProgress) window.finishProgress(); }
 }
@@ -385,6 +386,7 @@ async function resetCustomStartup() {
   const badge = document.getElementById('custom-startup-badge');
   if (badge) badge.classList.add('hidden');
   _useCustomStartup = false;
+  updateCommandPreview();
   showToast('Command direset ke default!', 'success');
  } catch(e) { showToast('Gagal reset.', 'error'); } finally { if (window.finishProgress) window.finishProgress(); }
 }
@@ -448,7 +450,33 @@ window.onload = async () => {
  } catch(e) {}
 };
 
-function updateCommandPreview() { const engineEl = document.getElementById('set-engine'); const jarEl = document.getElementById('set-jar'); const previewEl = document.getElementById('cmd-preview'); if(!engineEl || !previewEl) return; const engine = engineEl.value || 'java'; const jar = jarEl ? (jarEl.value || 'server.jar') : 'server.jar'; const ramEl = document.getElementById("set-ram"); const ramRaw = ramEl ? ramEl.value : ""; const ramLimit = window.ramLimitMB && window.ramLimitMB > 0 ? Math.round(window.ramLimitMB) : 2048; const ramFromServer = ramRaw ? parseRamToMB(ramRaw) : ramLimit; const ramMB = Math.min(ramFromServer, ramLimit); const ramStr = ramMB % 1024 === 0 ? `${ramMB / 1024}G` : `${ramMB}M`; let cmd = ''; if (engine === 'node') { cmd = `node ${jar}`; } else if (engine === 'python') { cmd = `python3 ${jar}`; } else { const flags = [ 'java', `-Xms128M`, `-Xmx${ramStr}`, `-XX:+UseG1GC`, `-XX:+ParallelRefProcEnabled`, `-XX:MaxGCPauseMillis=200`, `-XX:+UnlockExperimentalVMOptions`, `-XX:+ExplicitGCInvokesConcurrent`, `-XX:G1NewSizePercent=30`, `-XX:G1MaxNewSizePercent=40`, `-XX:G1HeapRegionSize=8M`, `-XX:G1ReservePercent=20`, `-XX:G1HeapWastePercent=5`, `-XX:G1MixedGCCountTarget=4`, `-XX:InitiatingHeapOccupancyPercent=15`, `-XX:G1MixedGCLiveThresholdPercent=90`, `-XX:G1RSetUpdatingPauseTimePercent=5`, `-XX:SurvivorRatio=32`, `-XX:+PerfDisableSharedMem`, `-XX:MaxTenuringThreshold=1`, `-XX:MinHeapFreeRatio=5`, `-XX:MaxHeapFreeRatio=10`, `-XX:G1PeriodicGCInterval=10000`, `-XX:+G1PeriodicGCInvokesConcurrent`, `-XX:-ShrinkHeapInSteps`, `-Dusing.aikars.flags=https://mcflags.emc.gs`, `-Daikars.new.flags=true`, `-jar ${jar}`, `--nogui` ]; cmd = flags.join(' '); } previewEl.innerText = cmd; }
+const _defaultJvmFlags = `-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+ExplicitGCInvokesConcurrent -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:G1PeriodicGCInterval=10000 -XX:+G1PeriodicGCInvokesConcurrent -XX:-ShrinkHeapInSteps -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true`;
+
+function updateCommandPreview() {
+ const engineEl = document.getElementById('set-engine');
+ const jarEl = document.getElementById('set-jar');
+ const previewEl = document.getElementById('cmd-preview');
+ if (!engineEl || !previewEl) return;
+ const engine = engineEl.value || 'java';
+ const jar = jarEl ? (jarEl.value || 'server.jar') : 'server.jar';
+ const ramEl = document.getElementById('set-ram');
+ const ramRaw = ramEl ? ramEl.value : '';
+ const ramLimit = window.ramLimitMB && window.ramLimitMB > 0 ? Math.round(window.ramLimitMB) : 2048;
+ const ramFromServer = ramRaw ? parseRamToMB(ramRaw) : ramLimit;
+ const ramMB = Math.min(ramFromServer, ramLimit);
+ const ramStr = ramMB % 1024 === 0 ? `${ramMB / 1024}G` : `${ramMB}M`;
+ let cmd = '';
+ if (engine === 'node') {
+  cmd = `node ${jar}`;
+ } else if (engine === 'python') {
+  cmd = `python3 ${jar}`;
+ } else {
+  const customFlags = settingsCache && settingsCache.customStartupCmd && settingsCache.customStartupCmd.trim();
+  const flags = (_useCustomStartup && customFlags) ? customFlags : _defaultJvmFlags;
+  cmd = `java -Xms128M -Xmx${ramStr} ${flags} -jar ${jar} --nogui`;
+ }
+ previewEl.textContent = cmd;
+}
 const softwareData = { 'mc-java': [ {id: 'paper', name: 'PaperMC (Ringan)'}, {id: 'purpur', name: 'Purpur'} ], 'proxy': [ {id: 'velocity', name: 'Velocity'}, {id: 'waterfall', name: 'Waterfall'} ], 'bedrock': [ {id: 'geyser', name: 'GeyserMC'} ], 'bot': [ {id: 'node', name: 'Node.js'}, {id: 'python', name: 'Python 3'} ] };
 function updateSubCategory() { if (window.startProgress) window.startProgress(); const cat = document.getElementById('vm-category').value; const softSelect = document.getElementById('vm-software'); if(softSelect) softSelect.innerHTML = softwareData[cat].map(s => `<option value="${s.id}">${s.name}</option>`).join(''); const javaSection = document.getElementById('java-version-section'); if (cat === 'bot') { if(document.getElementById('vm-version-container')) document.getElementById('vm-version-container').classList.add('hidden'); if(document.getElementById('vm-install-btn')) document.getElementById('vm-install-btn').innerText = ' SETUP ENVIRONMENT INI'; if(javaSection) javaSection.classList.add('hidden'); if (window.finishProgress) window.finishProgress(); } else { if(document.getElementById('vm-version-container')) document.getElementById('vm-version-container').classList.remove('hidden'); if(document.getElementById('vm-install-btn')) document.getElementById('vm-install-btn').innerText = ' INSTALL VERSI INI'; if(javaSection) javaSection.classList.remove('hidden'); fetchVersions(); } }
 
