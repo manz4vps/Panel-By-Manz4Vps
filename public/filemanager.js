@@ -422,7 +422,94 @@ function showDeleteModal(itemsArray, msg) {
  }; 
  } 
 }
-function deleteSelectedMulti() { showDeleteModal(Array.from(selectedFiles), `Are you sure you want to delete ${selectedFiles.size} items?`); } 
+function deleteSelectedMulti() { showDeleteModal(Array.from(selectedFiles), `Are you sure you want to delete ${selectedFiles.size} items?`); }
+
+window.downloadSelectedFiles = function() {
+ const files = Array.from(selectedFiles);
+ if (files.length === 0) { if(typeof showToast === 'function') showToast('Pilih file dulu!', 'error'); return; }
+
+ const existing = document.getElementById('bulkDownloadModal');
+ if (existing) existing.remove();
+
+ const cachedFiles = folderCache[currentPath] || [];
+ const sizeMap = {};
+ cachedFiles.forEach(f => { sizeMap[f.path] = f.size || ''; });
+
+ function getBulkFileIcon(name) {
+  const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+  const svg = (color, path) => `<div class="w-7 h-7 rounded-lg bg-slate-700/60 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 ${color}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg></div>`;
+  if (ext === 'jar') return svg('text-orange-400', '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>');
+  if (['zip','gz','tar','7z','rar'].includes(ext)) return svg('text-yellow-400', '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>');
+  if (['json','yml','yaml'].includes(ext)) return svg('text-blue-400', '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+  if (['properties','cfg','conf','ini'].includes(ext)) return svg('text-slate-300', '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/>');
+  if (['sh','bash'].includes(ext)) return svg('text-green-400', '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>');
+  if (['log','txt'].includes(ext)) return svg('text-slate-300', '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
+  if (['png','jpg','jpeg','gif','webp'].includes(ext)) return svg('text-pink-400', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>');
+  return svg('text-slate-400', '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+ }
+
+ const fileRows = files.map(filePath => {
+  const name = filePath.split('/').pop();
+  const size = sizeMap[filePath] || '';
+  const icon = getBulkFileIcon(name);
+  return `<div class="flex items-center gap-3 py-2.5 border-b border-slate-700/50 last:border-0">
+   ${icon}
+   <span class="text-white font-mono text-sm break-all flex-1 leading-snug">${name}</span>
+   ${size ? `<span class="text-blue-400 font-mono font-bold text-xs shrink-0">${size}</span>` : ''}
+  </div>`;
+ }).join('');
+
+ const modal = document.createElement('div');
+ modal.id = 'bulkDownloadModal';
+ modal.className = 'fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm tab-fade-in';
+ modal.innerHTML = `
+  <div class="bg-[#1e293b] w-full max-w-sm rounded-2xl border border-blue-500/40 shadow-2xl overflow-hidden" style="box-shadow:0 0 40px rgba(0,0,0,0.6)">
+   <div class="px-6 pt-6 pb-5">
+    <div class="flex flex-col items-center text-center gap-2 mb-5">
+     <div class="w-14 h-14 rounded-2xl bg-blue-500/15 border border-blue-500/40 flex items-center justify-center text-2xl">⬇️</div>
+     <div>
+      <h3 class="text-white font-black text-lg leading-tight">Download ${files.length} File</h3>
+      <p class="text-slate-400 text-xs mt-1">Semua file terpilih akan diunduh</p>
+     </div>
+    </div>
+    <div class="bg-slate-900/70 rounded-xl px-4 py-1 border border-slate-700/60 mb-5 max-h-48 overflow-y-auto">
+     ${fileRows}
+    </div>
+    <div class="flex gap-3">
+     <button id="bulkDlCancelBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 font-bold py-3 rounded-xl transition text-sm">Batal</button>
+     <button id="bulkDlConfirmBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold py-3 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/40">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      Download Semua
+     </button>
+    </div>
+   </div>
+  </div>
+ `;
+
+ document.body.appendChild(modal);
+
+ const close = () => { modal.style.opacity = '0'; modal.style.transition = 'opacity 0.15s'; setTimeout(() => modal.remove(), 150); };
+ document.getElementById('bulkDlCancelBtn').onclick = close;
+ modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+ document.getElementById('bulkDlConfirmBtn').onclick = () => {
+  close();
+  let delay = 0;
+  files.forEach(filePath => {
+   const name = filePath.split('/').pop();
+   setTimeout(() => {
+    const link = document.createElement('a');
+    link.href = `/api/download?path=${encodeURIComponent(filePath)}`;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+   }, delay);
+   delay += 400;
+  });
+  if(typeof showToast === 'function') showToast(`⬇️ Mendownload ${files.length} file...`);
+ };
+};
 function deleteSingle(filePath, fileName) { showDeleteModal([filePath], `Delete ${fileName}?`); }
 function openRenameModal(filePath, currentName) { if(document.getElementById('renameOldPath')) document.getElementById('renameOldPath').value = filePath; if(document.getElementById('renameInput')) document.getElementById('renameInput').value = currentName; const rModal = document.getElementById('renameModal'); if(rModal) rModal.classList.remove('hidden'); const rInput = document.getElementById('renameInput'); if(rInput) rInput.focus(); }
 
@@ -498,16 +585,84 @@ async function executeCreate() {
 
 function formatLocalTime(isoString) { if (!isoString || isoString === '-') return '-'; const date = new Date(isoString); return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`; }
 
-window.downloadFile = function(filePath, fileName) {
+window.downloadFile = function(filePath, fileName, fileSize) {
  if(typeof closeAllDropdowns === 'function') closeAllDropdowns();
- if(typeof showToast === 'function') showToast('Mendownload: ' + fileName);
- 
- const link = document.createElement('a');
- link.href = `/api/download?path=${encodeURIComponent(filePath)}`;
- link.download = fileName;
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
+
+ const existing = document.getElementById('downloadConfirmModal');
+ if (existing) existing.remove();
+
+ const ext = fileName.includes('.') ? fileName.split('.').pop().toLowerCase() : '';
+ const iconMap = {
+  jar: { icon: '📦', color: 'text-orange-400', bg: 'bg-orange-500/15', border: 'border-orange-500/40' },
+  zip: { icon: '🗜️', color: 'text-yellow-400', bg: 'bg-yellow-500/15', border: 'border-yellow-500/40' },
+  gz: { icon: '🗜️', color: 'text-yellow-400', bg: 'bg-yellow-500/15', border: 'border-yellow-500/40' },
+  json: { icon: '📋', color: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/40' },
+  yml: { icon: '⚙️', color: 'text-purple-400', bg: 'bg-purple-500/15', border: 'border-purple-500/40' },
+  yaml: { icon: '⚙️', color: 'text-purple-400', bg: 'bg-purple-500/15', border: 'border-purple-500/40' },
+  properties: { icon: '⚙️', color: 'text-slate-300', bg: 'bg-slate-500/15', border: 'border-slate-500/40' },
+  txt: { icon: '📄', color: 'text-slate-300', bg: 'bg-slate-500/15', border: 'border-slate-500/40' },
+  log: { icon: '📜', color: 'text-green-400', bg: 'bg-green-500/15', border: 'border-green-500/40' },
+  png: { icon: '🖼️', color: 'text-pink-400', bg: 'bg-pink-500/15', border: 'border-pink-500/40' },
+  jpg: { icon: '🖼️', color: 'text-pink-400', bg: 'bg-pink-500/15', border: 'border-pink-500/40' },
+  sh: { icon: '💻', color: 'text-green-400', bg: 'bg-green-500/15', border: 'border-green-500/40' },
+ };
+ const style = iconMap[ext] || { icon: '📁', color: 'text-slate-300', bg: 'bg-slate-500/15', border: 'border-slate-500/40' };
+
+ const modal = document.createElement('div');
+ modal.id = 'downloadConfirmModal';
+ modal.className = 'fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm tab-fade-in';
+ modal.innerHTML = `
+  <div class="bg-[#1e293b] w-full max-w-sm rounded-2xl border ${style.border} shadow-2xl overflow-hidden" style="box-shadow:0 0 40px rgba(0,0,0,0.6)">
+   <div class="px-6 pt-6 pb-5">
+    <div class="flex flex-col items-center text-center gap-3 mb-5">
+     <div class="w-16 h-16 rounded-2xl ${style.bg} border ${style.border} flex items-center justify-center text-3xl shadow-inner">
+      ${style.icon}
+     </div>
+     <div>
+      <h3 class="text-white font-black text-lg leading-tight">Download File</h3>
+      <p class="text-slate-400 text-xs mt-1">Siap untuk diunduh ke perangkat kamu</p>
+     </div>
+    </div>
+    <div class="bg-slate-900/70 rounded-xl px-4 py-3 border border-slate-700/60 mb-5">
+     <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0 flex-1">
+       <p class="text-xs text-slate-400 mb-1 font-semibold uppercase tracking-wider">Nama File</p>
+       <p class="text-white font-mono text-sm break-all leading-snug">${fileName}</p>
+      </div>
+      ${fileSize ? `<div class="shrink-0 text-right">
+       <p class="text-xs text-slate-400 mb-1 font-semibold uppercase tracking-wider">Ukuran</p>
+       <p class="text-blue-400 font-mono font-bold text-sm">${fileSize}</p>
+      </div>` : ''}
+     </div>
+    </div>
+    <div class="flex gap-3">
+     <button id="dlCancelBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 font-bold py-3 rounded-xl transition text-sm">Batal</button>
+     <button id="dlConfirmBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold py-3 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/40">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      Download
+     </button>
+    </div>
+   </div>
+  </div>
+ `;
+
+ document.body.appendChild(modal);
+
+ const close = () => { modal.style.opacity = '0'; modal.style.transition = 'opacity 0.15s'; setTimeout(() => modal.remove(), 150); };
+
+ document.getElementById('dlCancelBtn').onclick = close;
+ modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+ document.getElementById('dlConfirmBtn').onclick = () => {
+  close();
+  if(typeof showToast === 'function') showToast('⬇️ Mendownload: ' + fileName);
+  const link = document.createElement('a');
+  link.href = `/api/download?path=${encodeURIComponent(filePath)}`;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+ };
 }
 
 window.executeSingleAction = function(filePath, action) { 
@@ -625,7 +780,7 @@ function renderFileListHTML(files, dir, listElement) {
  let downloadBtn = '';
  if (!file.isDirectory) {
  downloadBtn = `
- <div onclick="event.stopPropagation(); downloadFile('${file.path}', '${file.name}')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
+ <div onclick="event.stopPropagation(); downloadFile('${file.path}', '${file.name}', '${file.size || ''}')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
  Download
  </div>`;
