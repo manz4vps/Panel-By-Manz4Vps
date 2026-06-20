@@ -176,12 +176,12 @@ function ensureJava(version, logCallback, callback) {
    );
   }
 
-  getZuluDownloadUrl(version)
-   .then(apiUrl => doInstall(apiUrl, 'Zulu'))
+  getTemurinDownloadUrl(version)
+   .then(apiUrl => doInstall(apiUrl, 'Temurin'))
    .catch(() => {
-    logCallback(`\x1b[33m[Manz4VPS Daemon]: Zulu tidak tersedia, mencoba Temurin...\x1b[0m\n`);
-    getTemurinDownloadUrl(version)
-     .then(apiUrl => doInstall(apiUrl, 'Temurin'))
+    logCallback(`\x1b[33m[Manz4VPS Daemon]: Temurin tidak tersedia, mencoba Zulu...\x1b[0m\n`);
+    getZuluDownloadUrl(version)
+     .then(apiUrl => doInstall(apiUrl, 'Zulu'))
      .catch(err => callback(new Error(`Semua sumber JDK ${version} gagal: ${err.message}`), null));
    });
  });
