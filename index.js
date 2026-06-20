@@ -48,8 +48,26 @@ function fetchJsonHttps(url) {
  });
 }
 
+function getSystemArch() {
+ const a = os.arch();
+ if (a === 'arm64' || a === 'aarch64') return { zulu: 'aarch64', temurin: 'aarch64' };
+ if (a === 'arm') return { zulu: 'aarch32', temurin: 'arm' };
+ return { zulu: 'x86_64', temurin: 'x64' };
+}
+
+async function getTemurinDownloadUrl(version) {
+ const arch = getSystemArch().temurin;
+ const url = `https://api.adoptium.net/v3/assets/latest/${version}/hotspot?architecture=${arch}&image_type=jdk&jvm_impl=hotspot&os=linux&vendor=eclipse`;
+ const data = await fetchJsonHttps(url);
+ if (data && data.length > 0) {
+  const pkg = data[0].binary?.package;
+  if (pkg && pkg.link) return pkg.link;
+ }
+ throw new Error(`Tidak ada Temurin JDK ${version} tersedia`);
+}
+
 async function getZuluDownloadUrl(version) {
- const arch = os.arch().includes('arm') ? 'aarch64' : 'x86_64';
+ const arch = getSystemArch().zulu;
  const isAlpine = fs.existsSync('/etc/alpine-release');
  const zuluOs = isAlpine ? 'linux_musl' : 'linux';
  for (const status of ['ga', 'ea']) {
@@ -59,26 +77,114 @@ async function getZuluDownloadUrl(version) {
    if (data && data.length > 0 && data[0].download_url) return data[0].download_url;
   } catch(e) {}
  }
- throw new Error(`Tidak ada Zulu JDK ${version} tersedia`);
+ throw new Error(`Tidak ada Zulu JDK ${version} tersedia untuk ${arch}`);
+}
+
+function checkSystemJava(version, callback) {
+ const staticPaths = [
+  `/usr/lib/jvm/java-${version}-openjdk-amd64/bin/java`,
+  `/usr/lib/jvm/java-${version}-openjdk-arm64/bin/java`,
+  `/usr/lib/jvm/java-${version}-openjdk-armhf/bin/java`,
+  `/usr/lib/jvm/java-${version}-openjdk/bin/java`,
+  `/usr/lib/jvm/java-${version}/bin/java`,
+  `/usr/lib/jvm/temurin-${version}/bin/java`,
+  `/usr/lib/jvm/zulu-${version}/bin/java`,
+  `/usr/lib/jvm/zulu${version}/bin/java`,
+  `/usr/lib/jvm/zulu${version}-amd64/bin/java`,
+  `/usr/lib/jvm/zulu${version}-arm64/bin/java`,
+  `/usr/local/lib/jvm/java-${version}/bin/java`,
+  `/opt/java/${version}/bin/java`,
+ ];
+ for (const p of staticPaths) {
+  if (fs.existsSync(p)) return callback(null, p);
+ }
+ try {
+  const jvmBase = '/usr/lib/jvm';
+  if (fs.existsSync(jvmBase)) {
+   const dirs = fs.readdirSync(jvmBase);
+   for (const dir of dirs) {
+    const lower = dir.toLowerCase();
+    const hasVersion = lower.includes(String(version));
+    const isJdk = lower.includes('zulu') || lower.includes('temurin') || lower.includes('java') || lower.includes('jdk') || lower.includes('openjdk');
+    if (hasVersion && isJdk) {
+     const candidate = path.join(jvmBase, dir, 'bin', 'java');
+     if (fs.existsSync(candidate)) return callback(null, candidate);
+    }
+   }
+  }
+ } catch(e) {}
+ exec(`java -version 2>&1`, (err, stdout, stderr) => {
+  const output = (stdout + stderr).toLowerCase();
+  const match = output.match(/version\s+"?(\d+)/);
+  if (!err && match) {
+   const sysVer = parseInt(match[1]);
+   if (sysVer >= version) {
+    exec(`which java`, (e2, out2) => {
+     const sysPath = out2 && out2.trim();
+     if (!e2 && sysPath && fs.existsSync(sysPath)) return callback(null, sysPath);
+     callback(null, null);
+    });
+    return;
+   }
+  }
+  callback(null, null);
+ });
+}
+
+function findJavaBinary(javaDir) {
+ try {
+  const binJava = path.join(javaDir, 'bin', 'java');
+  if (fs.existsSync(binJava)) return binJava;
+  const entries = fs.readdirSync(javaDir);
+  for (const entry of entries) {
+   const sub = path.join(javaDir, entry, 'bin', 'java');
+   if (fs.existsSync(sub)) return sub;
+  }
+ } catch(e) {}
+ return null;
 }
 
 function ensureJava(version, logCallback, callback) {
  const javaDir = path.join(__dirname, `java-runtime-${version}`);
- const javaExe = path.join(javaDir, 'bin', 'java');
 
- if (fs.existsSync(javaExe)) return callback(null, javaExe);
+ const existingBin = findJavaBinary(javaDir);
+ if (existingBin) {
+  try { fs.chmodSync(existingBin, '755'); } catch(e) {}
+  return callback(null, existingBin);
+ }
 
- logCallback(`\x1b[33m⏳ Mendownload & Instalasi Zulu JDK ${version}... (Hanya sekali)\x1b[0m\n`);
+ checkSystemJava(version, (err, sysJava) => {
+  if (sysJava) {
+   logCallback(`\x1b[32m[Manz4VPS Daemon]: Menggunakan Java ${version} dari sistem.\x1b[0m\n`);
+   return callback(null, sysJava);
+  }
 
- getZuluDownloadUrl(version)
-  .then(apiUrl => {
+  function doInstall(apiUrl, label) {
+   logCallback(`\x1b[33m⏳ Mendownload & Instalasi ${label} JDK ${version}... (Hanya sekali)\x1b[0m\n`);
    const tmpDir = path.join(__dirname, `tmp-java-${version}`);
-   exec(`rm -rf "${tmpDir}" "${javaDir}" && mkdir -p "${tmpDir}" "${javaDir}" && curl -L -# -o "${tmpDir}/java.tar.gz" "${apiUrl}" && tar -xzf "${tmpDir}/java.tar.gz" -C "${javaDir}" --strip-components=1 && rm -rf "${tmpDir}"`, (err) => {
-    if (err) return callback(err, null);
-    callback(null, javaExe);
+   exec(
+    `rm -rf "${tmpDir}" "${javaDir}" && mkdir -p "${tmpDir}" "${javaDir}" && curl -fsSL -o "${tmpDir}/java.tar.gz" "${apiUrl}" && tar -xzf "${tmpDir}/java.tar.gz" -C "${javaDir}" --strip-components=1 && rm -rf "${tmpDir}"`,
+    { maxBuffer: 1024 * 1024 * 50 },
+    (dlErr) => {
+     if (dlErr) return callback(new Error(`Download ${label} JDK ${version} gagal: ${dlErr.message}`), null);
+     const actualBin = findJavaBinary(javaDir);
+     if (!actualBin) return callback(new Error(`${label} JDK ${version} terdownload tapi binary tidak ditemukan`), null);
+     try { fs.chmodSync(actualBin, '755'); } catch(e) {}
+     logCallback(`\x1b[32m[Manz4VPS Daemon]: Java ${version} (${label}) berhasil diinstall.\x1b[0m\n`);
+     callback(null, actualBin);
+    }
+   );
+  }
+
+  getZuluDownloadUrl(version)
+   .then(apiUrl => doInstall(apiUrl, 'Zulu'))
+   .catch(() => {
+    logCallback(`\x1b[33m[Manz4VPS Daemon]: Zulu tidak tersedia, mencoba Temurin...\x1b[0m\n`);
+    getTemurinDownloadUrl(version)
+     .then(apiUrl => doInstall(apiUrl, 'Temurin'))
+     .catch(err => callback(new Error(`Semua sumber JDK ${version} gagal: ${err.message}`), null));
    });
-  })
-  .catch(err => callback(err, null));
+ });
 }
 // ===========================================================
 
@@ -548,55 +654,57 @@ app.post('/api/upload', checkAuth, (req, res, next) => {
 });
 
 // === ðŸ”¥ SISTEM REMOTE DOWNLOAD (BYPASS GDRIVE) ðŸ”¥ ===
-function fetchWithRedirects(urlStr, cookies = '') {
+function fetchWithRedirects(urlStr, cookies = '', depth = 0) {
  return new Promise((resolve) => {
- const parsedUrl = new URL(urlStr);
- const options = {
- hostname: parsedUrl.hostname,
- path: parsedUrl.pathname + parsedUrl.search,
- headers: {
- 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
- 'Cookie': cookies
- }
- };
-
- https.get(options, (res) => {
- let newCookies = res.headers['set-cookie'] || [];
- let newCookieStr = newCookies.map(c => c.split(';')[0]).join('; ');
- let combinedCookies = cookies ? (newCookieStr ? `${cookies}; ${newCookieStr}` : cookies) : newCookieStr;
-
- if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
- let nextUrl = res.headers.location;
- if (!nextUrl.startsWith('http')) nextUrl = `https://${parsedUrl.hostname}${nextUrl}`;
- resolve(fetchWithRedirects(nextUrl, combinedCookies));
- } else {
- let body = '';
- res.on('data', chunk => body += chunk);
- res.on('end', () => resolve({ body, cookies: combinedCookies, finalUrl: urlStr }));
- }
- }).on('error', () => resolve({ body: '', cookies: '', finalUrl: urlStr }));
+  if (depth > 10) return resolve({ body: '', cookies, finalUrl: urlStr });
+  let parsedUrl;
+  try { parsedUrl = new URL(urlStr); } catch(e) { return resolve({ body: '', cookies, finalUrl: urlStr }); }
+  const options = {
+   hostname: parsedUrl.hostname,
+   path: parsedUrl.pathname + parsedUrl.search,
+   headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    'Cookie': cookies,
+    'Accept': 'text/html,application/xhtml+xml,*/*'
+   }
+  };
+  https.get(options, (res) => {
+   const newCookieStr = (res.headers['set-cookie'] || []).map(c => c.split(';')[0]).join('; ');
+   const combinedCookies = [cookies, newCookieStr].filter(Boolean).join('; ');
+   if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+    let nextUrl = res.headers.location;
+    if (!nextUrl.startsWith('http')) nextUrl = `https://${parsedUrl.hostname}${nextUrl}`;
+    resolve(fetchWithRedirects(nextUrl, combinedCookies, depth + 1));
+   } else {
+    let body = '';
+    res.on('data', chunk => body += chunk);
+    res.on('end', () => resolve({ body, cookies: combinedCookies, finalUrl: urlStr }));
+   }
+  }).on('error', () => resolve({ body: '', cookies, finalUrl: urlStr }));
  });
 }
 
 async function getDriveDownloadInfo(fileId) {
- const initialUrl = `https://docs.google.com/uc?export=download&id=${fileId}`;
- const { body, cookies, finalUrl } = await fetchWithRedirects(initialUrl);
+ const directUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
+ const { body, cookies, finalUrl } = await fetchWithRedirects(directUrl);
 
- if (body.includes('<form id="download-form"')) {
- const actionMatch = body.match(/action="([^"]+)"/);
- const confirmMatch = body.match(/name="confirm" value="([^"]+)"/);
- const uuidMatch = body.match(/name="uuid" value="([^"]+)"/);
- 
- let action = actionMatch ? actionMatch[1] : 'https://docs.google.com/uc';
- if (action.startsWith('/')) action = `https://docs.google.com${action}`;
- 
- const confirm = confirmMatch ? confirmMatch[1] : 't';
- const uuidStr = uuidMatch ? `&uuid=${uuidMatch[1]}` : '';
- 
- let directUrl = `${action}?id=${fileId}&export=download&confirm=${confirm}${uuidStr}`;
- return { url: directUrl, cookie: cookies };
+ if (body && body.includes('<form') && body.includes('download')) {
+  const actionMatch = body.match(/action="([^"]+)"/);
+  const confirmMatch = body.match(/name="confirm"[^>]*value="([^"]+)"/);
+  const uuidMatch = body.match(/name="uuid"[^>]*value="([^"]+)"/);
+  const atMatch = body.match(/name="at"[^>]*value="([^"]+)"/);
+
+  let action = actionMatch ? actionMatch[1].replace(/&amp;/g, '&') : `https://drive.usercontent.google.com/download`;
+  if (action.startsWith('/')) action = `https://drive.usercontent.google.com${action}`;
+
+  const confirm = confirmMatch ? confirmMatch[1] : 't';
+  const uuidStr = uuidMatch ? `&uuid=${uuidMatch[1]}` : '';
+  const atStr = atMatch ? `&at=${atMatch[1]}` : '';
+
+  return { url: `${action}?id=${fileId}&export=download&confirm=${confirm}${uuidStr}${atStr}`, cookie: cookies };
  }
- return { url: finalUrl, cookie: cookies };
+
+ return { url: finalUrl || directUrl, cookie: cookies };
 }
 
 app.post('/api/remote-download', checkAuth, async (req, res) => {
@@ -610,19 +718,32 @@ app.post('/api/remote-download', checkAuth, async (req, res) => {
  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
  let finalUrl = url;
- let curlArgs = ['-L', '-#', '-o', filename];
  let targetFilePath = path.join(targetDir, filename);
 
- const gdriveMatch = url.match(/drive\.google\.com.*\/d\/([-\w]{25,})/i) || url.match(/drive\.google\.com.*id=([-\w]{25,})/i);
- 
- if (gdriveMatch) {
- const fileId = gdriveMatch[1];
- const info = await getDriveDownloadInfo(fileId);
- finalUrl = info.url;
- if (info.cookie) curlArgs.push('-b', info.cookie); 
+ const gdrivePatterns = [
+  /drive\.google\.com\/file\/d\/([-\w]{25,})/i,
+  /drive\.google\.com\/open\?.*id=([-\w]{25,})/i,
+  /drive\.google\.com\/uc\?.*id=([-\w]{25,})/i,
+  /drive\.google\.com\/.*[?&]id=([-\w]{25,})/i,
+  /docs\.google\.com\/.*\/d\/([-\w]{25,})/i,
+ ];
+ let fileId = null;
+ for (const re of gdrivePatterns) { const m = url.match(re); if (m) { fileId = m[1]; break; } }
+
+ if (fileId) {
+  finalUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
  }
 
- curlArgs.push(finalUrl);
+ const curlArgs = [
+  '-L', '--max-redirs', '10',
+  '--max-time', '3600',
+  '--connect-timeout', '30',
+  '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+  '-o', filename,
+  finalUrl
+ ];
+
+ res.json({ success: true });
 
  const dlProcess = spawn('curl', curlArgs, { cwd: targetDir });
  let isDone = false;
@@ -649,8 +770,6 @@ app.post('/api/remote-download', checkAuth, async (req, res) => {
  io.to('panel_' + srv).emit('remote_dl_error', { filename: filename, code: code });
  }
  });
-
- res.json({ success: true }); 
 });
 // ====================================================
 
@@ -1027,8 +1146,7 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
  }
  const userLimits = readUsers()[username]?.limits || { ram: 2048 };
  const ramMB = Math.min(parseRamMB(settings.ram), userLimits.ram);
- const execArgs = [
-  `-Xms128M`, `-Xmx${ramMB}M`,
+ const defaultJvmFlags = [
   `-XX:+UseG1GC`, `-XX:+ParallelRefProcEnabled`, `-XX:MaxGCPauseMillis=200`,
   `-XX:+UnlockExperimentalVMOptions`, `-XX:+ExplicitGCInvokesConcurrent`,
   `-XX:G1NewSizePercent=30`, `-XX:G1MaxNewSizePercent=40`, `-XX:G1HeapRegionSize=8M`,
@@ -1040,6 +1158,13 @@ const cpuColor = cpuPercent >= (80 * startCpu.length) ? '\x1b[1;31m' : (cpuPerce
   `-XX:G1PeriodicGCInterval=10000`, `-XX:+G1PeriodicGCInvokesConcurrent`,
   `-XX:-ShrinkHeapInSteps`,
   `-Dusing.aikars.flags=https://mcflags.emc.gs`, `-Daikars.new.flags=true`,
+ ];
+ const jvmFlags = (settings.useCustomStartup && settings.customStartupCmd && settings.customStartupCmd.trim())
+  ? settings.customStartupCmd.trim().split(/\s+/).filter(f => f.length > 0)
+  : defaultJvmFlags;
+ const execArgs = [
+  `-Xms128M`, `-Xmx${ramMB}M`,
+  ...jvmFlags,
   `-jar`, settings.jarFile, `--nogui`, `--port`, settings.port
  ];
  eksekusiProses(javaPath, execArgs, settings);
