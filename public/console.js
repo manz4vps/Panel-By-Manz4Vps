@@ -76,8 +76,7 @@ if(terminal) {
  terminal.appendChild(logWrapper); 
  smoothScrollToBottom(); 
  if (msg.includes("You need to agree to the EULA")) { 
- const eulaModal = document.getElementById('eulaModal'); 
- if(eulaModal) eulaModal.classList.remove('hidden'); 
+  showEulaModal();
  } 
  });
 }
@@ -107,7 +106,33 @@ function confirmKill() {
  } 
 }
 
-function acceptEula() { const eModal = document.getElementById('eulaModal'); if(eModal) eModal.classList.add('hidden'); socket.emit('accept_eula'); if(typeof showToast === 'function') showToast('Menyetujui EULA...', 'success'); }
+function showEulaModal() {
+ const eulaModal = document.getElementById('eulaModal');
+ if(eulaModal) {
+  eulaModal.classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
+  localStorage.setItem('eula_pending', '1');
+ }
+}
+
+function hideEulaModal() {
+ const eulaModal = document.getElementById('eulaModal');
+ if(eulaModal) {
+  eulaModal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+ }
+}
+
+function acceptEula() {
+ hideEulaModal();
+ localStorage.removeItem('eula_pending');
+ socket.emit('accept_eula');
+ if(typeof showToast === 'function') showToast('Menyetujui EULA...', 'success');
+}
+
+if (localStorage.getItem('eula_pending') === '1') {
+ showEulaModal();
+}
 
 const cmdHistory = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
 let cmdHistoryIndex = -1;
