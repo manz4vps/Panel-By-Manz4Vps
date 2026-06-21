@@ -188,18 +188,45 @@ setInterval(() => {
  const netInText = document.getElementById('stat-netin-text');
  const netOutText = document.getElementById('stat-netout-text');
 
+ const CARD_BASE = 'bg-[#1e293b] p-3.5 md:p-4 rounded-xl shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none';
+ const ICON_NORMAL = 'w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-slate-400 flex-shrink-0 bg-slate-700/40 border border-slate-600/60';
+ const ICON_WARN   = 'w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-yellow-300 flex-shrink-0 bg-yellow-500/25 border border-yellow-500/40';
+ const ICON_DANGER = 'w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-red-300 flex-shrink-0 bg-red-500/25 border border-red-500/40';
+
+ function applyStatState(cardId, iconId, pct) {
+  const card = document.getElementById(cardId);
+  const icon = document.getElementById(iconId);
+  if (pct >= 1.0) {
+   if(card) { card.className = `${CARD_BASE} border border-slate-700`; card.style.boxShadow = 'inset 4px 0 0 #ef4444'; }
+   if(icon) icon.className = ICON_DANGER;
+  } else if (pct >= 0.9) {
+   if(card) { card.className = `${CARD_BASE} border border-slate-700`; card.style.boxShadow = 'inset 4px 0 0 #facc15'; }
+   if(icon) icon.className = ICON_WARN;
+  } else {
+   if(card) { card.className = `${CARD_BASE} border border-slate-700`; card.style.boxShadow = ''; }
+   if(icon) icon.className = ICON_NORMAL;
+  }
+ }
+
  if (Date.now() - lastStatsTick > 10000 || !isServerOnline) {
- latestStats.cpu = 0; latestStats.ram = 0; latestStats.netIn = 0; latestStats.netOut = 0;
- if(cpuText) cpuText.innerHTML = `<span class="text-slate-400">Offline</span>`; 
- if(ramText) ramText.innerHTML = `<span class="text-slate-400">Offline</span>`;
- if(netInText) netInText.innerHTML = `<span class="text-slate-400">Offline</span>`;
- if(netOutText) netOutText.innerHTML = `<span class="text-slate-400">Offline</span>`;
- if (socket.disconnected) { _getOrCreateReconnectBanner().style.display = 'flex'; }
+  latestStats.cpu = 0; latestStats.ram = 0; latestStats.netIn = 0; latestStats.netOut = 0;
+  if(cpuText) { cpuText.className = 'text-sm font-black text-slate-500 truncate'; cpuText.innerText = 'Offline'; }
+  if(ramText) { ramText.className = 'text-sm font-black text-slate-500 truncate'; ramText.innerText = 'Offline'; }
+  if(netInText) netInText.innerHTML = `<span class="text-slate-500">Offline</span>`;
+  if(netOutText) netOutText.innerHTML = `<span class="text-slate-500">Offline</span>`;
+  applyStatState('stat-cpu-card', 'stat-cpu-icon', 0);
+  applyStatState('stat-ram-card', 'stat-ram-icon', 0);
+  if (socket.disconnected) { _getOrCreateReconnectBanner().style.display = 'flex'; }
  } else {
- if(cpuText) cpuText.innerHTML = `${latestStats.cpu.toFixed(2)}%`; 
- if(ramText) ramText.innerHTML = `${formatMB(latestStats.ram)}`;
- if(netInText) netInText.innerHTML = formatNetBytes(latestStats.netIn);
- if(netOutText) netOutText.innerHTML = formatNetBytes(latestStats.netOut);
+  const cpuPct = currentServerCpuLimit > 0 ? latestStats.cpu / currentServerCpuLimit : 0;
+  const ramPct = currentServerRamMB > 0 ? latestStats.ram / currentServerRamMB : 0;
+  const cpuLimitStr = currentServerCpuLimit % 1 === 0 ? currentServerCpuLimit.toFixed(0) : currentServerCpuLimit.toFixed(1);
+  if(cpuText) { cpuText.className = 'text-sm font-black truncate'; cpuText.innerHTML = `<span class="text-white">${latestStats.cpu.toFixed(2)}%</span><span style="color:#747B8B" class="text-xs font-semibold"> / ${cpuLimitStr}%</span>`; }
+  if(ramText) { ramText.className = 'text-sm font-black truncate'; ramText.innerHTML = `<span class="text-white">${formatMB(latestStats.ram)}</span><span style="color:#747B8B" class="text-xs font-semibold"> / ${formatMB(currentServerRamMB)}</span>`; }
+  if(netInText) netInText.innerHTML = formatNetBytes(latestStats.netIn);
+  if(netOutText) netOutText.innerHTML = formatNetBytes(latestStats.netOut);
+  applyStatState('stat-cpu-card', 'stat-cpu-icon', cpuPct);
+  applyStatState('stat-ram-card', 'stat-ram-icon', ramPct);
  }
 
  cpuData.shift(); cpuData.push(latestStats.cpu); 
@@ -399,11 +426,11 @@ function showTab(tab, addToHistory = true, forceRefresh = false) {
  if(view) { if (t === tab) { view.style.display = 'block'; } else { view.style.display = 'none'; } } 
  tabBtns.forEach(btn => {
  if (t === tab || (tab === 'edit' && t === 'files')) {
- btn.className = `tab-btn-${t} w-full text-left px-5 py-4 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-4 transition-colors duration-200 shadow-lg shadow-blue-500/20 text-lg`;
- const svg = btn.querySelector('svg'); if (svg) svg.classList.replace('opacity-70', 'opacity-100');
+ btn.className = `tab-btn-${t} w-full text-left px-3 py-2.5 rounded-lg bg-blue-600/15 text-blue-400 font-semibold flex items-center gap-3 transition-all duration-150 text-sm border border-blue-500/20`;
+ const svg = btn.querySelector('svg'); if (svg) { svg.classList.remove('opacity-70'); svg.classList.add('text-blue-400'); }
  } else {
- btn.className = `tab-btn-${t} w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg`;
- const svg = btn.querySelector('svg'); if (svg) svg.classList.replace('opacity-100', 'opacity-70');
+ btn.className = `tab-btn-${t} w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group`;
+ const svg = btn.querySelector('svg'); if (svg) { svg.classList.remove('text-blue-400'); svg.classList.add('opacity-70'); }
  }
  });
  });
