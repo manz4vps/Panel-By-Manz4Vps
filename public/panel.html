@@ -149,69 +149,117 @@
 
  <div id="toast-container" class="fixed top-4 right-4 z-[999] space-y-2 w-56 max-w-[85vw] max-h-[50vh] overflow-hidden flex flex-col gap-1.5"></div>
 
- <aside class="w-[300px] sidebar-bg border-r border-slate-800 flex-col hidden md:flex h-full fixed md:sticky top-0 z-20 flex-shrink-0">
- <div class="p-6 mb-2 flex items-center gap-4 border-b border-slate-800/50">
- <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
- <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
- </div>
- <div class="select-none">
- <h1 class="text-xl font-black text-slate-100 leading-tight">Manz4vps</h1>
- <div class="text-sm font-bold text-slate-500">Panel V26</div>
- </div>
- </div>
- 
- <nav class="flex-1 px-4 py-3 flex flex-col gap-2.5 overflow-y-auto ptero-scrollbar" id="sidebar-nav">
- <button onclick="window.location.href='/dashboard.html'" class="w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
- <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg> Home
- </button>
- <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
- <button onclick="showTab('console')" class="tab-btn-console w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
- <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Terminal
- </button>
- <button onclick='currentPath=""; showTab("files")' class="tab-btn-files w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
- <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg> Files
- </button>
- <button onclick="showTab('network')" class="tab-btn-network w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
- <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Network
- </button>
- <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
- <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Startup
- </button>
- <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg">
- <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg> Plugin
- </button>
+ <aside class="w-[260px] sidebar-bg border-r border-slate-800/60 flex-col hidden md:flex h-full fixed md:sticky top-0 z-20 flex-shrink-0">
+  <div class="px-5 py-5 flex items-center gap-3 border-b border-slate-800/60">
+   <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40 shrink-0">
+    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+   </div>
+   <div class="select-none min-w-0">
+    <h1 class="text-base font-black text-white leading-tight tracking-wide">Manz4vps</h1>
+    <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Panel V26</div>
+   </div>
+  </div>
 
- <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
- <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 hover:text-white flex items-center gap-4 transition-colors duration-200 text-lg mb-1">
- <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Settings
- </button>
- <button onclick="window.location.href='/logout'" class="w-full text-left px-5 py-4 mb-4 rounded-xl text-slate-400 font-bold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-4 transition-colors duration-200 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> Logout</button>
- </nav>
+  <nav class="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto ptero-scrollbar" id="sidebar-nav">
+   <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 mb-1">Menu</p>
+   <button onclick="window.location.href='/dashboard.html'" class="w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Home
+   </button>
+
+   <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 mt-4 mb-1">Server</p>
+   <button onclick="showTab('console')" class="tab-btn-console w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    Terminal
+   </button>
+   <button onclick='currentPath=""; showTab("files")' class="tab-btn-files w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+    File Manager
+   </button>
+   <button onclick="showTab('network')" class="tab-btn-network w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    Network
+   </button>
+   <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+    Startup
+   </button>
+   <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/></svg>
+    Plugin
+   </button>
+
+   <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 mt-4 mb-1">System</p>
+   <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Settings
+   </button>
+  </nav>
+
+  <div class="px-3 py-3 border-t border-slate-800/60 shrink-0">
+   <button onclick="window.location.href='/logout'" class="w-full px-3 py-2.5 rounded-lg text-slate-500 font-semibold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+    Logout
+   </button>
+  </div>
  </aside>
 
  <div id="mobile-overlay" class="fixed inset-0 bg-black/80 z-40 hidden md:hidden" onclick="closeMobileMenu()"></div>
  
- <aside id="mobile-sidebar" class="fixed top-0 left-0 bottom-0 w-[300px] sidebar-bg border-r border-slate-800 flex flex-col z-50 md:hidden transition-transform duration-300 transform -translate-x-full shadow-2xl">
- <div class="p-6 flex justify-between items-center border-b border-slate-800/50">
- <div class="flex items-center gap-4">
- <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg></div>
- <div class="select-none"><h1 class="text-xl font-black text-slate-100 leading-tight">Manz4vps</h1><div class="text-sm font-bold text-slate-500">Panel V26</div></div>
- </div>
- <button onclick="closeMobileMenu()" class="text-slate-400 hover:text-white text-3xl transition-colors"></button>
- </div>
- <nav class="flex-1 px-4 py-3 flex flex-col gap-2.5 overflow-y-auto ptero-scrollbar" onclick="closeMobileMenu()">
- <button onclick="window.location.href='/dashboard.html'" class="w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>Home</button>
- <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
- <button onclick="showTab('console')" class="tab-btn-console w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Terminal</button>
- <button onclick='currentPath=""; showTab("files")' class="tab-btn-files w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>Files</button>
- <button onclick="showTab('network')" class="tab-btn-network w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>Network</button>
- <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Startup</button>
- <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>Plugin</button>
- 
- <div class="h-px bg-slate-800/50 my-2 mx-2"></div>
- <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-5 py-4 rounded-xl text-slate-400 font-bold hover:bg-slate-800 flex items-center gap-4 text-lg mb-1"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Settings</button>
- <button onclick="window.location.href='/logout'" class="w-full text-left px-5 py-4 mb-4 rounded-xl text-slate-400 font-bold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-4 text-lg"><svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>Logout</button>
- </nav>
+ <aside id="mobile-sidebar" class="fixed top-0 left-0 bottom-0 w-[260px] sidebar-bg border-r border-slate-800/60 flex flex-col z-50 md:hidden transition-transform duration-300 transform -translate-x-full shadow-2xl">
+  <div class="px-5 py-5 flex items-center justify-between border-b border-slate-800/60 shrink-0">
+   <div class="flex items-center gap-3">
+    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40 shrink-0">
+     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+    </div>
+    <div class="select-none">
+     <h1 class="text-base font-black text-white leading-tight tracking-wide">Manz4vps</h1>
+     <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Panel V26</div>
+    </div>
+   </div>
+   <button onclick="closeMobileMenu()" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-white hover:bg-slate-700 rounded-lg transition">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+   </button>
+  </div>
+  <nav class="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto ptero-scrollbar" onclick="closeMobileMenu()">
+   <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 mb-1">Menu</p>
+   <button onclick="window.location.href='/dashboard.html'" class="w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Home
+   </button>
+   <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 mt-4 mb-1">Server</p>
+   <button onclick="showTab('console')" class="tab-btn-console w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    Terminal
+   </button>
+   <button onclick='currentPath=""; showTab("files")' class="tab-btn-files w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+    File Manager
+   </button>
+   <button onclick="showTab('network')" class="tab-btn-network w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    Network
+   </button>
+   <button onclick="showTab('startup')" class="tab-btn-startup w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+    Startup
+   </button>
+   <button onclick="showTab('plugins')" class="tab-btn-plugins w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/></svg>
+    Plugin
+   </button>
+   <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 mt-4 mb-1">System</p>
+   <button onclick="showTab('settings')" class="tab-btn-settings w-full text-left px-3 py-2.5 rounded-lg text-slate-400 font-semibold hover:bg-slate-800/70 hover:text-slate-100 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Settings
+   </button>
+  </nav>
+  <div class="px-3 py-3 border-t border-slate-800/60 shrink-0">
+   <button onclick="window.location.href='/logout'" class="w-full px-3 py-2.5 rounded-lg text-slate-500 font-semibold hover:bg-red-500/10 hover:text-red-400 flex items-center gap-3 transition-all duration-150 text-sm group">
+    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+    Logout
+   </button>
+  </div>
  </aside>
 
  <div class="md:hidden fixed bottom-20 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-10">
@@ -227,17 +275,17 @@
  </div>
 
  <main class="flex-1 flex flex-col min-w-0 min-h-screen md:h-screen md:overflow-y-auto relative pb-28 md:pb-0 w-full">
- <div class="p-2 pt-4 md:p-4 md:pt-6 flex-1 w-full relative">
+ <div class="px-4 pt-4 pb-4 md:px-12 md:pt-6 flex-1 w-full relative max-w-2xl mx-auto">
  
  <div id="console-view" class="hidden">
  <div class="bg-[#1e293b] rounded-xl shadow-lg border border-slate-700 overflow-hidden mb-5"><div class="p-4 bg-[#1e293b] border-b border-slate-700 flex flex-row gap-3"><button id="startBtn" class="flex-1 min-w-0 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Start</button><button id="restartBtn" class="flex-1 min-w-0 bg-slate-600 hover:bg-slate-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Restart</button><button id="stopBtn" class="flex-1 min-w-0 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition shadow active:scale-[0.98] tracking-wide text-sm">Stop</button></div><div id="terminal-wrapper" class="relative bg-[#0f172a] h-[42vh] md:h-[38vh] transition-all duration-300"><div id="terminal" class="absolute inset-0 p-4 overflow-y-auto overflow-x-hidden break-words break-all text-[11px] md:text-xs leading-tight font-mono whitespace-pre-wrap"></div><div class="absolute top-2 right-2 z-10 flex items-center gap-1 bg-slate-800/90 backdrop-blur rounded border border-slate-600 shadow-lg overflow-hidden"><button onclick="termZoom(-1)" class="text-slate-300 hover:text-white hover:bg-slate-600 transition px-2 py-1.5 text-sm font-bold leading-none" title="Perkecil Teks">−</button><span id="termZoomLabel" class="text-[10px] font-bold text-slate-400 px-1 select-none min-w-[3rem] text-center">38vh</span><button onclick="termZoom(+1)" class="text-slate-300 hover:text-white hover:bg-slate-600 transition px-2 py-1.5 text-sm font-bold leading-none" title="Perbesar Teks">+</button></div><div class="absolute bottom-4 right-6 flex flex-col gap-2 z-10"><button onclick="toggleAutoScroll()" id="btnAutoScroll" class="bg-blue-600/90 hover:bg-blue-500 text-white p-2.5 rounded shadow-lg backdrop-blur text-xs transition border border-blue-400/30" title="Toggle Auto Scroll"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg></button><button onclick="clearTerminal()" class="bg-slate-700/90 hover:bg-red-500/90 text-white p-2.5 rounded shadow-lg backdrop-blur text-xs transition border border-slate-600" title="Bersihkan Console"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></div><div class="flex bg-slate-800 border-t border-slate-700 p-2 gap-2 items-center"><input type="text" id="cmdInput" placeholder="Type a command..." class="flex-1 bg-[#1e293b] p-3 rounded-lg outline-none text-white font-mono text-sm border border-slate-700 focus:border-blue-500 transition shadow-inner"><button onclick="cmdHistoryNav(1)" class="shrink-0 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white w-10 h-10 rounded-lg flex items-center justify-center border border-slate-600 transition" title="Perintah sebelumnya"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg></button><button onclick="cmdHistoryNav(-1)" class="shrink-0 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white w-10 h-10 rounded-lg flex items-center justify-center border border-slate-600 transition" title="Perintah berikutnya"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg></button></div></div>
  <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6">
- <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Address</span><span id="stat-ip-text" onclick="copyIp()" class="text-sm md:text-base font-black text-white truncate cursor-pointer hover:text-teal-400 transition" title="Klik untuk menyalin IP">Memuat...</span></div></div>
- <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Uptime</span><span id="stat-uptime-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
- <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">CPU Load</span><span id="stat-cpu-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
- <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Memory</span><span id="stat-ram-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
- <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Network (Inbound)</span><span id="stat-netin-text" class="text-sm md:text-base font-black text-white truncate">0 KB/s</span></div></div>
- <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Network (Outbound)</span><span id="stat-netout-text" class="text-sm md:text-base font-black text-white truncate">0 KB/s</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700/40 border border-slate-600/60 flex items-center justify-center text-slate-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Address</span><span id="stat-ip-text" onclick="copyIp()" class="text-sm md:text-base font-black text-white truncate cursor-pointer hover:text-slate-300 transition" title="Klik untuk menyalin IP">Memuat...</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700/40 border border-slate-600/60 flex items-center justify-center text-slate-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Uptime</span><span id="stat-uptime-text" class="text-sm md:text-base font-black text-white truncate">Offline</span></div></div>
+ <div id="stat-cpu-card" class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div id="stat-cpu-icon" class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700/40 border border-slate-600/60 flex items-center justify-center text-slate-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg></div><div class="flex flex-col overflow-hidden min-w-0"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">CPU Load</span><span id="stat-cpu-text" class="text-sm font-black text-white truncate">Offline</span></div></div>
+ <div id="stat-ram-card" class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div id="stat-ram-icon" class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700/40 border border-slate-600/60 flex items-center justify-center text-slate-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div><div class="flex flex-col overflow-hidden min-w-0"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Memory</span><span id="stat-ram-text" class="text-sm font-black text-white truncate">Offline</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700/40 border border-slate-600/60 flex items-center justify-center text-slate-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Network (Inbound)</span><span id="stat-netin-text" class="text-sm md:text-base font-black text-white truncate">0 B</span></div></div>
+ <div class="bg-[#1e293b] p-3.5 md:p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden flex items-center gap-3 md:gap-4 select-none" oncontextmenu="return false"><div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700/40 border border-slate-600/60 flex items-center justify-center text-slate-400 flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg></div><div class="flex flex-col overflow-hidden"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Network (Outbound)</span><span id="stat-netout-text" class="text-sm md:text-base font-black text-white truncate">0 B</span></div></div>
  </div>
  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
  <div class="bg-[#1e293b] pt-4 rounded-xl border border-slate-700 shadow-lg overflow-hidden flex flex-col h-[300px]"><div class="px-5 mb-2"><h3 class="text-xs font-bold text-slate-400 uppercase">CPU Load</h3></div><div class="flex-grow relative w-full h-full"><canvas id="cpuChart"></canvas></div></div>
@@ -292,8 +340,8 @@
  </div>
  </div>
 
- <div class="h-[75vh] md:h-[calc(100vh-240px)] overflow-y-auto bg-[#0f172a] pb-24 pt-2 ptero-scrollbar">
- <ul id="fileList" class="flex flex-col gap-2 font-medium px-2 md:px-4"></ul>
+ <div class="h-[75vh] md:h-[calc(100vh-240px)] overflow-y-auto bg-[#111827] pb-24 ptero-scrollbar">
+ <ul id="fileList" class="flex flex-col font-medium"></ul>
  </div>
 
  </div>
@@ -610,13 +658,16 @@
  </div>
  <div class="p-3 bg-slate-800 border-t border-slate-700 shrink-0">
  <div class="flex items-center gap-2 relative">
- <input type="text" id="moveNewDirInput" placeholder="New Directory" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-yellow-500 font-mono text-sm shadow-inner transition pr-12">
- <button onclick="createDirInMove()" class="absolute right-1 top-1 bottom-1 bg-slate-700 hover:bg-yellow-600 text-white px-3 rounded-md font-black transition active:scale-95 text-lg flex items-center justify-center shadow-sm">+</button>
+ <input type="text" id="moveNewDirInput" placeholder="New Directory" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-blue-500 font-mono text-sm shadow-inner transition pr-12">
+ <button onclick="createDirInMove()" class="absolute right-1 top-1 bottom-1 bg-slate-700 hover:bg-blue-600 text-white px-3 rounded-md font-black transition active:scale-95 text-lg flex items-center justify-center shadow-sm">+</button>
  </div>
  </div>
  <div class="p-4 bg-slate-800 border-t border-slate-700 flex gap-3 shrink-0">
  <button onclick="document.getElementById('moveModal').classList.add('hidden')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm shadow">Cancel</button>
- <button onclick="executeInteractiveMove()" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-3 rounded-xl font-black transition active:scale-95 text-sm shadow flex items-center justify-center gap-2">Move Here</button>
+ <button onclick="executeInteractiveMove()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-black transition active:scale-95 text-sm shadow flex items-center justify-center gap-2">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+  Move Here
+ </button>
  </div>
  </div>
  </div>
@@ -646,7 +697,22 @@
  </div>
  </div>
  <div id="genericModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-red-600/50 shadow-2xl text-white"><div class="text-center mb-6"><span id="genericModalIcon" class="text-5xl mb-3 block"></span><h3 id="genericModalTitle" class="text-2xl font-black text-red-500 mb-1">Konfirmasi</h3><p id="genericModalMsg" class="text-slate-300 font-bold">Yakin?</p></div><div class="flex gap-3"><button onclick="document.getElementById('genericModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button id="genericConfirmBtn" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">Yes, Continue</button></div></div></div>
- <div id="eulaModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl text-white"><div class="text-center mb-6"><span class="text-5xl mb-3 block"></span><h3 class="text-2xl font-black text-white mb-2">Persetujuan EULA</h3><p class="text-slate-300 font-medium text-sm leading-relaxed">Anda diwajibkan untuk menyetujui End User License Agreement (EULA) dari Mojang untuk menjalankan server ini.</p></div><div class="flex gap-3"><button onclick="document.getElementById('eulaModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">I Disagree</button><button onclick="acceptEula()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">I Accept</button></div></div></div>
+ <div id="eulaModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in">
+  <div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-blue-600/50 shadow-2xl text-white relative" onclick="event.stopPropagation()">
+   <button onclick="hideEulaModal()" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition active:scale-95" title="Tutup">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+   </button>
+   <div class="text-center mb-6 mt-2">
+    <span class="text-5xl mb-3 block">📜</span>
+    <h3 class="text-2xl font-black text-white mb-2">Persetujuan EULA</h3>
+    <p class="text-slate-300 font-medium text-sm leading-relaxed">Anda diwajibkan untuk menyetujui End User License Agreement (EULA) dari Mojang untuk menjalankan server ini.</p>
+   </div>
+   <button onclick="acceptEula()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 active:scale-95">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    I Accept
+   </button>
+  </div>
+ </div>
  <div id="archiveModal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/90 tab-fade-in"><div class="bg-[#1e293b] w-full max-w-md p-6 rounded-2xl border border-purple-600/50 shadow-2xl"><h3 class="text-xl font-black text-white mb-4"> Create Archive</h3><input type="text" id="archiveInput" placeholder="Name (e.g. backup.zip)" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 text-white outline-none focus:border-purple-500 mb-6 font-mono text-sm shadow-inner"><div class="flex gap-3"><button onclick="document.getElementById('archiveModal').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition active:scale-95">Cancel</button><button onclick="executeArchive()" class="w-1/2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-bold transition active:scale-95">Archive</button></div></div></div>
  
  <div id="pteroFloatingBar" class="hidden fixed top-20 md:top-24 right-4 md:right-10 z-[100] transition-all duration-300 opacity-0 scale-90 -translate-y-4 w-max max-w-[90%]">
