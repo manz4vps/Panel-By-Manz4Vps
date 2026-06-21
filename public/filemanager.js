@@ -435,23 +435,19 @@ window.downloadSelectedFiles = function() {
  const sizeMap = {};
  cachedFiles.forEach(f => { sizeMap[f.path] = f.size || ''; });
 
- function getBulkFileIcon(name) {
-  const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
-  const svg = (color, path) => `<div class="w-7 h-7 rounded-lg bg-slate-700/60 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 ${color}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg></div>`;
-  if (ext === 'jar') return svg('text-orange-400', '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>');
-  if (['zip','gz','tar','7z','rar'].includes(ext)) return svg('text-yellow-400', '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>');
-  if (['json','yml','yaml'].includes(ext)) return svg('text-blue-400', '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
-  if (['properties','cfg','conf','ini'].includes(ext)) return svg('text-slate-300', '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/>');
-  if (['sh','bash'].includes(ext)) return svg('text-green-400', '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>');
-  if (['log','txt'].includes(ext)) return svg('text-slate-300', '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
-  if (['png','jpg','jpeg','gif','webp'].includes(ext)) return svg('text-pink-400', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>');
-  return svg('text-slate-400', '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+ function getBulkFileIcon(filePath) {
+  const cachedFiles = folderCache[currentPath] || [];
+  const entry = cachedFiles.find(f => f.path === filePath);
+  if (entry && entry.isDirectory) {
+   return `<svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
+  }
+  return `<svg class="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM16 18H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
  }
 
  const fileRows = files.map(filePath => {
   const name = filePath.split('/').pop();
   const size = sizeMap[filePath] || '';
-  const icon = getBulkFileIcon(name);
+  const icon = getBulkFileIcon(filePath);
   return `<div class="flex items-center gap-3 py-2.5 border-b border-slate-700/50 last:border-0">
    ${icon}
    <span class="text-white font-mono text-sm break-all flex-1 leading-snug">${name}</span>
@@ -675,76 +671,9 @@ window.executeSingleAction = function(filePath, action) {
 }
 
 function getFileIcon(name, isDirectory) {
- const ic = (bg, textColor, svgPath) =>
-  `<div class="w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 ${textColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svgPath}</svg>
-   </div>`;
+ if (isDirectory) return `<svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
 
- if (isDirectory) return ic('bg-amber-500/20', 'text-amber-400',
-  '<path d="M3 7a2 2 0 012-2h4l2 2h7a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>');
-
- const n = name.toLowerCase();
- const ext = n.includes('.') ? n.split('.').pop() : '';
-
- // JAR
- if (ext === 'jar') return ic('bg-orange-500/20', 'text-orange-400',
-  '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>');
-
- // Shell scripts
- if (ext === 'sh' || ext === 'bash' || ext === 'zsh' || ext === 'fish') return ic('bg-green-500/20', 'text-green-400',
-  '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>');
-
- // Config / properties
- if (ext === 'properties' || ext === 'cfg' || ext === 'conf' || ext === 'ini' || ext === 'env') return ic('bg-slate-500/30', 'text-slate-300',
-  '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/>');
-
- // YAML
- if (ext === 'yml' || ext === 'yaml') return ic('bg-purple-500/20', 'text-purple-400',
-  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
-
- // JSON
- if (ext === 'json' || ext === 'jsonc') return ic('bg-yellow-500/20', 'text-yellow-400',
-  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/>');
-
- // XML / HTML
- if (ext === 'xml' || ext === 'html' || ext === 'htm') return ic('bg-blue-500/20', 'text-blue-400',
-  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
-
- // TOML
- if (ext === 'toml') return ic('bg-teal-500/20', 'text-teal-400',
-  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
-
- // Archives / ZIP
- if (ext === 'zip' || ext === 'tar' || ext === 'gz' || ext === 'tgz' || ext === 'rar' || ext === '7z' || ext === 'bz2') return ic('bg-violet-500/20', 'text-violet-400',
-  '<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>');
-
- // Images
- if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'webp' || ext === 'svg' || ext === 'ico' || ext === 'bmp') return ic('bg-pink-500/20', 'text-pink-400',
-  '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>');
-
- // Logs
- if (ext === 'log') return ic('bg-slate-500/20', 'text-slate-400',
-  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>');
-
- // Text / Markdown
- if (ext === 'txt' || ext === 'md') return ic('bg-slate-500/20', 'text-slate-300',
-  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
-
- // Database
- if (ext === 'db' || ext === 'sqlite' || ext === 'sqlite3') return ic('bg-cyan-500/20', 'text-cyan-400',
-  '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>');
-
- // JS / TS
- if (ext === 'js' || ext === 'ts' || ext === 'jsx' || ext === 'tsx') return ic('bg-yellow-500/20', 'text-yellow-300',
-  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
-
- // Python
- if (ext === 'py') return ic('bg-blue-500/20', 'text-blue-300',
-  '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>');
-
- // Default
- return ic('bg-sky-500/20', 'text-sky-400',
-  '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+ return `<svg class="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM16 18H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
 }
 
 function renderFileListHTML(files, dir, listElement) {
@@ -752,81 +681,71 @@ function renderFileListHTML(files, dir, listElement) {
  let htmlBuffer = ""; 
  
  if (dir !== '') { 
- const parentPath = dir.split('/').slice(0, -1).join('/'); 
- htmlBuffer += `
- <li onclick="loadFiles('${parentPath}')" class="bg-[#1e293b] hover:bg-slate-800 rounded-xl p-4 md:p-5 cursor-pointer flex items-center gap-4 transition shadow-sm border border-slate-700/50 group">
- <svg class="w-6 h-6 md:w-7 md:h-7 text-blue-400 group-hover:-translate-x-1 transition-transform shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
- <span class="font-bold text-slate-300 text-base md:text-lg">Go Back</span>
- </li>`; 
+  const parentPath = dir.split('/').slice(0, -1).join('/'); 
+  htmlBuffer += `
+  <li onclick="loadFiles('${parentPath}')" class="flex items-center gap-3 mx-3 px-3 py-2 cursor-pointer hover:bg-white/5 rounded-lg border-b border-white/5 transition group">
+   <span class="w-4 h-4 shrink-0"></span>
+   <svg class="w-5 h-5 text-slate-400 group-hover:text-blue-400 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+   <span class="text-slate-400 group-hover:text-slate-200 text-sm transition select-none">..</span>
+  </li>`; 
  } 
  
  files.forEach((file, index) => { 
- const iconSvg = getFileIcon(file.name, file.isDirectory);
- 
- const action = file.isDirectory ? `loadFiles('${file.path}')` : `openFile('${file.path}', '${file.name}')`; 
- const menuId = `menu-${index}`; 
- const displayDate = formatLocalTime(file.date); 
- 
- let unarchiveBtn = ''; 
- const lname = file.name.toLowerCase(); 
- if (!file.isDirectory && (lname.endsWith('.zip') || lname.endsWith('.tar.gz') || lname.endsWith('.tgz'))) { 
- unarchiveBtn = `
- <div onclick="event.stopPropagation(); executeExtract('${file.path}')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
- <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
- Extract / Unarchive
- </div>`; 
- } 
- 
- let downloadBtn = '';
- if (!file.isDirectory) {
- downloadBtn = `
- <div onclick="event.stopPropagation(); downloadFile('${file.path}', '${file.name}', '${file.size || ''}')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
- <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
- Download
- </div>`;
- }
+  const iconSvg = getFileIcon(file.name, file.isDirectory);
+  const action = file.isDirectory ? `loadFiles('${file.path}')` : `openFile('${file.path}', '${file.name}')`; 
+  const menuId = `menu-${index}`; 
+  const lname = file.name.toLowerCase(); 
 
- htmlBuffer += `
- <li onclick="${action}" class="bg-[#1e293b] hover:bg-slate-800 rounded-xl p-4 md:p-5 flex items-center gap-2 md:gap-4 transition shadow-sm border border-slate-700/50 cursor-pointer text-base group relative">
- <input type="checkbox" value="${file.path}" class="file-checkbox w-5 h-5 md:w-6 md:h-6 rounded cursor-pointer accent-blue-500 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" onclick="event.stopPropagation(); toggleSelect(this.value)">
+  let unarchiveBtn = ''; 
+  if (!file.isDirectory && (lname.endsWith('.zip') || lname.endsWith('.tar.gz') || lname.endsWith('.tgz'))) { 
+   unarchiveBtn = `
+   <div onclick="event.stopPropagation(); executeExtract('${file.path}')" class="px-4 py-2.5 hover:bg-white/10 text-slate-300 text-sm cursor-pointer flex items-center gap-3 transition">
+    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+    Extract
+   </div>`; 
+  } 
  
- <div class="flex-grow flex items-center gap-3 md:gap-4 overflow-hidden">
- ${iconSvg}
- <span class="font-bold text-slate-200 truncate text-base md:text-lg">${file.name}</span>
- </div>
- 
- <div class="flex flex-col items-end justify-center shrink-0 ml-1">
- <span class="text-slate-400 font-mono text-[10px] md:text-sm">${displayDate}</span>
- <span class="text-slate-500 font-mono text-[10px] md:text-sm">${file.size || ''}</span>
- </div>
+  let downloadBtn = '';
+  if (!file.isDirectory) {
+   downloadBtn = `
+   <div onclick="event.stopPropagation(); downloadFile('${file.path}', '${file.name}', '${file.size || ''}')" class="px-4 py-2.5 hover:bg-white/10 text-slate-300 text-sm cursor-pointer flex items-center gap-3 transition">
+    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+    Download
+   </div>`;
+  }
 
- <div class="relative shrink-0">
- <button onclick="toggleMenu(event, '${menuId}')" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition">
- <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg>
- </button>
- <div id="${menuId}" class="dropdown-menu hidden absolute right-0 top-full mt-1 w-48 bg-[#1e293b] border border-slate-600 rounded-lg shadow-2xl z-50 py-1.5 origin-top-right">
- ${unarchiveBtn}
- ${downloadBtn}
- <div onclick="event.stopPropagation(); openRenameModal('${file.path}', '${file.name}')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
- <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
- Rename
- </div>
- <div onclick="event.stopPropagation(); executeSingleAction('${file.path}', 'move')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
- <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
- Move
- </div>
- <div onclick="event.stopPropagation(); executeSingleAction('${file.path}', 'archive')" class="px-4 py-2.5 hover:bg-slate-700/80 text-slate-300 font-medium text-sm cursor-pointer flex items-center gap-3 transition">
- <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
- Archive
- </div>
- <div class="h-px bg-slate-600/50 my-1.5"></div>
- <div onclick="event.stopPropagation(); deleteSingle('${file.path}', '${file.name}')" class="px-4 py-2.5 hover:bg-red-900/30 text-red-400 font-bold text-sm cursor-pointer flex items-center gap-3 transition">
- <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
- Delete
- </div>
- </div>
- </div>
- </li>`; 
+  htmlBuffer += `
+  <li onclick="${action}" class="flex items-center gap-3 mx-3 px-3 py-2 cursor-pointer hover:bg-white/5 rounded-lg border-b border-white/5 transition group relative">
+   <input type="checkbox" value="${file.path}" class="file-checkbox w-4 h-4 rounded cursor-pointer accent-blue-500 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation(); toggleSelect(this.value)">
+   ${iconSvg}
+   <span class="flex-grow text-slate-200 text-sm truncate">${file.name}</span>
+   <div class="relative shrink-0">
+    <button onclick="toggleMenu(event, '${menuId}')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-white/10 rounded transition">
+     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/></svg>
+    </button>
+    <div id="${menuId}" class="dropdown-menu hidden absolute right-0 top-full mt-1 w-48 bg-[#1e293b] border border-slate-600/80 rounded-lg shadow-2xl z-50 py-1 origin-top-right">
+     ${unarchiveBtn}
+     ${downloadBtn}
+     <div onclick="event.stopPropagation(); openRenameModal('${file.path}', '${file.name}')" class="px-4 py-2.5 hover:bg-white/10 text-slate-300 text-sm cursor-pointer flex items-center gap-3 transition">
+      <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+      Rename
+     </div>
+     <div onclick="event.stopPropagation(); executeSingleAction('${file.path}', 'move')" class="px-4 py-2.5 hover:bg-white/10 text-slate-300 text-sm cursor-pointer flex items-center gap-3 transition">
+      <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+      Move
+     </div>
+     <div onclick="event.stopPropagation(); executeSingleAction('${file.path}', 'archive')" class="px-4 py-2.5 hover:bg-white/10 text-slate-300 text-sm cursor-pointer flex items-center gap-3 transition">
+      <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+      Archive
+     </div>
+     <div class="h-px bg-slate-600/50 my-1"></div>
+     <div onclick="event.stopPropagation(); deleteSingle('${file.path}', '${file.name}')" class="px-4 py-2.5 hover:bg-red-500/10 text-red-400 text-sm font-medium cursor-pointer flex items-center gap-3 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      Delete
+     </div>
+    </div>
+   </div>
+  </li>`; 
  });
  
  listElement.innerHTML = htmlBuffer;
@@ -1374,7 +1293,7 @@ window.loadMoveFolders = async function(targetDir) {
  const pathText = document.getElementById('moveCurrentPathText');
  
  if(pathText) { pathText.innerText = targetDir === '' ? '/home/container/' : `/home/container/${targetDir}/`; }
- if(listEl) { listEl.innerHTML = '<div class="flex justify-center py-6"><div class="w-6 h-6 border-4 border-slate-600 border-t-yellow-500 rounded-full animate-spin"></div></div>'; }
+ if(listEl) { listEl.innerHTML = '<div class="flex justify-center py-6"><div class="w-6 h-6 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div></div>'; }
  
  try {
  const res = await fetch(`/api/files?path=${encodeURIComponent(targetDir)}`);
@@ -1400,7 +1319,7 @@ window.loadMoveFolders = async function(targetDir) {
  dirs.forEach(dir => {
  htmlBuffer += `
  <div onclick="loadMoveFolders('${dir.path}')" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700/80 p-3.5 rounded-xl flex items-center gap-3 text-slate-200 font-bold transition cursor-pointer active:scale-95 shadow-sm group">
- <span class="text-yellow-400 text-lg group-hover:scale-110 transition-transform"></span>
+ <svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
  <span class="truncate">${dir.name}</span>
  </div>
  `;
