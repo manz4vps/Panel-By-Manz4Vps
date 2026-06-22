@@ -285,7 +285,7 @@ app.post('/register', (req, res) => {
  for (let u in users) { if (typeof users[u] === 'object' && users[u].email === email) return res.status(400).json({ error: "Email sudah digunakan!" }); }
 
  const isFirst = Object.keys(users).length === 0;
- users[username] = { password: hashPassword(password), passwordPlain: password, email: email, limits: { ram: 6144, cpu: 1000, disk: 32768 }, servers: [], isAdmin: isFirst };
+ users[username] = { password: hashPassword(password), passwordPlain: password, email: email, limits: { ram: 2048, cpu: 100, disk: 5120 }, servers: [], isAdmin: isFirst };
  fs.writeFileSync(usersFile, JSON.stringify(users));
  res.json({ success: true, message: "Akun berhasil dibuat! Silakan Login." });
 });
@@ -342,7 +342,7 @@ app.get('/api/admin/users', checkAdmin, (req, res) => {
  const srvSettings = getUserSettings(srvName);
  return { name: srvName, isOnline: !!(state && state.startTime), srvLimits: srvSettings.srvLimits || { ram: u.limits?.ram || 2048, cpu: u.limits?.cpu || 1000, disk: u.limits?.disk || 32768 } };
  });
- result.push({ username, email: u.email || '', limits: u.limits || { ram: 6144, cpu: 1000, disk: 32768 }, servers, balance: u.balance || 0, freePackageUsed: u.freePackageUsed || false });
+ result.push({ username, email: u.email || '', limits: u.limits || { ram: 2048, cpu: 100, disk: 5120 }, servers, balance: u.balance || 0, freePackageUsed: u.freePackageUsed || false });
  }
  res.json(result);
 });
@@ -494,6 +494,51 @@ app.post('/api/admin/copy-server', checkAdmin, (req, res) => {
  } catch(e) { res.status(500).json({ error: `Gagal menyalin: ${e.message}` }); }
 });
 
+app.post('/api/admin/delete-server', checkAdmin, (req, res) => {
+  const { serverName } = req.body;
+  if (!serverName) return res.status(400).json({ error: 'Nama server wajib diisi.' });
+  const users = readUsers();
+  const owner = getOwner(serverName);
+  if (!owner) return res.status(404).json({ error: 'Server tidak ditemukan.' });
+  const state = activeServers[serverName];
+  if (state && state.process) { try { state.process.kill('SIGKILL'); } catch(e){} delete activeServers[serverName]; }
+  const dirPath = getUserDir(serverName);
+  if (fs.existsSync(dirPath)) { try { fs.rmSync(dirPath, { recursive: true, force: true }); } catch(e){} }
+  users[owner].servers = (users[owner].servers || []).filter(s => s !== serverName);
+  fs.writeFileSync(usersFile, JSON.stringify(users));
+  res.json({ success: true });
+});
+
+app.post('/api/admin/update-server-network', checkAdmin, (req, res) => {
+  const { serverName, ip, port } = req.body;
+  if (!serverName) return res.status(400).json({ error: 'Nama server wajib diisi.' });
+  const settingsFile = path.join(getUserDir(serverName), 'panel_settings.json');
+  const settings = getUserSettings(serverName);
+  if (ip !== undefined && ip.trim()) settings.ip = ip.trim();
+  if (port !== undefined && String(port).trim()) {
+    const p = parseInt(port);
+    if (isNaN(p) || p < 1 || p > 65535) return res.status(400).json({ error: 'Port tidak valid (1-65535).' });
+    settings.port = String(p);
+  }
+  fs.writeFileSync(settingsFile, JSON.stringify(settings));
+  res.json({ success: true });
+});
+
+app.get('/api/admin/server-settings/:serverName', checkAdmin, (req, res) => {
+  const { serverName } = req.params;
+  const settings = getUserSettings(serverName);
+  res.json({
+    ip: settings.ip || '127.0.0.1',
+    port: settings.port || '',
+    engine: settings.engine || 'java',
+    ram: settings.ram || '2G',
+    jarFile: settings.jarFile || '',
+    javaVersion: settings.javaVersion || '',
+    autoStart: settings.autoStart !== undefined ? settings.autoStart : true,
+    srvLimits: settings.srvLimits || { ram: 2048, cpu: 100, disk: 5120 }
+  });
+});
+
 app.post('/api/reset-password', (req, res) => {
  const { username, email, newPassword } = req.body;
  if (!username || !email || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap.' });
@@ -544,7 +589,9 @@ app.get('/api/servers-list', checkAuth, (req, res) => {
  servers.forEach(srv => {
  const state = getUserState(srv); const mcDir = getUserDir(srv);
  function getDirSizeSync(dirPath) { let size = 0; try { const files = fs.readdirSync(dirPath); files.forEach(file => { const fullPath = path.join(dirPath, file); const stats = fs.statSync(fullPath); if (stats.isDirectory()) size += getDirSizeSync(fullPath); else size += stats.size; }); } catch (e) {} return size; }
- results.push({ name: srv, isOnline: state.startTime !== null, diskUsed: getDirSizeSync(mcDir) });
+ const srvSettings = getUserSettings(srv);
+ const srvLimits = srvSettings.srvLimits || users[username]?.limits || { ram: 2048, cpu: 100, disk: 5120 };
+ results.push({ name: srv, isOnline: state.startTime !== null, diskUsed: getDirSizeSync(mcDir), srvLimits });
  });
  res.json(results);
 });
