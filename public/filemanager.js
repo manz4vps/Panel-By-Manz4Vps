@@ -670,6 +670,33 @@ window.executeSingleAction = function(filePath, action) {
  if (action === 'archive') showArchiveModal(); 
 }
 
+function formatFileDate(isoDate) {
+ if (!isoDate) return '';
+ try {
+  const d = new Date(isoDate);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+
+  if (diffSec < 60) return 'less than a minute ago';
+  if (diffMin < 60) return diffMin === 1 ? '1 minute ago' : diffMin + ' minutes ago';
+  if (diffHr < 24) return diffHr === 1 ? 'about 1 hour ago' : 'about ' + diffHr + ' hours ago';
+  if (diffDay === 1) return '1 day ago';
+
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = d.getDate();
+  const ord = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th';
+  let hr = d.getHours();
+  const ampm = hr >= 12 ? 'PM' : 'AM';
+  hr = hr % 12 || 12;
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return months[d.getMonth()] + ' ' + day + ord + ', ' + d.getFullYear() + ' ' + hr + ':' + min + ampm;
+ } catch(e) { return ''; }
+}
+
 function getFileIcon(name, isDirectory) {
  if (isDirectory) return `<svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
 
@@ -714,11 +741,14 @@ function renderFileListHTML(files, dir, listElement) {
    </div>`;
   }
 
+  const fileDateStr = formatFileDate(file.date);
   htmlBuffer += `
   <li onclick="${action}" class="flex items-center gap-3 mx-3 px-3 py-2 cursor-pointer hover:bg-white/5 rounded-lg border-b border-white/5 transition group relative">
    <input type="checkbox" value="${file.path}" class="file-checkbox w-4 h-4 rounded cursor-pointer accent-blue-500 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation(); toggleSelect(this.value)">
    ${iconSvg}
-   <span class="flex-grow text-slate-200 text-sm truncate">${file.name}</span>
+   <span class="flex-grow text-slate-200 text-sm truncate min-w-0">${file.name}</span>
+   ${file.size ? `<span class="text-[11px] text-slate-400 font-mono shrink-0 whitespace-nowrap">${file.size}</span>` : ''}
+   ${fileDateStr ? `<span class="text-[11px] text-slate-500 font-mono shrink-0 whitespace-nowrap">${fileDateStr}</span>` : ''}
    <div class="relative shrink-0">
     <button onclick="toggleMenu(event, '${menuId}')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-white/10 rounded transition">
      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/></svg>
@@ -788,7 +818,9 @@ async function loadFiles(dir = '', addToHistory = true) {
  } 
 
  if (folderCache[currentPath]) {
- setTimeout(() => { renderFileListHTML(folderCache[currentPath], currentPath, list); finishProgress(); }, 10);
+ const _cachedPath = currentPath;
+ const _cachedFiles = folderCache[currentPath];
+ setTimeout(() => { renderFileListHTML(_cachedFiles, _cachedPath, list); finishProgress(); }, 10);
  return; 
  }
  
@@ -1394,14 +1426,14 @@ window.executeInteractiveMove = async function() {
 window.addEventListener('popstate', function(event) {
  const hash = window.location.hash;
  if (hash === '#files' || hash.startsWith('#files/')) {
- if(typeof showTab === 'function') showTab('files', false);
- let dir = hash.replace('#files', '');
- if (dir.startsWith('/')) dir = dir.substring(1);
- loadFiles(dir, false); 
- } 
- else if (hash.startsWith('#edit/')) {
- if(typeof showTab === 'function') showTab('edit', false);
- let file = hash.replace('#edit/', '');
- openFile(file, '', false);
+  window._skipFileReset = true;
+  if(typeof showTab === 'function') showTab('files', false);
+  let dir = hash.replace('#files', '');
+  if (dir.startsWith('/')) dir = dir.substring(1);
+  loadFiles(dir, false);
+ } else if (hash.startsWith('#edit/')) {
+  if(typeof showTab === 'function') showTab('edit', false);
+  let file = hash.replace('#edit/', '');
+  openFile(file, '', false);
  }
 });
