@@ -95,7 +95,7 @@ function initTermZoom() {
 }
 function resetStopButton() { isStoppingServer = false; const stopBtn = document.getElementById('stopBtn'); if(stopBtn) { stopBtn.innerText = "Stop"; stopBtn.classList.remove('bg-red-800', 'hover:bg-red-700'); stopBtn.classList.add('bg-red-600', 'hover:bg-red-500'); } }
 
-const formatMB = (mb) => { if (!mb || mb === 0) return '0 Bytes'; if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GiB'; return mb.toFixed(2) + ' MiB'; };
+const formatMB = (mb) => { if (!mb || mb === 0) return '0 Bytes'; if (mb >= 1024) return parseFloat((mb / 1024).toFixed(2)) + ' GiB'; return parseFloat(mb.toFixed(2)) + ' MiB'; };
 window.ramLimitMB = 2048; 
 
 Chart.defaults.color = '#9ca3af'; Chart.defaults.font.family = 'Inter, sans-serif';
@@ -419,8 +419,17 @@ async function resetCustomStartup() {
 }
 
 function showTab(tab, addToHistory = true, forceRefresh = false) {
- if (window.startProgress) window.startProgress(); 
- 
+ if (window.startProgress) window.startProgress();
+
+ const tabContainer = document.getElementById('main-tab-container');
+ if (tabContainer) {
+  if (tab === 'files' || tab === 'edit') {
+   tabContainer.classList.remove('max-w-2xl', 'mx-auto', 'md:px-12', 'md:pt-6');
+  } else {
+   tabContainer.classList.add('max-w-2xl', 'mx-auto', 'md:px-12', 'md:pt-6');
+  }
+ }
+
  ['console', 'files', 'versions', 'plugins', 'network', 'startup', 'settings', 'edit'].forEach(t => { 
  const view = document.getElementById(t === 'edit' ? 'fileEditor' : `${t}-view`); const tabBtns = document.querySelectorAll(`.tab-btn-${t}`); 
  if(view) { if (t === tab) { view.style.display = 'block'; } else { view.style.display = 'none'; } } 
