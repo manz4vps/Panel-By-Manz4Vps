@@ -1,572 +1,712 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Admin Panel - Manz4vps V26</title>
- <script src="https://cdn.tailwindcss.com"></script>
- <style>
- body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
- .bg-panel { background-color: #1e293b; }
- @keyframes spin { to { transform: rotate(360deg); } }
- .animate-spin-pro { animation: spin 1s linear infinite; }
- @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
- .fade-in { animation: fadeIn 0.3s ease-in-out; }
- @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
- @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
- </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Manz4vps V26</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+    .bg-panel { background-color: #1e293b; }
+    .bg-panel-2 { background-color: #162032; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .animate-spin-pro { animation: spin 1s linear infinite; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.25s ease-in-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .slide-up { animation: slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1); }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
+    .tab-btn { transition: all 0.15s; border-bottom: 2px solid transparent; }
+    .tab-btn.active { border-bottom-color: #3b82f6; color: #93c5fd; }
+    .tab-btn:not(.active) { color: #64748b; }
+    .tab-btn:not(.active):hover { color: #94a3b8; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+    .server-row { transition: background 0.15s; }
+    .server-row:hover { background: rgba(30,41,59,0.8); }
+    .server-row.selected { background: rgba(239,68,68,0.07); border-color: rgba(239,68,68,0.3) !important; }
+    .srv-checkbox { accent-color: #ef4444; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+  </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen">
- <div class="max-w-6xl mx-auto">
+  <div class="max-w-6xl mx-auto">
 
- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-slate-700/60 pb-5 mt-2">
- <div>
- <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500 flex items-center gap-2">
- Admin Panel
- </h1>
- <span class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Manz4vps Management Console</span>
- </div>
- <div class="flex gap-2">
- <button onclick="window.location.href='/dashboard.html'" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2">← Kembali</button>
- </div>
- </div>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-slate-700/60 pb-5 mt-2">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500">Admin Panel</h1>
+        <span class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Manz4vps Management Console</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="window.location.href='/dashboard.html'" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm transition active:scale-95 flex items-center gap-2">← Kembali</button>
+      </div>
+    </div>
 
- <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="stats-bar">
- <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
- <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total User</p>
- <p class="text-3xl font-black text-white" id="stat-users">-</p>
- </div>
- <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
- <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Server</p>
- <p class="text-3xl font-black text-white" id="stat-servers">-</p>
- </div>
- <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
- <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Server Online</p>
- <p class="text-3xl font-black text-green-400" id="stat-online">-</p>
- </div>
- <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
- <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Server Offline</p>
- <p class="text-3xl font-black text-slate-500" id="stat-offline">-</p>
- </div>
- </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total User</p>
+        <p class="text-3xl font-black text-white" id="stat-users">-</p>
+      </div>
+      <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Server</p>
+        <p class="text-3xl font-black text-white" id="stat-servers">-</p>
+      </div>
+      <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Server Online</p>
+        <p class="text-3xl font-black text-green-400" id="stat-online">-</p>
+      </div>
+      <div class="bg-panel rounded-xl p-4 border border-slate-700/50 shadow">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Server Offline</p>
+        <p class="text-3xl font-black text-slate-500" id="stat-offline">-</p>
+      </div>
+    </div>
 
- <div class="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
- <h2 class="text-lg font-black text-white flex items-center gap-2"> Daftar User & Server</h2>
- <div class="flex gap-2 w-full sm:w-auto">
- <input type="text" id="search-input" placeholder="Cari user / server..." oninput="filterUsers()" class="flex-1 sm:w-64 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500 transition placeholder-slate-500">
- <button onclick="loadData()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition active:scale-95"></button>
- </div>
- </div>
+    <div class="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+      <h2 class="text-lg font-black text-white flex items-center gap-2">Daftar User & Server</h2>
+      <div class="flex gap-2 w-full sm:w-auto">
+        <input type="text" id="search-input" placeholder="Cari user / server..." oninput="filterUsers()" class="flex-1 sm:w-64 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500 transition placeholder-slate-500">
+        <button onclick="loadData()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition active:scale-95">↻</button>
+      </div>
+    </div>
 
- <div id="user-list" class="flex flex-col gap-4">
- <div class="text-center py-12" id="loading-indicator">
- <div class="inline-block w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin-pro"></div>
- <p class="text-slate-400 mt-4 font-bold text-sm">Memuat data admin...</p>
- </div>
- </div>
+    <div id="user-list" class="flex flex-col gap-4">
+      <div class="text-center py-12" id="loading-indicator">
+        <div class="inline-block w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin-pro"></div>
+        <p class="text-slate-400 mt-4 font-bold text-sm">Memuat data admin...</p>
+      </div>
+    </div>
 
- </div>
+  </div>
 
- <div id="modal-limits" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
- <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
- <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition"></button>
- <h3 class="text-xl font-black text-white mb-1"> Edit Limit</h3>
- <p class="text-sm text-slate-400 mb-1" id="modal-label-user">User: <span id="modal-username" class="font-bold text-white"></span></p>
- <p class="text-sm text-slate-400 mb-4 hidden" id="modal-label-server">Server: <span id="modal-servername" class="font-bold text-sky-400"></span></p>
- <div class="space-y-4">
- <div>
- <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">RAM (GB) — contoh: 2G, 6G</label>
- <input type="text" id="input-ram" placeholder="Contoh: 6G" oninput="this.value=this.value.replace(/g/g,'G')" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
- </div>
- <div>
- <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">CPU (%)</label>
- <input type="number" id="input-cpu" placeholder="Contoh: 1000" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
- </div>
- <div>
- <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Disk (GB) — contoh: 10G, 32G</label>
- <input type="text" id="input-disk" placeholder="Contoh: 32G" oninput="this.value=this.value.replace(/g/g,'G')" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
- </div>
- </div>
- <div class="flex gap-3 mt-6">
- <button onclick="closeModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
- <button onclick="saveLimits()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Simpan</button>
- </div>
- </div>
- </div>
+  <!-- ========== MODAL: KELOLA SERVER (Pterodactyl-style) ========== -->
+  <div id="modal-manage" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-panel-2 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl border border-slate-700 shadow-2xl relative slide-up overflow-hidden max-h-[92vh] flex flex-col">
+      <!-- Header -->
+      <div class="bg-[#0f1c2e] border-b border-slate-700/60 px-5 py-4 flex items-start justify-between flex-shrink-0">
+        <div>
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="w-2 h-2 rounded-full bg-blue-400" id="manage-status-dot"></span>
+            <h3 class="text-base font-black text-white" id="manage-server-title">Server</h3>
+            <span id="manage-online-badge" class="text-[10px] font-bold px-1.5 py-0.5 rounded hidden"></span>
+          </div>
+          <p class="text-xs text-slate-500">Control allocations and system resources for this server.</p>
+        </div>
+        <button onclick="closeManage()" class="text-slate-500 hover:text-white transition text-xl font-black leading-none mt-0.5 ml-4 flex-shrink-0">✕</button>
+      </div>
 
- <div id="modal-reset-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
- <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
- <button onclick="closeResetModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition"></button>
- <h3 class="text-xl font-black text-white mb-1"> Reset Password</h3>
- <p class="text-sm text-slate-400 mb-5">User: <span id="reset-modal-username" class="font-bold text-white"></span></p>
- <div class="space-y-4">
- <div>
- <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Password Baru</label>
- <div class="relative">
- <input type="password" id="input-new-password" placeholder="Minimal 6 karakter" class="w-full bg-slate-900 p-3 pr-12 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
- <button type="button" onclick="togglePassVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition text-lg"></button>
- </div>
- </div>
- <div>
- <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Konfirmasi Password</label>
- <input type="password" id="input-confirm-password" placeholder="Ulangi password baru" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
- </div>
- <p id="reset-error" class="hidden text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
- </div>
- <div class="flex gap-3 mt-6">
- <button onclick="closeResetModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
- <button onclick="executeResetPassword()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Reset Password</button>
- </div>
- </div>
- </div>
+      <!-- Tabs -->
+      <div class="flex border-b border-slate-700/60 px-5 gap-1 flex-shrink-0 bg-[#0f1c2e]">
+        <button class="tab-btn active text-sm font-bold py-3 px-3" onclick="switchTab('resources')">Resources</button>
+        <button class="tab-btn text-sm font-bold py-3 px-3" onclick="switchTab('network')">Network</button>
+        <button class="tab-btn text-sm font-bold py-3 px-3" onclick="switchTab('copy')">Copy</button>
+      </div>
 
- <div id="modal-delete-user" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
- <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-2xl text-center fade-in">
- <span class="text-5xl mb-3 block"></span>
- <h3 class="text-2xl font-black text-red-500 mb-2">Hapus User?</h3>
- <p class="text-slate-300 text-sm mb-4">User <span id="delete-username-display" class="font-black text-white"></span> dan semua servernya akan dihapus permanen.</p>
- <p class="text-red-400 text-xs font-bold mb-6 bg-red-500/10 p-2 rounded border border-red-500/20">Tindakan ini tidak bisa dibatalkan!</p>
- <div class="flex gap-3">
- <button onclick="document.getElementById('modal-delete-user').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
- <button onclick="executeDeleteUser()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition active:scale-95">Ya, Hapus</button>
- </div>
- </div>
- </div>
+      <!-- Tab Content -->
+      <div class="overflow-y-auto flex-1">
 
- <div id="modal-view-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
- <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
- <button onclick="document.getElementById('modal-view-password').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✕</button>
- <h3 class="text-xl font-black text-white mb-1">🔑 Password User</h3>
- <p class="text-sm text-slate-400 mb-5">User: <span id="view-pw-username" class="font-bold text-white"></span></p>
- <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
- <p class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Password</p>
- <div class="flex items-center gap-2">
- <input type="password" id="view-pw-value" readonly class="flex-1 bg-transparent text-white font-mono text-base outline-none min-w-0">
- <button type="button" onclick="toggleViewPw()" class="text-slate-400 hover:text-white transition text-xl flex-shrink-0">👁</button>
- <button onclick="navigator.clipboard.writeText(document.getElementById('view-pw-value').value).then(()=>showToast('Password dicopy!','success'))" class="text-slate-400 hover:text-white transition text-xs font-bold px-2 py-1 bg-slate-700 rounded flex-shrink-0">Copy</button>
- </div>
- </div>
- <p id="view-pw-note" class="hidden text-xs text-yellow-400 mt-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2"></p>
- </div>
- </div>
+        <!-- RESOURCES TAB -->
+        <div id="tab-resources" class="tab-panel active p-5 space-y-4">
+          <div class="bg-slate-800/40 rounded-xl border border-slate-700/40 p-4">
+            <h4 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3">Resource Management</h4>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wide">RAM (GB) — contoh: 2G, 6G</label>
+                <div class="relative">
+                  <input type="text" id="res-ram" placeholder="2G" oninput="this.value=this.value.replace(/g/g,'G')" class="w-full bg-slate-900 p-3 pr-14 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold">GiB</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">The maximum amount of memory allowed for this container. Setting to <code class="text-slate-400">0</code> allows unlimited memory.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wide">CPU Limit (%)</label>
+                <div class="relative">
+                  <input type="number" id="res-cpu" placeholder="100" class="w-full bg-slate-900 p-3 pr-10 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold">%</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">Each virtual core is considered to be 100%. Setting to <code class="text-slate-400">0</code> allows unrestricted CPU usage.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wide">Disk Space (GB) — contoh: 10G, 32G</label>
+                <div class="relative">
+                  <input type="text" id="res-disk" placeholder="5G" oninput="this.value=this.value.replace(/g/g,'G')" class="w-full bg-slate-900 p-3 pr-14 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold">MiB</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">Server will be stopped if disk usage exceeds this limit. Set to <code class="text-slate-400">0</code> for unlimited.</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="closeManage()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm">Batal</button>
+            <button onclick="saveResources()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm shadow-lg shadow-blue-500/20">Simpan Resource</button>
+          </div>
+        </div>
 
- <div id="modal-copy-server" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
- <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
- <button onclick="document.getElementById('modal-copy-server').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✕</button>
- <h3 class="text-xl font-black text-white mb-1">📋 Copy / Pindah Server</h3>
- <p class="text-sm text-slate-400 mb-5">Server asal: <span id="copy-srv-source" class="font-bold text-purple-400"></span></p>
- <div class="space-y-4">
- <div>
- <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Target User</label>
- <select id="copy-target-user" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-purple-500 transition text-sm"></select>
- </div>
- <div>
- <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Nama Server Baru</label>
- <input type="text" id="copy-new-name" placeholder="Contoh: ServerBaru" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-purple-500 transition font-mono text-sm">
- <p class="text-xs text-slate-500 mt-1">Port baru akan dibuat otomatis. Isi folder (world, plugins, dll) ikut tercopy.</p>
- </div>
- </div>
- <div class="flex gap-3 mt-6">
- <button onclick="document.getElementById('modal-copy-server').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
- <button onclick="executeCopyServer()" class="w-1/2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-purple-500/20">📋 Copy Server</button>
- </div>
- </div>
- </div>
+        <!-- NETWORK TAB -->
+        <div id="tab-network" class="tab-panel p-5 space-y-4">
+          <div class="bg-slate-800/40 rounded-xl border border-slate-700/40 p-4">
+            <h4 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3">Network Allocation</h4>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wide">IP Address</label>
+                <input type="text" id="net-ip" placeholder="127.0.0.1" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+                <p class="text-[11px] text-slate-500 mt-1">The IP address this server will be bound to. Use <code class="text-slate-400">0.0.0.0</code> to bind to all interfaces.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wide">Port</label>
+                <input type="number" id="net-port" placeholder="25565" min="1" max="65535" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+                <p class="text-[11px] text-slate-500 mt-1">The primary port this server will listen on (1–65535). Server restart diperlukan setelah perubahan.</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="closeManage()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm">Batal</button>
+            <button onclick="saveNetwork()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm shadow-lg shadow-blue-500/20">Simpan Network</button>
+          </div>
+        </div>
 
- <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-1.5 w-72 flex flex-col gap-1.5"></div>
+        <!-- COPY TAB -->
+        <div id="tab-copy" class="tab-panel p-5 space-y-4">
+          <div class="bg-slate-800/40 rounded-xl border border-slate-700/40 p-4">
+            <h4 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3">Copy / Pindah Server</h4>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wide">Target User</label>
+                <select id="copy-target-user" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-purple-500 transition text-sm"></select>
+                <p class="text-[11px] text-slate-500 mt-1">Pilih user tujuan untuk menerima copy server ini.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wide">Nama Server Baru</label>
+                <input type="text" id="copy-new-name" placeholder="ServerBaru" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-purple-500 transition font-mono text-sm">
+                <p class="text-[11px] text-slate-500 mt-1">Port baru dibuat otomatis. File world, plugins, dll ikut tercopy.</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="closeManage()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm">Batal</button>
+            <button onclick="executeCopyServer()" id="btn-copy-exec" class="w-1/2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold transition active:scale-95 text-sm shadow-lg shadow-purple-500/20">📋 Copy Server</button>
+          </div>
+        </div>
 
- <script>
- let allUsers = [];
- let pendingDeleteUser = null;
- let editingUser = null;
- let editingServer = null;
+      </div>
+    </div>
+  </div>
 
- function showToast(message, type = 'success') {
- const container = document.getElementById('toast-container');
- if (container.children.length >= 5) container.removeChild(container.lastChild);
- const isSuccess = type === 'success';
- const isWarning = type === 'warning';
- const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
- const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
- const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
- const icon = isSuccess ? '' : isWarning ? '!' : '';
- const toast = document.createElement('div');
- toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 overflow-hidden`;
- toast.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1)';
- toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${message}</span><button class="text-slate-500 hover:text-white transition text-xl leading-none flex-shrink-0 ml-1">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
- container.insertBefore(toast, container.firstChild);
- requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
- const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
- toast.querySelector('button').addEventListener('click', () => { clearTimeout(autoRemove); toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); });
- }
+  <!-- ========== MODAL: RESET PASSWORD ========== -->
+  <div id="modal-reset-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
+      <button onclick="closeResetModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✕</button>
+      <h3 class="text-xl font-black text-white mb-1">🔒 Reset Password</h3>
+      <p class="text-sm text-slate-400 mb-5">User: <span id="reset-modal-username" class="font-bold text-white"></span></p>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Password Baru</label>
+          <div class="relative">
+            <input type="password" id="input-new-password" placeholder="Minimal 6 karakter" class="w-full bg-slate-900 p-3 pr-12 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+            <button type="button" onclick="togglePassVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition text-lg">👁</button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Konfirmasi Password</label>
+          <input type="password" id="input-confirm-password" placeholder="Ulangi password baru" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-blue-500 transition font-mono text-sm">
+        </div>
+        <p id="reset-error" class="hidden text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button onclick="closeResetModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+        <button onclick="executeResetPassword()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition active:scale-95 shadow-lg shadow-blue-500/20">Reset Password</button>
+      </div>
+    </div>
+  </div>
 
- async function loadData() {
- document.getElementById('loading-indicator').classList.remove('hidden');
- document.querySelectorAll('.user-card').forEach(el => el.remove());
- try {
- const res = await fetch('/api/admin/users');
- if (res.status === 403) return window.location.href = '/';
- allUsers = await res.json();
- renderUsers(allUsers);
- } catch(e) {
- showToast('Gagal memuat data', 'error');
- }
- document.getElementById('loading-indicator').classList.add('hidden');
- }
+  <!-- ========== MODAL: HAPUS USER ========== -->
+  <div id="modal-delete-user" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+    <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-2xl text-center fade-in">
+      <span class="text-5xl mb-3 block">⚠️</span>
+      <h3 class="text-2xl font-black text-red-500 mb-2">Hapus User?</h3>
+      <p class="text-slate-300 text-sm mb-4">User <span id="delete-username-display" class="font-black text-white"></span> dan semua servernya akan dihapus permanen.</p>
+      <p class="text-red-400 text-xs font-bold mb-6 bg-red-500/10 p-2 rounded border border-red-500/20">Tindakan ini tidak bisa dibatalkan!</p>
+      <div class="flex gap-3">
+        <button onclick="document.getElementById('modal-delete-user').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+        <button onclick="executeDeleteUser()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition active:scale-95">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
 
- function filterUsers() {
- const q = document.getElementById('search-input').value.toLowerCase();
- if (!q) { renderUsers(allUsers); return; }
- const filtered = allUsers.filter(u =>
- u.username.toLowerCase().includes(q) ||
- u.email.toLowerCase().includes(q) ||
- u.servers.some(s => s.name.toLowerCase().includes(q))
- );
- renderUsers(filtered);
- }
+  <!-- ========== MODAL: HAPUS SERVER ========== -->
+  <!-- Bulk Delete Toolbar -->
+  <div id="bulk-delete-bar" class="hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 px-4 py-3 bg-[#1e293b] border-t border-red-500/40 shadow-2xl">
+    <div class="flex items-center gap-2">
+      <span class="w-7 h-7 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center font-black text-sm">🗑</span>
+      <span class="text-sm font-bold text-white"><span id="bulk-count">0</span> server dipilih</span>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="clearServerSelection()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition active:scale-95">Batal</button>
+      <button onclick="confirmBulkDeleteServers()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition active:scale-95">Hapus Terpilih</button>
+    </div>
+  </div>
 
- function renderUsers(users) {
- document.querySelectorAll('.user-card').forEach(el => el.remove());
+  <div id="modal-delete-server" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+    <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-red-500/50 shadow-2xl text-center fade-in">
+      <span class="text-5xl mb-3 block">🗑️</span>
+      <h3 class="text-2xl font-black text-red-500 mb-2">Hapus Server?</h3>
+      <p class="text-slate-300 text-sm mb-3">Server berikut akan dihapus permanen beserta semua filenya:</p>
+      <div id="delete-server-name-display" class="text-white font-mono bg-slate-900 p-3 rounded-lg border border-slate-700 mb-4 max-h-32 overflow-y-auto text-sm text-left shadow-inner"></div>
+      <p class="text-red-400 text-xs font-bold mb-6 bg-red-500/10 p-2 rounded border border-red-500/20">Tindakan ini tidak bisa dibatalkan!</p>
+      <div class="flex gap-3">
+        <button onclick="document.getElementById('modal-delete-server').classList.add('hidden')" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition active:scale-95">Batal</button>
+        <button onclick="executeDeleteServers()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition active:scale-95">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
 
- let totalServers = 0, totalOnline = 0;
- document.getElementById('stat-users').textContent = users === allUsers ? allUsers.length : document.getElementById('stat-users').textContent;
+  <!-- ========== MODAL: LIHAT PASSWORD ========== -->
+  <div id="modal-view-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-panel w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative fade-in">
+      <button onclick="document.getElementById('modal-view-password').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white font-black text-xl transition">✕</button>
+      <h3 class="text-xl font-black text-white mb-1">🔑 Password User</h3>
+      <p class="text-sm text-slate-400 mb-5">User: <span id="view-pw-username" class="font-bold text-white"></span></p>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+        <p class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Password</p>
+        <div class="flex items-center gap-2">
+          <input type="password" id="view-pw-value" readonly class="flex-1 bg-transparent text-white font-mono text-base outline-none min-w-0">
+          <button type="button" onclick="toggleViewPw()" class="text-slate-400 hover:text-white transition text-xl flex-shrink-0">👁</button>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('view-pw-value').value).then(()=>showToast('Password dicopy!','success'))" class="text-slate-400 hover:text-white transition text-xs font-bold px-2 py-1 bg-slate-700 rounded flex-shrink-0">Copy</button>
+        </div>
+      </div>
+      <p id="view-pw-note" class="hidden text-xs text-yellow-400 mt-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2"></p>
+    </div>
+  </div>
 
- if (users.length === 0) {
- document.getElementById('user-list').insertAdjacentHTML('beforeend', `<div class="user-card text-center py-16 border-2 border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20"><p class="text-slate-400 font-bold">Tidak ada user ditemukan</p></div>`);
- return;
- }
+  <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-1.5 w-72 flex flex-col gap-1.5"></div>
 
- users.forEach(user => {
- const onlineCount = user.servers.filter(s => s.isOnline).length;
- totalServers += user.servers.length;
- totalOnline += onlineCount;
+  <script>
+    let allUsers = [];
+    let pendingDeleteUser = null;
+    let selectedServers = new Set();
+    let resetingUser = null;
+    let manageServerName = null;
 
- const serversHtml = user.servers.length === 0
- ? `<p class="text-slate-500 text-xs italic">Tidak ada server</p>`
- : user.servers.map(srv => {
- const sl = srv.srvLimits || { ram: user.limits.ram, cpu: user.limits.cpu, disk: user.limits.disk };
- const srvRamGB = (sl.ram / 1024).toFixed(1);
- return `
- <div class="flex items-center justify-between bg-slate-900/60 rounded-lg px-3 py-2 border border-slate-700/40">
- <div class="flex items-center gap-2 flex-wrap">
- <span class="w-2 h-2 rounded-full flex-shrink-0 ${srv.isOnline ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]' : 'bg-slate-600'}"></span>
- <span class="text-sm font-mono font-bold text-slate-200">${srv.name}</span>
- <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${srv.isOnline ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-500'}">${srv.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
- <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50"> ${srvRamGB}G | CPU ${sl.cpu}% | Disk ${(sl.disk/1024).toFixed(0)}G</span>
- </div>
- <div class="flex gap-1.5 flex-wrap justify-end">
- <button onclick="openServerLimits('${srv.name}', ${sl.ram}, ${sl.cpu}, ${sl.disk}, '${user.username}')" class="text-[11px] font-bold bg-sky-500/10 text-sky-400 hover:bg-sky-500 hover:text-white px-2 py-1 rounded transition active:scale-95"> Limit</button>
- <button onclick="openCopyServer('${srv.name}')" class="text-[11px] font-bold bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white px-2 py-1 rounded transition active:scale-95">📋 Copy</button>
- ${srv.isOnline ? `
- <button onclick="restartServer('${srv.name}')" class="text-[11px] font-bold bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Restart</button>
- <button onclick="stopServer('${srv.name}', false)" class="text-[11px] font-bold bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Stop</button>
- <button onclick="stopServer('${srv.name}', true)" class="text-[11px] font-bold bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Kill</button>
- ` : `
- <button onclick="startServer('${srv.name}')" class="text-[11px] font-bold bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2 py-1 rounded transition active:scale-95">Start</button>
- `}
- </div>
- </div>`;
- }).join('');
+    async function goToServer(serverName) {
+      try {
+        await fetch('/api/select-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName }) });
+        window.location.href = '/panel.html#console';
+      } catch(e) { showToast('Gagal masuk ke server', 'error'); }
+    }
 
- const card = document.createElement('div');
- card.className = 'user-card bg-panel border border-slate-700/50 rounded-xl p-5 shadow-lg fade-in';
- card.innerHTML = `
- <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
- <div class="flex items-center gap-3">
- <div class="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 rounded-xl flex items-center justify-center border border-blue-500/30 font-black text-blue-400 text-lg">
- ${user.username.charAt(0).toUpperCase()}
- </div>
- <div>
- <h3 class="font-black text-white text-[15px]">${user.username}</h3>
- <p class="text-xs text-slate-500">${user.email}</p>
- </div>
- </div>
- <div class="flex flex-wrap gap-2 sm:items-start">
- <button onclick="viewPassword('${user.username}')" class="text-[12px] font-bold bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded-lg border border-green-500/20 transition active:scale-95">🔑 Lihat Password</button>
- <button onclick="openResetPassword('${user.username}')" class="text-[12px] font-bold bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-3 py-1.5 rounded-lg border border-yellow-500/20 transition active:scale-95"> Reset Password</button>
- <button onclick="confirmDeleteUser('${user.username}')" class="text-[12px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg border border-red-500/20 transition active:scale-95"> Hapus User</button>
- </div>
- </div>
- <div>
- <p class="text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-2">
- Server (${user.servers.length}) — ${onlineCount} Online
- </p>
- <div class="flex flex-col gap-2">${serversHtml}</div>
- </div>`;
- document.getElementById('user-list').appendChild(card);
- });
+    function toggleServerSelect(serverName, checkbox) {
+      const row = document.getElementById('srvrow-' + serverName);
+      if (checkbox.checked) {
+        selectedServers.add(serverName);
+        if (row) row.classList.add('selected');
+      } else {
+        selectedServers.delete(serverName);
+        if (row) row.classList.remove('selected');
+      }
+      updateBulkDeleteBar();
+    }
 
- if (users === allUsers) {
- document.getElementById('stat-users').textContent = allUsers.length;
- document.getElementById('stat-servers').textContent = totalServers;
- document.getElementById('stat-online').textContent = totalOnline;
- document.getElementById('stat-offline').textContent = totalServers - totalOnline;
- }
- }
+    function updateBulkDeleteBar() {
+      const bar = document.getElementById('bulk-delete-bar');
+      const count = selectedServers.size;
+      document.getElementById('bulk-count').textContent = count;
+      bar.classList.toggle('hidden', count === 0);
+    }
 
- async function startServer(serverName) {
- try {
- const res = await fetch('/api/admin/start-server', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ serverName })
- });
- const data = await res.json();
- if (res.ok) { showToast(`Server "${serverName}" sedang distart!`, 'success'); setTimeout(loadData, 3000); }
- else showToast(data.error || 'Gagal start server', 'error');
- } catch(e) { showToast('Error jaringan', 'error'); }
- }
+    function clearServerSelection() {
+      selectedServers.clear();
+      document.querySelectorAll('.srv-checkbox').forEach(cb => { cb.checked = false; });
+      document.querySelectorAll('.server-row').forEach(r => r.classList.remove('selected'));
+      updateBulkDeleteBar();
+    }
 
- async function restartServer(serverName) {
- try {
- const res = await fetch('/api/admin/restart-server', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ serverName })
- });
- const data = await res.json();
- if (res.ok) { showToast(`Server "${serverName}" sedang direstart!`, 'success'); setTimeout(loadData, 4000); }
- else showToast(data.error || 'Gagal restart server', 'error');
- } catch(e) { showToast('Error jaringan', 'error'); }
- }
+    function confirmBulkDeleteServers() {
+      if (selectedServers.size === 0) return;
+      const display = document.getElementById('delete-server-name-display');
+      display.innerHTML = [...selectedServers].map(n => `<div class="py-0.5">• ${n}</div>`).join('');
+      document.getElementById('modal-delete-server').classList.remove('hidden');
+    }
 
- async function stopServer(serverName, force) {
- try {
- const res = await fetch('/api/admin/stop-server', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ serverName, force })
- });
- const data = await res.json();
- if (res.ok) { showToast(`Server "${serverName}" ${force ? 'di-kill' : 'distop'}!`); setTimeout(loadData, 1500); }
- else showToast(data.error || 'Gagal', 'error');
- } catch(e) { showToast('Error jaringan', 'error'); }
- }
+    async function executeDeleteServers() {
+      document.getElementById('modal-delete-server').classList.add('hidden');
+      const toDelete = [...selectedServers];
+      if (toDelete.length === 0) return;
+      let success = 0, failed = 0;
+      for (const serverName of toDelete) {
+        try {
+          const res = await fetch('/api/admin/delete-server', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ serverName })
+          });
+          if (res.ok) success++;
+          else failed++;
+        } catch(e) { failed++; }
+      }
+      selectedServers.clear();
+      updateBulkDeleteBar();
+      if (success > 0) showToast(`${success} server berhasil dihapus!`);
+      if (failed > 0) showToast(`${failed} server gagal dihapus`, 'error');
+      loadData();
+    }
 
- function confirmDeleteUser(username) {
- pendingDeleteUser = username;
- document.getElementById('delete-username-display').textContent = username;
- document.getElementById('modal-delete-user').classList.remove('hidden');
- }
+    /* ========== TOAST ========== */
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (container.children.length >= 5) container.removeChild(container.lastChild);
+      const isSuccess = type === 'success', isWarning = type === 'warning';
+      const borderColor = isSuccess ? 'border-green-500/40' : isWarning ? 'border-yellow-500/40' : 'border-red-500/40';
+      const iconBg = isSuccess ? 'bg-green-500/20 text-green-400' : isWarning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
+      const barColor = isSuccess ? 'bg-green-500' : isWarning ? 'bg-yellow-500' : 'bg-red-500';
+      const icon = isSuccess ? '✓' : isWarning ? '!' : '✕';
+      const toast = document.createElement('div');
+      toast.className = `relative bg-[#1e293b] border ${borderColor} text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/40 overflow-hidden`;
+      toast.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+      toast.innerHTML = `<div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center font-black text-sm flex-shrink-0">${icon}</div><span class="text-[13px] font-semibold leading-snug flex-1">${message}</span><button class="text-slate-500 hover:text-white transition text-xl leading-none flex-shrink-0 ml-1">×</button><div class="absolute bottom-0 left-0 h-[2px] ${barColor} toast-bar rounded-full" style="width:100%;transition:width 4s linear;"></div>`;
+      container.insertBefore(toast, container.firstChild);
+      requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = toast.querySelector('.toast-bar'); if (bar) bar.style.width = '0%'; }); });
+      const autoRemove = setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); }, 4200);
+      toast.querySelector('button').addEventListener('click', () => { clearTimeout(autoRemove); toast.style.animation = 'toastOut 0.3s ease-in forwards'; setTimeout(() => toast.remove(), 300); });
+    }
 
- async function executeDeleteUser() {
- document.getElementById('modal-delete-user').classList.add('hidden');
- if (!pendingDeleteUser) return;
- try {
- const res = await fetch('/api/admin/delete-user', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ username: pendingDeleteUser })
- });
- const data = await res.json();
- if (res.ok) { showToast(`User "${pendingDeleteUser}" dihapus!`); loadData(); }
- else showToast(data.error || 'Gagal menghapus user', 'error');
- } catch(e) { showToast('Error jaringan', 'error'); }
- pendingDeleteUser = null;
- }
+    /* ========== LOAD DATA ========== */
+    async function loadData() {
+      document.getElementById('loading-indicator').classList.remove('hidden');
+      document.querySelectorAll('.user-card').forEach(el => el.remove());
+      try {
+        const res = await fetch('/api/admin/users');
+        if (res.status === 403) return window.location.href = '/';
+        allUsers = await res.json();
+        renderUsers(allUsers);
+      } catch(e) { showToast('Gagal memuat data', 'error'); }
+      document.getElementById('loading-indicator').classList.add('hidden');
+    }
 
- function mbToG(mb) { const g = mb / 1024; return Number.isInteger(g) ? g + 'G' : g.toFixed(1) + 'G'; }
- function gToMb(str) { const s = String(str).trim().toUpperCase(); if (s.endsWith('G')) return Math.round(parseFloat(s) * 1024); if (s.endsWith('M')) return Math.round(parseFloat(s)); return parseInt(s) || 0; }
+    function filterUsers() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      if (!q) { renderUsers(allUsers); return; }
+      const filtered = allUsers.filter(u =>
+        u.username.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.servers.some(s => s.name.toLowerCase().includes(q))
+      );
+      renderUsers(filtered);
+    }
 
- function openLimits(username, ram, cpu, disk) {
- editingUser = username;
- editingServer = null;
- document.getElementById('modal-username').textContent = username;
- document.getElementById('modal-label-user').classList.remove('hidden');
- document.getElementById('modal-label-server').classList.add('hidden');
- document.getElementById('input-ram').value = mbToG(ram);
- document.getElementById('input-cpu').value = cpu;
- document.getElementById('input-disk').value = mbToG(disk);
- document.getElementById('modal-limits').classList.remove('hidden');
- }
+    /* ========== RENDER USERS ========== */
+    function renderUsers(users) {
+      document.querySelectorAll('.user-card').forEach(el => el.remove());
+      let totalServers = 0, totalOnline = 0;
 
- function openServerLimits(serverName, ram, cpu, disk, username) {
- editingServer = serverName;
- editingUser = null;
- document.getElementById('modal-servername').textContent = serverName;
- document.getElementById('modal-username').textContent = username;
- document.getElementById('modal-label-user').classList.remove('hidden');
- document.getElementById('modal-label-server').classList.remove('hidden');
- document.getElementById('input-ram').value = mbToG(ram);
- document.getElementById('input-cpu').value = cpu;
- document.getElementById('input-disk').value = mbToG(disk);
- document.getElementById('modal-limits').classList.remove('hidden');
- }
+      if (users.length === 0) {
+        document.getElementById('user-list').insertAdjacentHTML('beforeend', `<div class="user-card text-center py-16 border-2 border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20"><p class="text-slate-400 font-bold">Tidak ada user ditemukan</p></div>`);
+        return;
+      }
 
- function closeModal() {
- document.getElementById('modal-limits').classList.add('hidden');
- editingUser = null;
- editingServer = null;
- }
+      users.forEach(user => {
+        const onlineCount = user.servers.filter(s => s.isOnline).length;
+        totalServers += user.servers.length;
+        totalOnline += onlineCount;
 
- async function saveLimits() {
- const ramRaw = document.getElementById('input-ram').value;
- const cpu = document.getElementById('input-cpu').value;
- const diskRaw = document.getElementById('input-disk').value;
- const ram = gToMb(ramRaw);
- const disk = gToMb(diskRaw);
- if (!ram || ram < 128) return showToast('RAM minimal 128M / 0.125G', 'error');
- if (!disk || disk < 512) return showToast('Disk minimal 512M / 0.5G', 'error');
+        const serversHtml = user.servers.length === 0
+          ? `<p class="text-slate-500 text-xs italic">Tidak ada server</p>`
+          : user.servers.map(srv => {
+            const sl = srv.srvLimits || { ram: user.limits.ram, cpu: user.limits.cpu, disk: user.limits.disk };
+            const srvRamGB = (sl.ram / 1024).toFixed(1);
+            return `
+            <div class="server-row flex items-center justify-between bg-slate-900/40 rounded-xl px-3 py-2.5 border border-slate-700/30 gap-2" id="srvrow-${srv.name}">
+              <div class="flex items-center gap-2 flex-wrap min-w-0">
+                <input type="checkbox" class="srv-checkbox" onchange="toggleServerSelect('${srv.name}', this)" title="Pilih untuk dihapus">
+                <span class="w-2 h-2 rounded-full flex-shrink-0 ${srv.isOnline ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]' : 'bg-slate-600'}"></span>
+                <span class="text-sm font-mono font-bold text-blue-400 hover:text-blue-300 truncate max-w-[100px] sm:max-w-none cursor-pointer underline-offset-2 hover:underline" onclick="goToServer('${srv.name}')" title="Masuk ke panel server">${srv.name}</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${srv.isOnline ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-500'}">${srv.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50 flex-shrink-0">${srvRamGB}G | ${sl.cpu}% | ${(sl.disk/1024).toFixed(0)}G</span>
+              </div>
+              <div class="flex gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                ${srv.isOnline ? `
+                  <button onclick="restartServer('${srv.name}')" class="text-[11px] font-bold bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-white px-2 py-1 rounded-lg transition active:scale-95">Restart</button>
+                  <button onclick="stopServer('${srv.name}', false)" class="text-[11px] font-bold bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white px-2 py-1 rounded-lg transition active:scale-95">Stop</button>
+                  <button onclick="stopServer('${srv.name}', true)" class="text-[11px] font-bold bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded-lg transition active:scale-95">Kill</button>
+                ` : `
+                  <button onclick="startServer('${srv.name}')" class="text-[11px] font-bold bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2 py-1 rounded-lg transition active:scale-95">Start</button>
+                `}
+                <button onclick="openManage('${srv.name}', ${sl.ram}, ${sl.cpu}, ${sl.disk}, '${user.username}', ${srv.isOnline})"
+                  class="text-[11px] font-bold bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white px-2.5 py-1 rounded-lg transition active:scale-95 flex items-center gap-1">
+                  ⚙️ Kelola
+                </button>
+              </div>
+            </div>`;
+          }).join('');
 
- if (editingServer) {
- try {
- const res = await fetch('/api/admin/update-server-limits', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ serverName: editingServer, ram, cpu, disk })
- });
- const data = await res.json();
- if (res.ok) { showToast(`Limit server "${editingServer}" disimpan!`); closeModal(); loadData(); }
- else showToast(data.error || 'Gagal menyimpan', 'error');
- } catch(e) { showToast('Error jaringan', 'error'); }
- } else if (editingUser) {
- try {
- const res = await fetch('/api/admin/update-limits', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ username: editingUser, ram, cpu, disk })
- });
- const data = await res.json();
- if (res.ok) { showToast('Limit user berhasil disimpan!'); closeModal(); loadData(); }
- else showToast(data.error || 'Gagal menyimpan', 'error');
- } catch(e) { showToast('Error jaringan', 'error'); }
- }
- }
+        const card = document.createElement('div');
+        card.className = 'user-card bg-panel border border-slate-700/50 rounded-xl p-5 shadow-lg fade-in';
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 rounded-xl flex items-center justify-center border border-blue-500/30 font-black text-blue-400 text-lg">
+                ${user.username.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h3 class="font-black text-white text-[15px]">${user.username}</h3>
+                <p class="text-xs text-slate-500">${user.email}</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 sm:items-start">
+              <button onclick="viewPassword('${user.username}')" class="text-[12px] font-bold bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded-lg border border-green-500/20 transition active:scale-95">🔑 Lihat Password</button>
+              <button onclick="openResetPassword('${user.username}')" class="text-[12px] font-bold bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-3 py-1.5 rounded-lg border border-yellow-500/20 transition active:scale-95">🔒 Reset Password</button>
+              <button onclick="confirmDeleteUser('${user.username}')" class="text-[12px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg border border-red-500/20 transition active:scale-95">🗑 Hapus User</button>
+            </div>
+          </div>
+          <div>
+            <p class="text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-2">
+              Server (${user.servers.length}) — ${onlineCount} Online
+            </p>
+            <div class="flex flex-col gap-2">${serversHtml}</div>
+          </div>`;
+        document.getElementById('user-list').appendChild(card);
+      });
 
- let resetingUser = null;
+      if (users === allUsers) {
+        document.getElementById('stat-users').textContent = allUsers.length;
+        document.getElementById('stat-servers').textContent = totalServers;
+        document.getElementById('stat-online').textContent = totalOnline;
+        document.getElementById('stat-offline').textContent = totalServers - totalOnline;
+      }
+    }
 
- function openResetPassword(username) {
- resetingUser = username;
- document.getElementById('reset-modal-username').textContent = username;
- document.getElementById('input-new-password').value = '';
- document.getElementById('input-confirm-password').value = '';
- document.getElementById('input-new-password').type = 'password';
- const errEl = document.getElementById('reset-error');
- errEl.classList.add('hidden');
- errEl.textContent = '';
- document.getElementById('modal-reset-password').classList.remove('hidden');
- setTimeout(() => document.getElementById('input-new-password').focus(), 100);
- }
+    /* ========== SERVER ACTIONS ========== */
+    async function startServer(serverName) {
+      try {
+        const res = await fetch('/api/admin/start-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName }) });
+        const data = await res.json();
+        if (res.ok) { showToast(`Server "${serverName}" sedang distart!`); setTimeout(loadData, 3000); }
+        else showToast(data.error || 'Gagal start server', 'error');
+      } catch(e) { showToast('Error jaringan', 'error'); }
+    }
 
- function closeResetModal() {
- document.getElementById('modal-reset-password').classList.add('hidden');
- resetingUser = null;
- }
+    async function restartServer(serverName) {
+      try {
+        const res = await fetch('/api/admin/restart-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName }) });
+        const data = await res.json();
+        if (res.ok) { showToast(`Server "${serverName}" sedang direstart!`); setTimeout(loadData, 4000); }
+        else showToast(data.error || 'Gagal restart server', 'error');
+      } catch(e) { showToast('Error jaringan', 'error'); }
+    }
 
- function togglePassVisibility() {
- const inp = document.getElementById('input-new-password');
- inp.type = inp.type === 'password' ? 'text' : 'password';
- }
+    async function stopServer(serverName, force) {
+      try {
+        const res = await fetch('/api/admin/stop-server', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serverName, force }) });
+        const data = await res.json();
+        if (res.ok) { showToast(`Server "${serverName}" ${force ? 'di-kill' : 'distop'}!`); setTimeout(loadData, 1500); }
+        else showToast(data.error || 'Gagal', 'error');
+      } catch(e) { showToast('Error jaringan', 'error'); }
+    }
 
- async function executeResetPassword() {
- if (!resetingUser) return;
- const newPassword = document.getElementById('input-new-password').value;
- const confirmPassword = document.getElementById('input-confirm-password').value;
- const errEl = document.getElementById('reset-error');
+    /* ========== MANAGE MODAL ========== */
+    function switchTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
 
- errEl.classList.add('hidden');
+    async function openManage(serverName, ram, cpu, disk, username, isOnline) {
+      manageServerName = serverName;
 
- if (!newPassword || newPassword.length < 6) {
- errEl.textContent = 'Password minimal 6 karakter.';
- errEl.classList.remove('hidden');
- return;
- }
- if (newPassword !== confirmPassword) {
- errEl.textContent = 'Konfirmasi password tidak cocok!';
- errEl.classList.remove('hidden');
- return;
- }
+      // Set header
+      document.getElementById('manage-server-title').textContent = serverName;
+      const dot = document.getElementById('manage-status-dot');
+      const badge = document.getElementById('manage-online-badge');
+      dot.className = `w-2 h-2 rounded-full ${isOnline ? 'bg-green-400' : 'bg-slate-500'}`;
+      badge.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+      badge.className = `text-[10px] font-bold px-1.5 py-0.5 rounded ${isOnline ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'}`;
+      badge.classList.remove('hidden');
 
- try {
- const res = await fetch('/api/admin/reset-password', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ username: resetingUser, newPassword })
- });
- const data = await res.json();
- if (res.ok) {
- showToast(`Password "${resetingUser}" berhasil direset!`);
- closeResetModal();
- } else {
- errEl.textContent = data.error || 'Gagal mereset password.';
- errEl.classList.remove('hidden');
- }
- } catch(e) {
- errEl.textContent = 'Error jaringan.';
- errEl.classList.remove('hidden');
- }
- }
+      // Resources tab
+      document.getElementById('res-ram').value = mbToG(ram);
+      document.getElementById('res-cpu').value = cpu;
+      document.getElementById('res-disk').value = mbToG(disk);
 
- document.getElementById('input-confirm-password').addEventListener('keydown', (e) => {
- if (e.key === 'Enter') executeResetPassword();
- });
+      // Copy tab
+      const sel = document.getElementById('copy-target-user');
+      sel.innerHTML = allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+      document.getElementById('copy-new-name').value = serverName + '_copy';
 
- async function viewPassword(username) {
- try {
- const res = await fetch('/api/admin/view-password', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ username })
- });
- const data = await res.json();
- document.getElementById('view-pw-username').textContent = username;
- const pwField = document.getElementById('view-pw-value');
- const noteEl = document.getElementById('view-pw-note');
- pwField.type = 'password';
- if (data.passwordPlain) {
- pwField.value = data.passwordPlain;
- noteEl.classList.add('hidden');
- } else {
- pwField.value = '';
- noteEl.textContent = '⚠️ Password belum tersimpan. Gunakan Reset Password dulu untuk mendapatkan password baru yang bisa dilihat.';
- noteEl.classList.remove('hidden');
- }
- document.getElementById('modal-view-password').classList.remove('hidden');
- } catch(e) { showToast('Gagal mengambil password', 'error'); }
- }
+      // Reset tab to Resources
+      document.querySelectorAll('.tab-btn').forEach((b, i) => { b.classList.toggle('active', i === 0); });
+      document.querySelectorAll('.tab-panel').forEach((p, i) => { p.classList.toggle('active', i === 0); });
 
- function toggleViewPw() {
- const inp = document.getElementById('view-pw-value');
- inp.type = inp.type === 'password' ? 'text' : 'password';
- }
+      // Load network settings
+      try {
+        const res = await fetch(`/api/admin/server-settings/${encodeURIComponent(serverName)}`);
+        if (res.ok) {
+          const s = await res.json();
+          document.getElementById('net-ip').value = s.ip || '';
+          document.getElementById('net-port').value = s.port || '';
+        }
+      } catch(e) {}
 
- let copyingServer = null;
+      document.getElementById('modal-manage').classList.remove('hidden');
+    }
 
- function openCopyServer(serverName) {
- copyingServer = serverName;
- document.getElementById('copy-srv-source').textContent = serverName;
- const sel = document.getElementById('copy-target-user');
- sel.innerHTML = allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
- document.getElementById('copy-new-name').value = serverName + '_copy';
- document.getElementById('modal-copy-server').classList.remove('hidden');
- }
+    function closeManage() {
+      document.getElementById('modal-manage').classList.add('hidden');
+      manageServerName = null;
+    }
 
- async function executeCopyServer() {
- if (!copyingServer) return;
- const targetUser = document.getElementById('copy-target-user').value;
- const newServerName = document.getElementById('copy-new-name').value.trim();
- if (!newServerName) return showToast('Nama server baru wajib diisi', 'error');
- try {
- const btn = document.querySelector('#modal-copy-server button[onclick="executeCopyServer()"]');
- if (btn) { btn.textContent = '⏳ Menyalin...'; btn.disabled = true; }
- const res = await fetch('/api/admin/copy-server', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ sourceServer: copyingServer, targetUser, newServerName })
- });
- const data = await res.json();
- if (btn) { btn.textContent = '📋 Copy Server'; btn.disabled = false; }
- if (res.ok) {
- showToast(`Server "${copyingServer}" berhasil dicopy ke ${targetUser} sebagai "${newServerName}"!`);
- document.getElementById('modal-copy-server').classList.add('hidden');
- copyingServer = null;
- loadData();
- } else showToast(data.error || 'Gagal menyalin server', 'error');
- } catch(e) { showToast('Error jaringan', 'error'); }
- }
+    function mbToG(mb) { const g = mb / 1024; return Number.isInteger(g) ? g + 'G' : g.toFixed(1) + 'G'; }
+    function gToMb(str) { const s = String(str).trim().toUpperCase(); if (s.endsWith('G')) return Math.round(parseFloat(s) * 1024); if (s.endsWith('M')) return Math.round(parseFloat(s)); return parseInt(s) || 0; }
 
- loadData();
- setInterval(loadData, 10000);
- </script>
+    async function saveResources() {
+      if (!manageServerName) return;
+      const ram = gToMb(document.getElementById('res-ram').value);
+      const cpu = document.getElementById('res-cpu').value;
+      const disk = gToMb(document.getElementById('res-disk').value);
+      if (!ram || ram < 128) return showToast('RAM minimal 128M / 0.125G', 'error');
+      if (!disk || disk < 512) return showToast('Disk minimal 512M / 0.5G', 'error');
+      try {
+        const res = await fetch('/api/admin/update-server-limits', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ serverName: manageServerName, ram, cpu, disk })
+        });
+        const data = await res.json();
+        if (res.ok) { showToast(`Resource "${manageServerName}" disimpan!`); closeManage(); loadData(); }
+        else showToast(data.error || 'Gagal menyimpan', 'error');
+      } catch(e) { showToast('Error jaringan', 'error'); }
+    }
+
+    async function saveNetwork() {
+      if (!manageServerName) return;
+      const ip = document.getElementById('net-ip').value.trim();
+      const port = document.getElementById('net-port').value.trim();
+      if (!ip) return showToast('IP address wajib diisi', 'error');
+      if (!port) return showToast('Port wajib diisi', 'error');
+      try {
+        const res = await fetch('/api/admin/update-server-network', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ serverName: manageServerName, ip, port })
+        });
+        const data = await res.json();
+        if (res.ok) { showToast(`Network "${manageServerName}" disimpan! Restart server untuk efek.`, 'success'); closeManage(); loadData(); }
+        else showToast(data.error || 'Gagal menyimpan', 'error');
+      } catch(e) { showToast('Error jaringan', 'error'); }
+    }
+
+    async function executeCopyServer() {
+      if (!manageServerName) return;
+      const targetUser = document.getElementById('copy-target-user').value;
+      const newServerName = document.getElementById('copy-new-name').value.trim();
+      if (!newServerName) return showToast('Nama server baru wajib diisi', 'error');
+      const btn = document.getElementById('btn-copy-exec');
+      btn.textContent = '⏳ Menyalin...'; btn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/copy-server', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceServer: manageServerName, targetUser, newServerName })
+        });
+        const data = await res.json();
+        btn.textContent = '📋 Copy Server'; btn.disabled = false;
+        if (res.ok) {
+          showToast(`Server dicopy ke ${targetUser} sebagai "${newServerName}"!`);
+          closeManage(); loadData();
+        } else showToast(data.error || 'Gagal menyalin server', 'error');
+      } catch(e) { btn.textContent = '📋 Copy Server'; btn.disabled = false; showToast('Error jaringan', 'error'); }
+    }
+
+    /* ========== USER ACTIONS ========== */
+    function confirmDeleteUser(username) {
+      pendingDeleteUser = username;
+      document.getElementById('delete-username-display').textContent = username;
+      document.getElementById('modal-delete-user').classList.remove('hidden');
+    }
+
+    async function executeDeleteUser() {
+      document.getElementById('modal-delete-user').classList.add('hidden');
+      if (!pendingDeleteUser) return;
+      try {
+        const res = await fetch('/api/admin/delete-user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: pendingDeleteUser }) });
+        const data = await res.json();
+        if (res.ok) { showToast(`User "${pendingDeleteUser}" dihapus!`); loadData(); }
+        else showToast(data.error || 'Gagal menghapus user', 'error');
+      } catch(e) { showToast('Error jaringan', 'error'); }
+      pendingDeleteUser = null;
+    }
+
+    function openResetPassword(username) {
+      resetingUser = username;
+      document.getElementById('reset-modal-username').textContent = username;
+      document.getElementById('input-new-password').value = '';
+      document.getElementById('input-confirm-password').value = '';
+      document.getElementById('input-new-password').type = 'password';
+      const errEl = document.getElementById('reset-error');
+      errEl.classList.add('hidden'); errEl.textContent = '';
+      document.getElementById('modal-reset-password').classList.remove('hidden');
+      setTimeout(() => document.getElementById('input-new-password').focus(), 100);
+    }
+
+    function closeResetModal() {
+      document.getElementById('modal-reset-password').classList.add('hidden');
+      resetingUser = null;
+    }
+
+    function togglePassVisibility() {
+      const inp = document.getElementById('input-new-password');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    async function executeResetPassword() {
+      if (!resetingUser) return;
+      const newPassword = document.getElementById('input-new-password').value;
+      const confirmPassword = document.getElementById('input-confirm-password').value;
+      const errEl = document.getElementById('reset-error');
+      errEl.classList.add('hidden');
+      if (!newPassword || newPassword.length < 6) { errEl.textContent = 'Password minimal 6 karakter.'; errEl.classList.remove('hidden'); return; }
+      if (newPassword !== confirmPassword) { errEl.textContent = 'Konfirmasi password tidak cocok!'; errEl.classList.remove('hidden'); return; }
+      try {
+        const res = await fetch('/api/admin/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: resetingUser, newPassword }) });
+        const data = await res.json();
+        if (res.ok) { showToast(`Password "${resetingUser}" berhasil direset!`); closeResetModal(); }
+        else { errEl.textContent = data.error || 'Gagal mereset password.'; errEl.classList.remove('hidden'); }
+      } catch(e) { errEl.textContent = 'Error jaringan.'; errEl.classList.remove('hidden'); }
+    }
+
+    document.getElementById('input-confirm-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') executeResetPassword(); });
+
+    async function viewPassword(username) {
+      try {
+        const res = await fetch('/api/admin/view-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
+        const data = await res.json();
+        document.getElementById('view-pw-username').textContent = username;
+        const pwField = document.getElementById('view-pw-value');
+        const noteEl = document.getElementById('view-pw-note');
+        pwField.type = 'password';
+        if (data.passwordPlain) { pwField.value = data.passwordPlain; noteEl.classList.add('hidden'); }
+        else { pwField.value = ''; noteEl.textContent = '⚠️ Password belum tersimpan. Gunakan Reset Password dulu.'; noteEl.classList.remove('hidden'); }
+        document.getElementById('modal-view-password').classList.remove('hidden');
+      } catch(e) { showToast('Gagal mengambil password', 'error'); }
+    }
+
+    function toggleViewPw() {
+      const inp = document.getElementById('view-pw-value');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    /* ========== TAB SWITCH FIX (event target) ========== */
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        const tabName = this.getAttribute('onclick').match(/switchTab\('(\w+)'\)/)[1];
+        document.getElementById('tab-' + tabName).classList.add('active');
+      });
+    });
+
+    /* ========== CLOSE MODAL ON BACKDROP ========== */
+    document.getElementById('modal-manage').addEventListener('click', function(e) {
+      if (e.target === this) closeManage();
+    });
+
+    loadData();
+  </script>
 </body>
 </html>
