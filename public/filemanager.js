@@ -700,6 +700,13 @@ function formatFileDate(isoDate) {
 function getFileIcon(name, isDirectory) {
  if (isDirectory) return `<svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
 
+ const lname = name.toLowerCase();
+ const isArchive = lname.endsWith('.tar.gz') || lname.endsWith('.zip') || lname.endsWith('.tgz') || lname.endsWith('.tar');
+ const isLib = lname.endsWith('.jar') || lname.endsWith('.so') || lname.endsWith('.dll') || lname.endsWith('.lib');
+
+ if (isArchive) return `<svg class="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/><path d="M8 12h8v1.5H8zm0 3h8v1.5H8zm0 3h5v1.5H8z"/></svg>`;
+ if (isLib) return `<svg class="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`;
+
  return `<svg class="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM16 18H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
 }
 
@@ -1292,20 +1299,33 @@ async function executeExtract(filePath) {
  } catch(e) {} finally { finishProgress(); }
 }
 
-function showArchiveModal() { const aInput = document.getElementById('archiveInput'); if(aInput) aInput.value = ''; const aModal = document.getElementById('archiveModal'); if(aModal) aModal.classList.remove('hidden'); if(aInput) aInput.focus(); }
+function showArchiveModal() {
+ const now = new Date();
+ const pad = n => String(n).padStart(2, '0');
+ const datePart = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+ const timePart = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+ const archiveName = `archive-${datePart}T${timePart}Z.tar.gz`;
+ executeArchiveWithName(archiveName);
+}
+
+async function executeArchiveWithName(name) {
+ startProgress();
+ try {
+ const res = await fetch('/api/archive', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: Array.from(selectedFiles), archiveName: name, currentPath: currentPath }) });
+ if(res.ok) {
+ delete folderCache[currentPath];
+ selectedFiles.clear(); updateDeleteButton(); await loadFiles(currentPath);
+ if(typeof showToast === 'function') showToast('Arsip berhasil dibuat: ' + name);
+ } else {
+ if(typeof showToast === 'function') showToast('Gagal membuat arsip', 'error');
+ }
+ } catch(e) {} finally { finishProgress(); }
+}
 
 async function executeArchive() { 
  const name = document.getElementById('archiveInput').value.trim(); if(!name) return; 
  document.getElementById('archiveModal').classList.add('hidden'); 
- startProgress(); 
- try { 
- const res = await fetch('/api/archive', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: Array.from(selectedFiles), archiveName: name, currentPath: currentPath }) }); 
- if(res.ok) {
- delete folderCache[currentPath];
- selectedFiles.clear(); updateDeleteButton(); await loadFiles(currentPath); 
- if(typeof showToast === 'function') showToast('Arsip berhasil dibuat!');
- }
- } catch(e) {} finally { finishProgress(); }
+ await executeArchiveWithName(name);
 }
 
 window.showMoveModal = function() { 
