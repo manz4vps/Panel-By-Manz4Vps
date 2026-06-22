@@ -93,10 +93,10 @@
  <p class="text-[11px] md:text-[12px] font-medium text-slate-500">Manz4VPS Cloud Node</p>
  </div>
  </div>
- <div class="flex flex-row items-center gap-4 md:gap-12 pr-2 ml-auto overflow-x-auto scrollbar-hide">
- <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">CPU</span><span id="val-cpu" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0.00 %</span></div>
- <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">RAM</span><span id="val-ram" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0 MiB</span></div>
- <div class="flex flex-col items-center min-w-[60px] md:min-w-[80px]"><span class="text-[9px] md:text-[10px] uppercase font-bold text-white mb-1 tracking-wider">DISK</span><span id="val-disk" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500">0 MiB</span></div>
+ <div class="flex flex-row items-center gap-1 md:gap-3 pr-2 ml-auto flex-shrink-0">
+ <div class="flex flex-col items-center w-[72px] md:w-[82px] flex-shrink-0"><span class="text-[9px] uppercase font-bold text-white mb-1 tracking-wider">CPU</span><span id="val-cpu" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500 w-full text-center">0.00%</span></div>
+ <div class="flex flex-col items-center w-[72px] md:w-[82px] flex-shrink-0"><span class="text-[9px] uppercase font-bold text-white mb-1 tracking-wider">RAM</span><span id="val-ram" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500 w-full text-center">0MiB</span></div>
+ <div class="flex flex-col items-center w-[72px] md:w-[82px] flex-shrink-0"><span class="text-[9px] uppercase font-bold text-white mb-1 tracking-wider">DISK</span><span id="val-disk" class="font-mono text-[12px] md:text-[14px] font-bold text-slate-500 w-full text-center">0MiB</span></div>
  </div>
  </div>
  </div>
@@ -118,8 +118,10 @@
  let serverOnlineStatus = {}; 
  let serverStartTimes = {}; 
 
- const formatMBToPtero = (mb) => { if (!mb || mb === 0) return '0 MiB'; if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GiB'; return mb.toFixed(2) + ' MiB'; };
- const formatBytes = (bytes) => { if (!+bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`; };
+ const formatMBToPtero = (mb) => { if (!mb || mb === 0) return '0MiB'; if (mb >= 1024) return parseFloat((mb / 1024).toFixed(2)) + 'GiB'; return parseFloat(mb.toFixed(2)) + 'MiB'; };
+ const formatBytes = (bytes) => { if (!+bytes) return '0B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))}${sizes[i]}`; };
+ const formatLimitMB = (mb) => { if (!mb) return '?'; if (mb >= 1024) return parseFloat((mb / 1024).toFixed(2)) + 'GiB'; return mb + 'MiB'; };
+ let serverLimits = {};
  function showToast(message, type = 'success') {
  const container = document.getElementById('toast-container');
  if (!container) return;
@@ -180,6 +182,7 @@
  } catch (e) {}
  }
 
+const valCls = 'font-mono text-[12px] md:text-[14px] font-bold w-full text-center';
  async function fetchServersList() {
  try {
  document.getElementById('loading-indicator').classList.remove('hidden');
@@ -193,26 +196,23 @@
  document.getElementById('loading-indicator').classList.add('hidden');
  if (servers.length === 0) { listContainer.innerHTML += `<div class="text-center py-16 border-2 border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20"><p class="text-slate-400 font-bold text-lg mb-2">Belum ada server </p></div>`; return; }
  servers.forEach(srv => {
+ if (srv.srvLimits) serverLimits[srv.name] = srv.srvLimits;
  const clone = template.cloneNode(true);
  clone.id = `card-${srv.name}`;
  clone.classList.remove('hidden');
  clone.querySelector('#server-name').innerText = srv.name;
+ const diskVal = formatBytes(srv.diskUsed);
  const cached = serverStatsCache[srv.name];
- if (cached) {
- clone.querySelector('#val-cpu').innerText = cached.cpu;
- clone.querySelector('#val-ram').innerText = cached.ram;
- clone.querySelector('#val-disk').innerText = cached.disk;
- if (cached.online) {
- clone.querySelector('#status-line').className = "absolute left-0 top-0 bottom-0 w-1.5 bg-[#10b981] shadow-[0_0_15px_rgba(16,185,129,0.6)] transition-all duration-500";
- clone.querySelector('.icon-bg-container').className = "w-10 h-10 md:w-12 md:h-12 bg-green-600/20 rounded-xl flex items-center justify-center text-green-400 border border-green-500/30";
- clone.querySelector('#val-cpu').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-400";
- clone.querySelector('#val-ram').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-400";
- clone.querySelector('#val-disk').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-400";
+ if (cached && cached.online) {
+  clone.querySelector('#status-line').className = "absolute left-0 top-0 bottom-0 w-1.5 bg-[#10b981] shadow-[0_0_15px_rgba(16,185,129,0.6)] transition-all duration-500";
+  clone.querySelector('.icon-bg-container').className = "w-10 h-10 md:w-12 md:h-12 bg-green-600/20 rounded-xl flex items-center justify-center text-green-400 border border-green-500/30";
+  clone.querySelector('#val-cpu').className = valCls + ' text-slate-400'; clone.querySelector('#val-cpu').innerText = cached.cpu;
+  clone.querySelector('#val-ram').className = valCls + ' text-slate-400'; clone.querySelector('#val-ram').innerText = cached.ram;
+  clone.querySelector('#val-disk').className = valCls + ' text-slate-400'; clone.querySelector('#val-disk').innerText = cached.disk;
  } else {
- clone.querySelector('#val-disk').innerText = formatBytes(srv.diskUsed);
- }
- } else {
- clone.querySelector('#val-disk').innerText = formatBytes(srv.diskUsed);
+  clone.querySelector('#val-cpu').className = valCls + ' text-slate-500'; clone.querySelector('#val-cpu').innerText = '0.00%';
+  clone.querySelector('#val-ram').className = valCls + ' text-slate-500'; clone.querySelector('#val-ram').innerText = '0MiB';
+  clone.querySelector('#val-disk').className = valCls + ' text-slate-500'; clone.querySelector('#val-disk').innerText = diskVal;
  }
  clone.onclick = () => selectServerAction(srv.name);
  listContainer.appendChild(clone);
@@ -251,14 +251,12 @@
  })();
 
  socket.on('dashboard_stats', (data) => {
- const cpuText = data.cpu + ' %';
- const ramText = formatMBToPtero(data.ramMB);
  const isOnline = !!data.isOnline;
+ const cpuVal = data.cpu + '%';
+ const ramVal = formatMBToPtero(data.ramMB);
 
  const card = serverCards[data.serverName];
  if (card) {
- card.querySelector('#val-cpu').innerText = cpuText;
- card.querySelector('#val-ram').innerText = ramText;
  const statusLine = card.querySelector('#status-line');
  const iconBg = card.querySelector('.icon-bg-container');
  if (isOnline) {
@@ -269,26 +267,26 @@
  statusLine.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-[#10b981] shadow-[0_0_15px_rgba(16,185,129,0.6)] transition-all duration-500";
  iconBg.className = "w-10 h-10 md:w-12 md:h-12 bg-green-600/20 rounded-xl flex items-center justify-center text-green-400 border border-green-500/30";
  }
- card.querySelector('#val-cpu').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-400";
- card.querySelector('#val-ram').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-400";
- card.querySelector('#val-disk').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-400";
+ card.querySelector('#val-cpu').className = valCls + ' text-slate-400'; card.querySelector('#val-cpu').innerText = cpuVal;
+ card.querySelector('#val-ram').className = valCls + ' text-slate-400'; card.querySelector('#val-ram').innerText = ramVal;
+ card.querySelector('#val-disk').className = valCls + ' text-slate-400';
  } else {
  statusLine.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-slate-600 transition-all duration-500";
  iconBg.className = "w-10 h-10 md:w-12 md:h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 border border-slate-700";
- card.querySelector('#val-cpu').innerText = '0.00 %'; card.querySelector('#val-cpu').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-500";
- card.querySelector('#val-ram').innerText = '0 MiB'; card.querySelector('#val-ram').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-500";
- card.querySelector('#val-disk').className = "font-mono text-[12px] md:text-[14px] font-bold text-slate-500";
+ card.querySelector('#val-cpu').className = valCls + ' text-slate-500'; card.querySelector('#val-cpu').innerText = '0.00%';
+ card.querySelector('#val-ram').className = valCls + ' text-slate-500'; card.querySelector('#val-ram').innerText = '0MiB';
+ card.querySelector('#val-disk').className = valCls + ' text-slate-500';
  }
  }
 
  const diskEl = serverCards[data.serverName] ? serverCards[data.serverName].querySelector('#val-disk') : null;
  serverStatsCache[data.serverName] = {
- cpu: isOnline ? cpuText : '0.00 %',
- ram: isOnline ? ramText : '0 MiB',
+ cpu: isOnline ? cpuVal : '0.00%',
+ ram: isOnline ? ramVal : '0MiB',
  disk: diskEl ? diskEl.innerText : '0 B',
  online: isOnline
  };
- });
+});
 
  // LOGIKA PWA (Tombol Permanen + Pop-up Kecil Chrome Aktif) 
  let deferredPrompt;
