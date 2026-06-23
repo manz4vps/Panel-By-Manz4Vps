@@ -12,36 +12,44 @@ let currentServerRamMB = 2048;
 let currentServerCpuLimit = 100;
 let currentServerDiskLimitMB = 32768;
 
-let _reconnectBanner = null;
 let _wasEverConnected = false;
 
-function _getOrCreateReconnectBanner() {
- if (!_reconnectBanner) {
- _reconnectBanner = document.createElement('div');
- _reconnectBanner.id = 'reconnect-banner';
- _reconnectBanner.className = 'fixed top-0 left-0 right-0 z-[99999] bg-red-600 text-white text-center text-sm font-bold py-2 px-4 flex items-center justify-center gap-2 shadow-lg';
- _reconnectBanner.innerHTML = '<div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0"></div><span>Koneksi terputus — mencoba menghubungkan kembali...</span>';
- document.body.appendChild(_reconnectBanner);
+function _showReconnectBanner() {
+ let banner = document.getElementById('reconnect-banner');
+ if (!banner) {
+  banner = document.createElement('div');
+  banner.id = 'reconnect-banner';
+  banner.className = 'fixed top-0 left-0 right-0 z-[99999] bg-red-600 text-white text-center text-sm font-bold py-2 px-4 flex items-center justify-center gap-2 shadow-lg';
+  banner.innerHTML = '<div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0"></div><span>Koneksi terputus — mencoba menghubungkan kembali...</span>';
+  document.body.appendChild(banner);
  }
- return _reconnectBanner;
+ banner.style.display = 'flex';
+}
+
+function _hideReconnectBanner() {
+ const banner = document.getElementById('reconnect-banner');
+ if (banner) banner.style.display = 'none';
 }
 
 socket.on('connect', () => {
+ _hideReconnectBanner();
  if (_wasEverConnected) {
- if (_reconnectBanner) { _reconnectBanner.remove(); _reconnectBanner = null; }
- if (typeof showToast === 'function') showToast('Berhasil terhubung kembali!', 'success');
+  if (typeof showToast === 'function') showToast('Berhasil terhubung kembali!', 'success');
  }
  _wasEverConnected = true;
 });
 
 socket.on('disconnect', (reason) => {
  if (reason === 'io server disconnect') { socket.connect(); }
- const banner = _getOrCreateReconnectBanner();
- banner.style.display = 'flex';
+ _showReconnectBanner();
+});
+
+socket.on('reconnect_attempt', () => {
+ _showReconnectBanner();
 });
 
 socket.on('connect_error', () => {
- _getOrCreateReconnectBanner().style.display = 'flex';
+ _showReconnectBanner();
 });
 
 function parseRamToMB(ramStr) {
@@ -149,6 +157,107 @@ function formatNetBytes(bytes) {
  return bytes + ' B';
 }
 
+/* =========================================
+ MODULE: NOTIFIKASI SUARA SERVER
+ ========================================= */
+let _audioCtx = null;
+let _soundEnabled = true;
+let _startSoundBuffer = null;
+let _startSoundArrayBuffer = null;
+
+function _getAudioCtx() {
+ if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+ if (_audioCtx.state === 'suspended') _audioCtx.resume();
+ return _audioCtx;
+}
+
+fetch('/sounds/start.mp3').then(r => r.arrayBuffer()).then(ab => { _startSoundArrayBuffer = ab; }).catch(() => {});
+
+async function _ensureStartBuffer() {
+ if (_startSoundBuffer) return _startSoundBuffer;
+ if (!_startSoundArrayBuffer) return null;
+ try {
+  const ctx = _getAudioCtx();
+  _startSoundBuffer = await ctx.decodeAudioData(_startSoundArrayBuffer.slice(0));
+  return _startSoundBuffer;
+ } catch(e) { return null; }
+}
+
+function _playBuffer(buffer, ctx) {
+ const source = ctx.createBufferSource();
+ const gain = ctx.createGain();
+ source.buffer = buffer;
+ source.connect(gain);
+ gain.connect(ctx.destination);
+ gain.gain.setValueAtTime(1.0, ctx.currentTime);
+ source.start(ctx.currentTime);
+}
+
+function _playChime(freq, startTime, duration, gainVal, ctx) {
+ const osc = ctx.createOscillator();
+ const gain = ctx.createGain();
+ osc.connect(gain);
+ gain.connect(ctx.destination);
+ osc.type = 'sine';
+ osc.frequency.setValueAtTime(freq, startTime);
+ gain.gain.setValueAtTime(0, startTime);
+ gain.gain.linearRampToValueAtTime(gainVal, startTime + 0.008);
+ gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+ osc.start(startTime);
+ osc.stop(startTime + duration + 0.05);
+ const osc2 = ctx.createOscillator();
+ const gain2 = ctx.createGain();
+ osc2.connect(gain2);
+ gain2.connect(ctx.destination);
+ osc2.type = 'sine';
+ osc2.frequency.setValueAtTime(freq * 2, startTime);
+ gain2.gain.setValueAtTime(0, startTime);
+ gain2.gain.linearRampToValueAtTime(gainVal * 0.3, startTime + 0.008);
+ gain2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
+ osc2.start(startTime);
+ osc2.stop(startTime + duration + 0.05);
+}
+
+async function playSoundServerOn() {
+ if (!_soundEnabled) return;
+ try {
+  const ctx = _getAudioCtx();
+  const buf = await _ensureStartBuffer();
+  if (buf) { _playBuffer(buf, ctx); } else {
+   const now = ctx.currentTime;
+   _playChime(523, now + 0.00, 0.30, 1.0, ctx);
+   _playChime(659, now + 0.16, 0.30, 1.0, ctx);
+   _playChime(784, now + 0.32, 0.55, 1.0, ctx);
+  }
+ } catch(e) {}
+}
+
+function playSoundServerOff() {
+ if (!_soundEnabled) return;
+ try {
+  const ctx = _getAudioCtx();
+  const now = ctx.currentTime;
+  _playChime(784, now + 0.00, 0.28, 1.0, ctx);
+  _playChime(587, now + 0.16, 0.28, 1.0, ctx);
+  _playChime(392, now + 0.32, 0.55, 1.0, ctx);
+ } catch(e) {}
+}
+
+async function playSoundServerRestart() {
+ if (!_soundEnabled) return;
+ try {
+  const ctx = _getAudioCtx();
+  const buf = await _ensureStartBuffer();
+  if (buf) { _playBuffer(buf, ctx); } else {
+   const now = ctx.currentTime;
+   _playChime(659, now + 0.00, 0.18, 1.0, ctx);
+   _playChime(659, now + 0.20, 0.18, 1.0, ctx);
+   _playChime(784, now + 0.40, 0.40, 1.0, ctx);
+  }
+ } catch(e) {}
+}
+
+
 socket.on('stats', (data) => {
  lastStatsTick = Date.now(); 
  const ipText = document.getElementById('stat-ip-text'); if(ipText) { ipText.innerText = data.address; ipText.title = data.address; }
@@ -216,7 +325,7 @@ setInterval(() => {
   if(netOutText) netOutText.innerHTML = `<span class="text-slate-500">Offline</span>`;
   applyStatState('stat-cpu-card', 'stat-cpu-icon', 0);
   applyStatState('stat-ram-card', 'stat-ram-icon', 0);
-  if (socket.disconnected) { _getOrCreateReconnectBanner().style.display = 'flex'; }
+  if (socket.disconnected) { _showReconnectBanner(); }
  } else {
   const cpuPct = currentServerCpuLimit > 0 ? latestStats.cpu / currentServerCpuLimit : 0;
   const ramPct = currentServerRamMB > 0 ? latestStats.ram / currentServerRamMB : 0;
