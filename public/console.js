@@ -77,7 +77,10 @@ if(terminal) {
  smoothScrollToBottom(); 
  if (msg.includes("You need to agree to the EULA")) { 
   showEulaModal();
- } 
+ }
+ if (/Done \([\d.]+s\)!/i.test(msg)) {
+  if (typeof playSoundServerOn === 'function') playSoundServerOn();
+ }
  });
 }
 
